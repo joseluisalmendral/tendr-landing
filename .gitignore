@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 next-env.d.ts
 /build
 .vercel
+
+# neonctl local context (may contain project/credential data)
+.neon

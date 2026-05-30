@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+# Pre-commit hook: block secrets from being committed using gitleaks.
+# Scans only the staged diff (what is about to be committed).
+# Enable in a fresh clone with: git config core.hooksPath .githooks
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "✖ gitleaks is not installed. Install it (e.g. 'brew install gitleaks') to enable secret scanning." >&2
+  exit 1
+fi
+
+# --staged   scan staged changes (current best practice for pre-commit)
+# --redact   never print the secret value, only the rule/location
+# --no-banner keep output clean
+gitleaks git --staged --redact --no-banner --verbose
+status=$?
+
+if [ "$status" -ne 0 ]; then
+  echo "" >&2
+  echo "✖ gitleaks detected a potential secret in your staged changes. Commit aborted." >&2
+  echo "  Review the finding above. If it is a false positive, add a 'gitleaks:allow' comment" >&2
+  echo "  on that line or an entry in .gitleaksignore." >&2
+  exit "$status"
+fi
+
+exit 0
