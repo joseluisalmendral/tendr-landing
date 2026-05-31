@@ -4,12 +4,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* =========================================================================
+   Tendr design tokens · destilado de docs/design.md v2.0 (dirección #3
+   "Papel anotado", ADR-002). La capa semántica de shadcn se recolorea al
+   papel; los tokens de marca de Tendr se exponen como utilidades propias.
+   Notación OKLCH. Page theme lock = light (sin dark mode en v2.0).
+   ========================================================================= */
+
 @theme inline {
+  /* ---- shadcn semantic layer (recoloreada al papel) ---- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-mono);
-  --font-heading: var(--font-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,50 +44,183 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ---- Tendr brand tokens (design.md §2.1) ---- */
+  /* surfaces */
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  /* warm ink text */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  /* amber action accent (= acción) */
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-primary-hover: var(--accent-primary-hover);
+  --color-accent-primary-active: var(--accent-primary-active);
+  --color-on-accent: var(--on-accent);
+  /* clay annotation accent (= atención, tono Anthropic) */
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-secondary-soft: var(--accent-secondary-soft);
+  /* functional states (= estado) */
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  /* borders / focus */
+  --color-border-strong: var(--border-strong);
+  --color-focus-ring: var(--focus-ring);
+  /* disabled */
+  --color-disabled-bg: var(--disabled-bg);
+  --color-disabled-fg: var(--disabled-fg);
+  /* hard-shadow tint + hero washes */
+  --color-shadow-tint: var(--shadow-tint);
+  --color-wash-from: var(--wash-from);
+  --color-wash-to: var(--wash-to);
+
+  /* ---- Type families (design.md §2.2) ----
+     Registradas con next/font en app/layout.tsx: Clash Display (local,
+     self-host) + Hanken Grotesk + JetBrains Mono. Fallbacks literales por
+     si la var no carga. */
+  --font-display: var(--font-clash-display), "Clash Display", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-hanken-grotesk), "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, monospace;
+  --font-heading: var(--font-display);
+
+  /* ---- Type scale (design.md §2.3) · base 20px, ratio 1.25 ---- */
+  --text-display-xl: clamp(3rem, 6vw, 4.75rem);
+  --text-display-xl--line-height: 1.02;
+  --text-display-xl--letter-spacing: -0.02em;
+  --text-display-lg: clamp(2.5rem, 4.5vw, 3.5rem);
+  --text-display-lg--line-height: 1.05;
+  --text-display-lg--letter-spacing: -0.018em;
+  --text-h1: 2.5rem;
+  --text-h1--line-height: 1.1;
+  --text-h1--letter-spacing: -0.015em;
+  --text-h2: 2rem;
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.01em;
+  --text-h3: 1.5rem;
+  --text-h3--line-height: 1.2;
+  --text-h3--letter-spacing: -0.005em;
+  --text-body-lg: 1.375rem;
+  --text-body-lg--line-height: 1.55;
+  --text-body: 1.25rem;
+  --text-body--line-height: 1.6;
+  --text-body-sm: 1rem;
+  --text-body-sm--line-height: 1.55;
+  --text-caption: 0.875rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.01em;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.3;
+  --text-meta--letter-spacing: 0.14em;
+
+  /* ---- Radii (design.md §2.5) · brutalist: 0px salvo CTA ---- */
+  --radius-cta: 0.25rem; /* 4px, EXCLUSIVO del CTA primario */
+
+  /* ---- Shadows (design.md §2.6) · hard sin blur, tintada al papel ---- */
+  --shadow-hard: 4px 4px 0 var(--shadow-tint);
+  --shadow-hard-sm: 2px 2px 0 var(--shadow-tint);
+  --shadow-soft: 0 8px 24px -12px oklch(0.30 0.04 60 / 0.25);
+
+  /* ---- Movimiento (design.md §2.7) · genera utilidades ease-* ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);     /* reveals on-scroll */
+  --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);     /* toggles, tabs, FAQ */
+  --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1); /* pop-in brutalist */
+  --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);    /* EXCLUSIVO momento wow */
+
+  /* duraciones canónicas (usar como var, p.ej. duration-[var(--duration-reveal)]) */
+  --duration-micro: 120ms;
+  --duration-reveal: 480ms;
+  --duration-wow: 720ms;
+  --duration-beat: 1400ms;
 }
+
+/* Nota: la escala de espacio (design.md §2.4) coincide 1:1 con la escala
+   por defecto de Tailwind v4 (space-1=4px ... space-32=128px). No se
+   redefine para no duplicar tokens. */
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0rem; /* brutalist editorial: 0px por defecto (taste 4.4) */
+
+  /* ---- Paper surfaces ---- */
+  --surface: oklch(0.97 0.015 90);
+  --surface-raised: oklch(0.985 0.012 90);
+  --surface-sunken: oklch(0.94 0.018 88);
+
+  /* ---- Warm ink text ---- */
+  --text-primary: oklch(0.18 0.020 50);
+  --text-secondary: oklch(0.42 0.015 50);
+  --text-muted: oklch(0.55 0.012 50);
+
+  /* ---- Amber action accent ---- */
+  --accent-primary: oklch(0.85 0.13 88);
+  --accent-primary-hover: oklch(0.81 0.14 86);
+  --accent-primary-active: oklch(0.77 0.15 84);
+  --on-accent: oklch(0.18 0.020 50);
+
+  /* ---- Clay annotation accent (Anthropic) ---- */
+  --accent-secondary: oklch(0.62 0.15 38);
+  --accent-secondary-soft: oklch(0.92 0.04 40);
+
+  /* ---- Functional states ---- */
+  --success: oklch(0.48 0.07 185);
+  --success-soft: oklch(0.90 0.03 185);
+  --warning: oklch(0.70 0.14 65);
+  --danger: oklch(0.55 0.17 28);
+
+  /* ---- Borders / focus ---- */
+  --border-hairline: oklch(0.85 0.015 80);
+  --border-strong: oklch(0.18 0.020 50);
+  --focus-ring: oklch(0.62 0.15 38);
+
+  /* ---- Disabled ---- */
+  --disabled-bg: oklch(0.92 0.008 88);
+  --disabled-fg: oklch(0.68 0.008 60);
+
+  /* ---- Shadow tint + hero washes ---- */
+  --shadow-tint: oklch(0.30 0.04 60);
+  --wash-from: oklch(0.90 0.06 70);
+  --wash-to: oklch(0.93 0.05 40);
+
+  /* ---- shadcn semantic layer → mapeada al papel ---- */
+  --background: var(--surface);
+  --foreground: var(--text-primary);
+  --card: var(--surface-raised);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent-primary);
+  --primary-foreground: var(--on-accent);
+  --secondary: var(--surface-sunken);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface-sunken);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--accent-secondary-soft);   /* hover/highlight bg de shadcn (≠ accent-primary de marca) */
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--danger);
+  --border: var(--border-hairline);
+  --input: var(--border-hairline);
+  --ring: var(--focus-ring);
+  --chart-1: var(--accent-primary);
+  --chart-2: var(--accent-secondary);
+  --chart-3: var(--success);
+  --chart-4: oklch(0.55 0.012 50);
+  --chart-5: oklch(0.42 0.015 50);
+  --sidebar: var(--surface-raised);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--accent-primary);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-accent: var(--accent-secondary-soft);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-hairline);
+  --sidebar-ring: var(--focus-ring);
 }
 
+/* Page theme lock = light en v2.0 (design.md §2.1). El bloque .dark queda
+   dormido (no se togglea ninguna clase .dark); si en el futuro se pide
+   modo nocturno, sería un "papel sepia", no este gris frío heredado. */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -125,6 +263,6 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-mono;
+    @apply font-sans; /* body = Hanken Grotesk (antes font-mono, corregido) */
   }
 }
