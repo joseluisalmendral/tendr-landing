@@ -39,12 +39,12 @@ Lógica de la paleta (PARTE 1.4 "color como sistema"): **base cálida de baja sa
 | `--color-surface-sunken` | `oklch(0.94 0.018 88)` | Zonas hundidas (input fields, columnas vacías del kanban). Levemente más oscura para profundidad de papel. |
 | `--color-text-primary` | `oklch(0.18 0.020 50)` | Tinta cálida casi negra. Contraste ~14:1 sobre papel; legible y de confianza, no negro frío de pantalla. |
 | `--color-text-secondary` | `oklch(0.42 0.015 50)` | Subtexto / captions. ~6:1 sobre papel, jerarquía por luminosidad manteniendo la calidez. |
-| `--color-text-muted` | `oklch(0.55 0.012 50)` | Metadata, labels mono, placeholders. ~4.6:1, el mínimo AA; nunca para texto largo. |
+| `--color-text-muted` | `oklch(0.52 0.012 50)` | Metadata, labels mono, placeholders. ~4.7:1 (AA verificado con axe/Lighthouse); nunca para texto largo. |
 | `--color-accent-primary` | `oklch(0.85 0.13 88)` | Amber CTA. Energía cálida de alta luminosidad; reservado SOLO a la acción primaria. |
 | `--color-accent-primary-hover` | `oklch(0.81 0.14 86)` | Hover del CTA. Baja luminosidad un paso para feedback táctil sin cambiar de hue. |
 | `--color-accent-primary-active` | `oklch(0.77 0.15 84)` | `:active` del CTA, combina con `translate-y-[1px]`. |
 | `--color-on-accent` | `oklch(0.18 0.020 50)` | Texto sobre amber = misma tinta. Amber es claro: texto oscuro asegura AA (el blanco fallaría). |
-| `--color-accent-secondary` | `oklch(0.62 0.15 38)` | Clay/coral (naranja Claude). Anotaciones hand-drawn, border-left editorial, wash ambient. El "mirá esto". |
+| `--color-accent-secondary` | `oklch(0.50 0.16 38)` | Clay/coral (naranja Claude). Anotaciones hand-drawn, border-left editorial, wash ambient. El "mirá esto". Profundizado para pasar AA como texto sobre papel (4.5:1). |
 | `--color-accent-secondary-soft` | `oklch(0.92 0.04 40)` | Fondo tenue clay para highlights y la card "en riesgo" del pipeline. |
 | `--color-success` | `oklch(0.48 0.07 185)` | Teal funcional. Estado OK y datos del pipeline; el único frío, dosificado, hereda la lógica "color solo en data" de Attio. |
 | `--color-success-soft` | `oklch(0.90 0.03 185)` | Fondo tenue teal para badges de estado positivo. |
@@ -52,7 +52,7 @@ Lógica de la paleta (PARTE 1.4 "color como sistema"): **base cálida de baja sa
 | `--color-danger` | `oklch(0.55 0.17 28)` | Error / destructivo. Rojo cálido alineado al clay, no rojo pantalla saturado. |
 | `--color-border` | `oklch(0.85 0.015 80)` | Borde 1px hairline sobre papel. Tinta diluida, no gris frío. |
 | `--color-border-strong` | `oklch(0.18 0.020 50)` | Borde de tinta plena (1px) para piezas brutalist y el contorno del CTA. |
-| `--color-focus-ring` | `oklch(0.62 0.15 38)` | Focus visible = clay a 2px offset. Acento secundario para no chocar con el amber del CTA. |
+| `--color-focus-ring` | `oklch(0.50 0.16 38)` | Focus visible = clay a 2px offset. Acento secundario para no chocar con el amber del CTA. |
 | `--color-disabled-bg` | `oklch(0.92 0.008 88)` | Fondo deshabilitado, casi papel sin acento. |
 | `--color-disabled-fg` | `oklch(0.68 0.008 60)` | Texto deshabilitado, bajo contraste a propósito. |
 | `--color-shadow-tint` | `oklch(0.30 0.04 60)` | Tinte del hard shadow: tinta cálida al 90%, NUNCA negro puro (taste 4.4). |

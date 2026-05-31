@@ -152,7 +152,7 @@
   /* ---- Warm ink text ---- */
   --text-primary: oklch(0.18 0.020 50);
   --text-secondary: oklch(0.42 0.015 50);
-  --text-muted: oklch(0.55 0.012 50);
+  --text-muted: oklch(0.52 0.012 50);
 
   /* ---- Amber action accent ---- */
   --accent-primary: oklch(0.85 0.13 88);
@@ -161,7 +161,7 @@
   --on-accent: oklch(0.18 0.020 50);
 
   /* ---- Clay annotation accent (Anthropic) ---- */
-  --accent-secondary: oklch(0.62 0.15 38);
+  --accent-secondary: oklch(0.50 0.16 38);
   --accent-secondary-soft: oklch(0.92 0.04 40);
 
   /* ---- Functional states ---- */
@@ -173,7 +173,7 @@
   /* ---- Borders / focus ---- */
   --border-hairline: oklch(0.85 0.015 80);
   --border-strong: oklch(0.18 0.020 50);
-  --focus-ring: oklch(0.62 0.15 38);
+  --focus-ring: oklch(0.50 0.16 38);
 
   /* ---- Disabled ---- */
   --disabled-bg: oklch(0.92 0.008 88);
