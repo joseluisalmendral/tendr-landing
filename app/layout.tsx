@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { AxeReporter } from "@/components/a11y/AxeReporter";
 
 // Display: Clash Display (Fontshare, libre comercial) self-hosteada.
 const clashDisplay = localFont({
@@ -49,7 +50,10 @@ export default function RootLayout({
         jetbrainsMono.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AxeReporter />
+        {children}
+      </body>
     </html>
   );
 }
