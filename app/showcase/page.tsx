@@ -11,8 +11,61 @@ import { Feature } from "@/components/landing/Feature";
 import { PricingCard } from "@/components/landing/PricingCard";
 import { TestimonialCard } from "@/components/landing/TestimonialCard";
 import { FAQ } from "@/components/landing/FAQ";
+import { PaperGrain } from "@/components/landing/PaperGrain";
 import { SkipLink } from "@/components/a11y/SkipLink";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+/**
+ * One comparison panel for the paper-grain strip. Real content (label, heading,
+ * body, amber CTA) sits in a `relative z-10` layer ABOVE the absolute grain, so
+ * the team can judge legibility and CTA crispness on a textured surface.
+ */
+type GrainPanel = {
+  /** OFF, fine or layered: which PaperGrain (if any) sits behind the content. */
+  grain: "off" | "fine" | "layered";
+  /** Small mono label naming the treatment. */
+  label: string;
+  /** Surface utility: bg-surface (flat cream) or bg-surface-raised (card). */
+  surface: "bg-surface" | "bg-surface-raised";
+  /** Opacity of the fine fiber layer (passed through to PaperGrain). */
+  intensity?: number;
+};
+
+function GrainComparePanel({ grain, label, surface, intensity }: GrainPanel) {
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden border border-border-strong p-6",
+        surface,
+      )}
+    >
+      {grain === "fine" ? <PaperGrain variant="fine" intensity={intensity} /> : null}
+      {grain === "layered" ? <PaperGrain variant="layered" intensity={intensity} /> : null}
+
+      {/* Content sits above the grain so text and CTA stay crisp. The label
+          uses text-secondary (~6:1), not text-muted (~4.6:1, borderline): the
+          grain multiply darkens the panel background a hair, and a muted 12px
+          label on that darker cream would dip under AA. text-secondary keeps
+          headroom on a textured surface. */}
+      <div className="relative z-10 flex flex-col gap-3">
+        <span className="font-mono text-meta uppercase text-text-secondary">
+          {label}
+        </span>
+        <h3 className="font-heading text-h3 text-text-primary">
+          Cliente en seguimiento
+        </h3>
+        <p className="max-w-[42ch] text-body-sm text-text-secondary">
+          Hablaste con este cliente hace seis días. Tendr te avisa para que no
+          se enfríe antes de cerrar la propuesta.
+        </p>
+        <Button size="lg" className="mt-2 w-fit shadow-hard">
+          Escribir hoy
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 /**
  * DEV-ONLY component showcase for the Tendr landing library.
@@ -269,6 +322,44 @@ export default function ShowcasePage() {
               },
             ]}
           />
+        </Section>
+
+        {/* ---------------------------------------------------------------- */}
+        {/* PaperGrain: side-by-side comparison on both surfaces.            */}
+        {/* ---------------------------------------------------------------- */}
+        <Section id="texturas" heading="Textura de papel (comparativa)">
+          <div className="flex flex-col gap-8">
+            <p className="max-w-[65ch] text-body text-text-secondary">
+              Mismo contenido real, intensidad creciente, para elegir a ojo. El
+              grano es tinta cálida (token shadow-tint) enmascarada por ruido,
+              nunca gris ni negro: por eso lee como fibra de papel y no como
+              polvo. La capa va detrás del texto, así que el cuerpo y el CTA
+              quedan nítidos.
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <span className="font-mono text-meta uppercase text-text-secondary">
+                Sobre bg-surface-raised · intensidad creciente
+              </span>
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                <GrainComparePanel grain="off" label="OFF" surface="bg-surface-raised" />
+                <GrainComparePanel grain="fine" label="Sutil" surface="bg-surface-raised" intensity={0.3} />
+                <GrainComparePanel grain="fine" label="Media" surface="bg-surface-raised" intensity={0.55} />
+                <GrainComparePanel grain="fine" label="Fuerte" surface="bg-surface-raised" intensity={0.85} />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <span className="font-mono text-meta uppercase text-text-secondary">
+                Fibra + mota en capas vs papel plano
+              </span>
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                <GrainComparePanel grain="layered" label="Capas (raised)" surface="bg-surface-raised" intensity={0.55} />
+                <GrainComparePanel grain="off" label="OFF (plano)" surface="bg-surface" />
+                <GrainComparePanel grain="fine" label="Fina (plano)" surface="bg-surface" intensity={0.55} />
+              </div>
+            </div>
+          </div>
         </Section>
 
         {/* ---------------------------------------------------------------- */}
