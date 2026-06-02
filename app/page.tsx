@@ -5,11 +5,13 @@ import { Section } from "@/components/landing/Section";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { FeatureShowcase } from "@/components/landing/FeatureShowcase";
 import { Pricing } from "@/components/landing/Pricing";
+import { PRICING } from "@/components/landing/pricing.data";
 import { TestimonialsCork } from "@/components/landing/TestimonialsCork";
 import { TESTIMONIALS } from "@/components/landing/testimonials.data";
 import { FAQ } from "@/components/landing/FAQ";
 import { Footer } from "@/components/landing/Footer";
-import { pageMetadata } from "@/components/seo/metadata";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { ogImage, pageMetadata, siteUrl } from "@/components/seo/metadata";
 import type { FaqItem, PricingCardProps } from "@/components/landing/types";
 
 export const metadata = pageMetadata({
@@ -20,54 +22,6 @@ export const metadata = pageMetadata({
 });
 
 // TODO(F6): copy provisional. Las variantes finales de copy se definen en F6.
-
-const PRICING: PricingCardProps[] = [
-  {
-    tier: "Free",
-    price: "0",
-    priceCurrency: "EUR",
-    period: "/mes",
-    forWho: "Para empezar",
-    features: ["3 clientes", "1 proyecto", "Soporte de la comunidad"],
-    cta: { label: "Empezar gratis", href: "#" },
-    productName: "Tendr Free",
-    productDescription: "Plan gratuito para empezar a ordenar tu cartera.",
-  },
-  {
-    tier: "Pro",
-    price: "9",
-    priceCurrency: "EUR",
-    period: "/mes",
-    forWho: "Para freelances",
-    features: [
-      "Clientes ilimitados",
-      "Proyectos ilimitados",
-      "Reportes automáticos",
-      "Soporte por email",
-    ],
-    cta: { label: "Probar 14 días", href: "#" },
-    highlighted: true,
-    productName: "Tendr Pro",
-    productDescription: "Para profesionalizar tu seguimiento con IA.",
-  },
-  {
-    tier: "Team",
-    price: "29",
-    priceCurrency: "EUR",
-    period: "/mes",
-    forWho: "Para equipos",
-    badge: "Próximamente",
-    features: [
-      "Todo lo de Pro",
-      "Multi-usuario",
-      "Permisos por rol",
-      "Workspace de equipo",
-    ],
-    cta: { label: "Apuntarse a waitlist", href: "#" },
-    productName: "Tendr Team",
-    productDescription: "Para equipos pequeños que comparten cartera.",
-  },
-];
 
 const FAQ_ITEMS: FaqItem[] = [
   {
@@ -93,7 +47,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "¿Mis datos están seguros?",
     answer:
-      "Sí. Tus datos viven en Postgres sobre Supabase con Row-Level Security activada desde el primer día, así que cada usuario solo ve los suyos. Las claves de API se guardan cifradas con envelope encryption AES-256-GCM. La seguridad es parte del diseño, no un añadido posterior.",
+      "Sí. Tus datos viven en Postgres gestionado en Neon con Row-Level Security activada desde el primer día, así que cada usuario solo ve los suyos. Las claves de API se guardan cifradas con envelope encryption AES-256-GCM. La seguridad es parte del diseño, no un añadido posterior.",
   },
   {
     question: "¿Puedo exportar mis datos si dejo de usarlo?",
@@ -122,9 +76,50 @@ const FAQ_ITEMS: FaqItem[] = [
   },
 ];
 
+// Public offers for the SoftwareApplication schema: only the purchasable Free
+// and Pro tiers, derived from PRICING so the price is a single source of truth
+// (Team is "próximamente", so it is not advertised as an active offer).
+const APP_OFFERS = [
+  PRICING.find((tier) => tier.tier === "Free"),
+  PRICING.find((tier) => tier.tier === "Pro"),
+]
+  .filter((tier): tier is PricingCardProps => Boolean(tier))
+  .map((tier) => ({
+    "@type": "Offer" as const,
+    name: tier.tier,
+    price: tier.price,
+    priceCurrency: tier.priceCurrency,
+  }));
+
+const ORGANIZATION = {
+  "@type": "Organization" as const,
+  name: "Tendr",
+  url: siteUrl.toString(),
+};
+
 export default function Home() {
   return (
     <>
+      {/* GEO/SEO: SoftwareApplication structured data for answer engines and
+          rich results. Sits before <main> so crawlers read the product schema
+          up front. Prices come from PRICING; rating is intentionally omitted
+          until real reviews exist (no invented numbers). */}
+      <JsonLd
+        type="SoftwareApplication"
+        data={{
+          name: "Tendr",
+          description:
+            "Mini-CRM con IA para freelancers y perfiles B2B junior: organiza tu cartera de clientes, casos y seguimientos en un pipeline visual.",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: siteUrl.toString(),
+          screenshot: ogImage(),
+          offers: APP_OFFERS,
+          author: ORGANIZATION,
+          publisher: ORGANIZATION,
+        }}
+      />
+
       <SkipLink />
       <Header />
 

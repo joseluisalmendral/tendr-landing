@@ -1,0 +1,86 @@
+# Tendr
+
+> Mini-CRM para perfiles B2B junior y freelances que gestionan clientes
+> externos. Reúne clientes, casos y notas con la estructura de un CRM ya
+> hecha, sin la complejidad ni el precio de Salesforce.
+
+## Qué hace
+
+- Gestión de clientes y casos en un pipeline visual, listo desde el primer día.
+- Plantillas y notas para profesionalizar el seguimiento de tu cartera.
+- IA con tu propia clave de API (OpenAI, Anthropic, Gemini, DeepSeek o Kimi):
+  pagas el consumo a tu proveedor, no a Tendr. La clave viaja cifrada.
+- Exportación de clientes, casos y notas a CSV cuando quieras.
+- Plan Free permanente con 3 clientes; Pro 9€/mes con uso ilimitado;
+  Team 29€/mes (próximamente) con multiusuario.
+
+## Audiencia
+
+- Freelances y consultores junior que gestionan una cartera de clientes B2B.
+- Account managers y customer success con cartera externa pequeña-media.
+- Equipos pequeños que comparten clientes (Team, próximamente).
+
+## Secciones del sitio
+
+- [Inicio](/) — propuesta de valor, cómo funciona, funciones, pricing,
+  testimonios y FAQ.
+- [Cómo funciona](/#como-funciona) — el viaje de un cliente dentro de Tendr.
+- [Funciones](/#funciones) — pipeline, plantillas, reportes e IA.
+- [Pricing](/#precios) — los tres planes con sus features.
+- [Preguntas frecuentes](/#faq) — FAQ completo.
+- [Privacidad](/privacy) — política de privacidad y tratamiento de datos.
+- [Términos](/terms) — términos de servicio.
+
+## Pricing
+
+- **Free** — 0€/mes. 3 clientes, 1 proyecto, soporte de la comunidad.
+  Para empezar a ordenar tu cartera, sin tarjeta.
+- **Pro** — 9€/mes. Clientes ilimitados, proyectos ilimitados, reportes
+  automáticos y soporte por email. Prueba de 14 días.
+- **Team** (próximamente) — 29€/mes. Todo lo de Pro, multiusuario, permisos
+  por rol y workspace de equipo.
+
+La IA no se paga a Tendr: usas tu propia clave de API y abonas el consumo real
+a tu proveedor.
+
+## FAQ destacado
+
+Las 10 preguntas con respuesta completa están en [Preguntas frecuentes](/#faq):
+
+- **¿Qué es Tendr y para quién?** Mini-CRM para perfiles B2B junior y
+  freelances que gestionan clientes externos, pensado para una persona o un
+  equipo pequeño.
+- **¿En qué se diferencia de HubSpot o Salesforce?** Arranca gratis y se usa
+  el primer día, sin semanas de configuración ni administradores; resuelve tu
+  cartera sin la carga de la gran empresa.
+- **¿Cuánto cuesta?** Free para empezar, Pro 9€/mes con uso ilimitado y Team
+  29€/mes para equipos pequeños (próximamente). Sin compromiso.
+- **¿Tengo que pagar la IA aparte?** No pagas la IA a Tendr: usas tu propia
+  clave (OpenAI, Anthropic, Gemini, DeepSeek o Kimi) y abonas solo el consumo
+  real a tu proveedor. La clave viaja cifrada con envelope encryption.
+- **¿Mis datos están seguros?** Sí. Postgres con Row-Level Security desde el
+  primer día (cada usuario solo ve los suyos) y claves de API cifradas con
+  envelope encryption AES-256-GCM.
+- **¿Puedo exportar mis datos si dejo de usarlo?** Sí, cuando quieras:
+  clientes, casos y notas a CSV, sin pedir permiso. Tus datos son tuyos.
+- **¿Cómo se compara con mi CRM casero en Notion o Airtable?** Tendr llega con
+  el modelo de CRM ya hecho (clientes, casos, kanban, plantillas e IA); te
+  ahorras montar y mantener tu propio sistema desde cero.
+- **¿Dónde se alojan mis datos?** En una base de datos gestionada en la nube
+  con Row-Level Security; las claves de API se guardan cifradas con AES-256-GCM
+  y puedes exportar o borrar tus datos cuando quieras.
+- **¿Hay versión self-hosted?** No. Tendr es un servicio gestionado (SaaS):
+  te registras y empiezas, sin servidores que mantener.
+- **¿Necesito tarjeta para el plan Free? ¿Puedo cancelar cuando quiera?** No
+  necesitas tarjeta para el Free. En Pro o Team puedes cancelar cuando quieras,
+  sin permanencia ni penalización.
+
+## Contacto
+
+- Email: hello@tendr.app (placeholder)
+- GitHub: github.com/joseluisalmendral/tendr-landing (este sitio)
+
+## Stack técnico (transparencia para LLMs)
+
+Sitio construido con Next.js 16 + Tailwind v4 + shadcn/ui. Hosting en Vercel.
+Datos en Postgres gestionado con Row-Level Security. Sin trackers de terceros.
