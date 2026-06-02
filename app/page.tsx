@@ -3,7 +3,7 @@ import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { Section } from "@/components/landing/Section";
 import { HowItWorks } from "@/components/landing/HowItWorks";
-import { FeaturesBoard } from "@/components/landing/FeaturesBoard";
+import { FeatureShowcase } from "@/components/landing/FeatureShowcase";
 import { Pricing } from "@/components/landing/Pricing";
 import { TestimonialsCork } from "@/components/landing/TestimonialsCork";
 import { TESTIMONIALS } from "@/components/landing/testimonials.data";
@@ -159,10 +159,10 @@ export default function Home() {
 
         <Section
           id="funciones"
-          heading="Tus clientes, vivos en un tablero"
+          heading="Un CRM con todo lo que necesitas"
           divider
         >
-          <FeaturesBoard />
+          <FeatureShowcase />
         </Section>
 
         <Section id="precios" heading="Un plan para cada momento" divider>
