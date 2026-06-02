@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Hero } from "@/components/landing/Hero";
 import type { HeroProps } from "@/components/landing/types";
@@ -11,15 +11,37 @@ const props: HeroProps = {
     "Ordená leads, propuestas y cobros en un pipeline visual. Sin hojas de cálculo ni recordatorios perdidos.",
   ctaPrimary: { label: "Empezá gratis", href: "/signup" },
   ctaSecondary: { label: "Ver cómo funciona", href: "/demo" },
-  image: {
-    src: "/hero-pipeline-empty.png",
-    alt: "Vista del pipeline de clientes vacío en Tendr",
-    width: 720,
-    height: 600,
-  },
 };
 
+/** matchMedia stub returning a fixed `matches` for every query. */
+function stubMatchMedia(matches: boolean) {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn().mockImplementation((query: string) => ({
+      matches,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  );
+}
+
 describe("Hero", () => {
+  // HeroPipeline (the right column) reads useSyncExternalStore-backed
+  // matchMedia. Stub it to the mobile/static branch so the pipeline renders its
+  // ordered final state deterministically (no animation timing in the test).
+  beforeEach(() => {
+    stubMatchMedia(false);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("renders exactly one <h1> with the title (the page's only h1)", () => {
     const { container } = render(<Hero {...props} />);
 
@@ -46,13 +68,17 @@ describe("Hero", () => {
     expect(secondary).toHaveAttribute("href", props.ctaSecondary.href);
   });
 
-  it("renders the faux-UI image with its alt and reserved width/height (CLS 0)", () => {
+  it("renders the pipeline micro-demo with exactly 4 client cards (R1)", () => {
     render(<Hero {...props} />);
 
-    const img = screen.getByAltText(props.image.alt);
-    expect(img.tagName).toBe("IMG");
-    expect(img).toHaveAttribute("width", String(props.image.width));
-    expect(img).toHaveAttribute("height", String(props.image.height));
+    // Each card shows a client name + a stage label from the allowed union.
+    expect(screen.getByText("Ana Ruiz")).toBeInTheDocument();
+    expect(screen.getByText("Marco Vidal")).toBeInTheDocument();
+    expect(screen.getByText("Lucía Fernández")).toBeInTheDocument();
+    expect(screen.getByText("Diego Sá")).toBeInTheDocument();
+
+    const stages = screen.getAllByText(/^(Contacto|Propuesta|Activo)$/);
+    expect(stages).toHaveLength(4);
   });
 
   it("primary CTA carries the rounded-cta and accent token classes", () => {
