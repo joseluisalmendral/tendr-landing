@@ -48,8 +48,9 @@ describe("TestimonialCard", () => {
   it("sets the avatar alt to the exact derived contract string", () => {
     const { container } = render(<TestimonialCard {...props} />);
     const img = container.querySelector("img");
+    // Avatars are generated illustrations (dicebear), not photos -> "Avatar de".
     expect(img?.getAttribute("alt")).toBe(
-      `Foto de ${props.name}, ${props.role} en ${props.company}`,
+      `Avatar de ${props.name}, ${props.role} en ${props.company}`,
     );
   });
 
@@ -58,6 +59,33 @@ describe("TestimonialCard", () => {
     const img = container.querySelector("img");
     expect(img?.getAttribute("width")).toBe(String(props.avatar.width));
     expect(img?.getAttribute("height")).toBe(String(props.avatar.height));
+  });
+
+  it("wraps the avatar in an overflow-hidden container (no edge bleed)", () => {
+    const { container } = render(<TestimonialCard {...props} />);
+    const wrapper = container.querySelector(".tw-note__avatar");
+    // The bleed fix: the avatar lives inside an opaque, clipped wrapper.
+    expect(wrapper).not.toBeNull();
+    expect(wrapper?.className).toContain("overflow-hidden");
+    expect(wrapper?.querySelector("img")).not.toBeNull();
+  });
+
+  it("keeps the cream surface on the figure, not the article (desync fix)", () => {
+    const { container } = render(<TestimonialCard {...props} />);
+    const article = container.querySelector("article.tw-note");
+    const figure = container.querySelector("figure");
+    // The opaque paper surface moves WITH the unit: bg lives on the figure.
+    expect(figure?.className).toContain("bg-surface-raised");
+    // The article must NOT carry the surface bg (root cause of the cream bleed).
+    expect(article?.className).not.toContain("bg-surface-raised");
+  });
+
+  it("keeps the pushpin at the article level (anchored to the cork)", () => {
+    const { container } = render(<TestimonialCard {...props} />);
+    const article = container.querySelector("article.tw-note");
+    const pin = article?.querySelector(":scope > .tw-note__pin");
+    // The pin stays on the cork so the paper swings under it.
+    expect(pin).not.toBeNull();
   });
 
   it("contains no em-dash anywhere in the rendered output", () => {
