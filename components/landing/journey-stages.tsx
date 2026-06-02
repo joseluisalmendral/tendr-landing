@@ -24,7 +24,6 @@ import type { ReactNode } from "react";
 import {
   CaretDown,
   Check,
-  CurrencyEur,
   DotsThreeVertical,
   Envelope,
   Phone,
@@ -53,8 +52,8 @@ export const JOURNEY_STAGES: JourneyStage[] = [
   },
   {
     n: "03",
-    title: "Cobras el trabajo",
-    body: "Emites la factura y la marcas como cobrada. El cliente queda cerrado y tu facturación, al día.",
+    title: "Cierras el caso",
+    body: "Marcas el caso como cerrado y cobrado. El cliente queda al día y conservas el hilo de lo que trabajaste y lo que cobraste.",
   },
 ];
 
@@ -102,7 +101,18 @@ export function FauxShell({
  * across three moments. Each backdrop embeds this card directly (no traveling
  * card, no layoutId). Pure markup, fixed sizing.
  * ------------------------------------------------------------------------- */
-export function JourneyCardContent() {
+export function JourneyCardContent({
+  status = "Activo",
+  closed,
+}: {
+  /** Status pill label. Defaults to the in-progress "Activo" state used by
+   * stages 1 & 2; stage 3 passes "Cobrado" (a closed/paid STATE in the pipeline
+   * prospect → propuesta → en curso → cerrado — NOT an invoice). */
+  status?: string;
+  /** When true the pill uses the success token (the case reached the closed/
+   * paid state) instead of the clay in-progress token. */
+  closed?: boolean;
+} = {}) {
   return (
     <div className="flex w-full items-center gap-3 rounded-note border border-border-strong bg-surface px-3 py-2.5 shadow-hard-sm">
       <span
@@ -119,8 +129,15 @@ export function JourneyCardContent() {
           Diseño · €2.000 {/* mock */}
         </span>
       </span>
-      <span className="rounded-input border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary">
-        Activo
+      <span
+        className={
+          "rounded-input border px-2 py-0.5 font-mono text-meta uppercase " +
+          (closed
+            ? "border-success bg-success-soft text-success"
+            : "border-accent-secondary bg-accent-secondary-soft text-accent-secondary")
+        }
+      >
+        {status}
       </span>
     </div>
   );
@@ -386,124 +403,101 @@ export function StagePipelineFaux({ active }: { active: boolean }) {
 }
 
 /* ------------------------------------------------------------------------- *
- * Stage 3 — StageReportFaux: INVOICE / REPORT. Invoice header (the SAME Estudio
- * Hibö client card), >=2 line items with a totals block, a rotated "Cobrado" ink
- * stamp, and a fixed-size mini bar chart of monthly income. Looks like a real
- * financial document.
+ * Stage 3 — StageCaseClosedFaux: a CASE-CLOSED ("cobrado") view, FAITHFUL to the
+ * product model (docs/product.md): Tendr has clientes + casos/oportunidades with
+ * a pipeline of states (prospect → propuesta → en curso → CERRADO) and markdown
+ * notes per caso — and explicitly NO billing module ("No tiene módulo de
+ * facturación"). So "cobrado" is a CASE that reached the closed/paid STATE, NOT
+ * an invoice document.
+ *
+ * Composition (rich + truthful, NOT an invoice): a case header for the SAME
+ * Estudio Hibö client (window "Caso · Estudio Hibö"), the client/case card reused
+ * from JourneyCardContent with its status pill flipped to the "Cobrado" closed
+ * STATE, a markdown-note / activity TIMELINE in the same language as the
+ * seguimiento ACTIVIDAD rail (propuesta aceptada → entregado → cerrado · cobrado),
+ * the deal value as a SINGLE figure (NOT a subtotal/IVA/total breakdown), and the
+ * hand-drawn rotated "Cobrado" ink stamp (an on-brand STATE mark). No invoice
+ * number, no IVA, no totals, no billing analytics.
  * ------------------------------------------------------------------------- */
 
-type LineItem = { concept: string; amount: string };
+type CaseEvent = { text: string; when: string; done?: boolean };
 
-const INVOICE_LINES: LineItem[] = [
-  { concept: "Identidad de marca", amount: "€1.200" }, // mock
-  { concept: "Retainer · marzo", amount: "€800" }, // mock
+/* The case timeline reads like markdown notes + state changes, ending in the
+ * closed/paid state. All mock. */
+const CASE_TIMELINE: CaseEvent[] = [
+  { text: "Propuesta aceptada", when: "feb · 12" }, // mock
+  { text: "Proyecto entregado", when: "mar · 21" }, // mock
+  { text: "Caso cerrado · cobrado", when: "mar · 28", done: true }, // mock
 ];
 
-/* Monthly income bars. Fixed heights (rem) → fixed-size chart, no layout-driven
- * resize. Values are mock and map to OKLCH chart tokens. */
-const INCOME_BARS = [
-  { month: "Dic", h: "1.5rem", token: "var(--color-chart-4)" },
-  { month: "Ene", h: "2.25rem", token: "var(--color-chart-2)" },
-  { month: "Feb", h: "1.9rem", token: "var(--color-chart-4)" },
-  { month: "Mar", h: "3rem", token: "var(--color-chart-1)" },
-] as const;
+/* A single timeline entry. The closed/paid step gets a success dot to mark the
+ * terminal state; the rest use the clay activity dot (same as the seguimiento
+ * rail). Markdown-note / activity style, NOT a financial line item. */
+function CaseTimelineEvent({ text, when, done }: CaseEvent) {
+  return (
+    <li className="relative pl-4">
+      <span
+        className={
+          "absolute left-0 top-1.5 size-1.5 rounded-full " +
+          (done ? "bg-success" : "bg-accent-secondary")
+        }
+        aria-hidden="true"
+      />
+      <span className="block text-body-sm leading-tight text-text-secondary">
+        {text}
+      </span>
+      <span className="font-mono text-meta uppercase text-text-muted">
+        {when}
+      </span>
+    </li>
+  );
+}
 
 export function StageReportFaux({ active }: { active: boolean }) {
   return (
-    <FauxShell label="Factura · #0042" active={active}>
+    <FauxShell label="Caso · Estudio Hibö" active={active}>
       <div className="flex flex-col gap-3">
-        {/* Invoice header = the same Estudio Hibö client card. */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <JourneyCardContent />
-          </div>
-          <div className="shrink-0 text-right">
-            <span className="block font-mono text-meta uppercase text-text-muted">
-              Periodo
-            </span>
-            <span className="block text-body-sm text-text-primary">
-              Marzo 2026 {/* mock */}
-            </span>
-          </div>
-        </div>
+        {/* Case header = the same Estudio Hibö client card, now with the closed/
+            paid "Cobrado" STATE pill (a pipeline state, not "Activo"). */}
+        <JourneyCardContent status="Cobrado" closed />
 
-        {/* Line items. */}
-        <ul className="divide-y divide-border rounded-input border border-border">
-          {INVOICE_LINES.map((line) => (
-            <li
-              key={line.concept}
-              className="flex items-center justify-between px-3 py-2"
-            >
-              <span className="text-body-sm text-text-secondary">
-                {line.concept}
-              </span>
-              <span className="font-mono text-body-sm text-text-primary">
-                {line.amount}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:items-end">
-          {/* Mini bar chart — fixed dims. */}
-          <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-meta uppercase text-text-muted">
-              Facturado / mes
-            </span>
-            <div
-              className="flex h-[3.5rem] items-end gap-2"
-              role="img"
-              aria-label="Facturación mensual, tendencia al alza"
-            >
-              {INCOME_BARS.map((bar) => (
-                <span
-                  key={bar.month}
-                  className="flex flex-1 flex-col items-center gap-1"
-                >
-                  <span
-                    className="w-full rounded-input"
-                    style={{ height: bar.h, backgroundColor: bar.token }}
-                    aria-hidden="true"
-                  />
-                  <span className="font-mono text-[0.625rem] uppercase leading-none text-text-muted">
-                    {bar.month}
-                  </span>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Totals block. */}
+        {/* Case meta row: a single deal-value field (NOT a totals breakdown) +
+            the closed state, kept as a faithful caso summary. */}
+        <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1 rounded-input border border-border bg-surface px-3 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-meta uppercase text-text-muted">
-                Subtotal
-              </span>
-              <span className="font-mono text-body-sm text-text-secondary">
-                €2.000
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-meta uppercase text-text-muted">
-                IVA 21%
-              </span>
-              <span className="font-mono text-body-sm text-text-secondary">
-                €420
-              </span>
-            </div>
-            <div className="mt-1 flex items-center justify-between border-t border-border pt-1">
-              <span className="font-mono text-meta uppercase text-text-primary">
-                Total
-              </span>
-              <span className="inline-flex items-center gap-1 font-mono text-body-sm text-text-primary">
-                <CurrencyEur size={13} weight="bold" aria-hidden="true" />
-                2.420 {/* mock */}
-              </span>
-            </div>
+            <span className="font-mono text-meta uppercase text-text-muted">
+              Valor del caso
+            </span>
+            <span className="font-mono text-body-sm text-text-primary">
+              €2.000 {/* mock */}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1 rounded-input border border-border bg-surface px-3 py-2">
+            <span className="font-mono text-meta uppercase text-text-muted">
+              Estado
+            </span>
+            <span className="text-body-sm text-text-primary">
+              Cerrado · cobrado
+            </span>
           </div>
         </div>
 
-        {/* "Cobrado" ink stamp, rotated like a real stamp. */}
+        {/* Case timeline — markdown-note / activity style, same language as the
+            seguimiento ACTIVIDAD rail. The journey of the caso through its states
+            up to closed/paid. */}
+        <div className="flex flex-col gap-2 rounded-input border border-border bg-surface px-3 py-2.5">
+          <span className="font-mono text-meta uppercase text-text-muted">
+            Historial del caso
+          </span>
+          <ol className="flex flex-col gap-2.5">
+            {CASE_TIMELINE.map((e) => (
+              <CaseTimelineEvent key={e.text} {...e} />
+            ))}
+          </ol>
+        </div>
+
+        {/* Hand-drawn "Cobrado" ink stamp, rotated — an on-brand STATE mark
+            (the case is marked cobrado), NOT a payment receipt. */}
         <div className="flex items-center justify-between">
           <span className="font-mono text-meta uppercase text-text-muted">
             Estudio Hibö · 28 mar {/* mock */}
