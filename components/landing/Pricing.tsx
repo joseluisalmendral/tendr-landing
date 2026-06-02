@@ -93,44 +93,51 @@ export function Pricing({ tiers }: Props) {
   const reason = recommendReason(work, portfolio);
 
   return (
-    <div className="flex flex-col gap-12">
-      {/* Top band: selector + live conclusion side by side, so the section uses
-          the full width instead of leaving a lonely line under the selector. */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-stretch">
-        <Selector
-          work={work}
-          portfolio={portfolio}
-          onWorkChange={setWork}
-          onPortfolioChange={setPortfolio}
-        />
+    <div className="flex flex-col gap-6">
+      {/* Unified recommender bar: ONE cohesive surface (single border, radius,
+          shadow) split into selector (left) + live recommendation (right),
+          balanced and separated by a hairline. This reads as a single
+          instrument and feeds the eye straight down into the cards, instead of
+          two mismatched boxes side by side. */}
+      <div className="overflow-hidden rounded-card border border-border-strong bg-surface-raised shadow-hard-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <Selector
+            work={work}
+            portfolio={portfolio}
+            onWorkChange={setWork}
+            onPortfolioChange={setPortfolio}
+          />
 
-        {/* Recommendation conclusion in plain text + announced politely to
-            screen readers. This is the a11y / reduced-motion ground truth: the
-            moving annotation is an enhancement on top of this, never the only
-            signal. The panel fills the dead space next to the selector. */}
-        <aside
-          id={liveId}
-          aria-live="polite"
-          className="flex flex-col justify-center gap-2 rounded-card border border-border-strong bg-surface-raised p-6 shadow-hard-sm"
-        >
-          <span className="font-mono text-meta uppercase text-accent-secondary">
-            Nuestra recomendación
-          </span>
-          <p className="text-body-lg text-text-secondary">
-            Para ti, el plan{" "}
-            <span className="font-display text-h3 text-text-primary">
-              {recommended}
+          {/* Recommendation conclusion in plain text + announced politely to
+              screen readers. This is the a11y / reduced-motion ground truth: the
+              moving annotation is an enhancement on top of this, never the only
+              signal. Separated from the selector by a hairline (top on mobile,
+              left on desktop) so the bar stays one surface. */}
+          <aside
+            id={liveId}
+            aria-live="polite"
+            className="flex flex-col justify-center gap-1.5 border-t border-border bg-surface-sunken/40 p-5 md:border-l md:border-t-0"
+          >
+            <span className="font-mono text-meta uppercase text-accent-secondary">
+              Nuestra recomendación
             </span>
-            .
-          </p>
-          <p className="text-body-sm text-text-muted">{reason}</p>
-        </aside>
+            <p className="text-body-lg text-text-secondary">
+              Para ti, el plan{" "}
+              <span className="font-display text-h2 text-text-primary">
+                {recommended}
+              </span>
+              .
+            </p>
+            <p className="text-body-sm text-text-muted">{reason}</p>
+          </aside>
+        </div>
       </div>
 
       {/* Equal-height cards (md:items-stretch + h-full in PricingCard) so the
           CTAs align across tiers. pt-10 reserves room for the hand-drawn arrow
-          + tag that overhang the recommended card. */}
-      <div className="grid grid-cols-1 gap-8 pt-10 md:grid-cols-3 md:items-stretch">
+          + tag that overhang the recommended card and visually connect the bar
+          above to the matching card. */}
+      <div className="grid grid-cols-1 gap-8 pt-8 md:grid-cols-3 md:items-stretch">
         {tiers.map((tier) => {
           const isRecommended = tier.tier === recommended;
           return (
@@ -170,12 +177,12 @@ function Selector({
   onPortfolioChange: (value: Portfolio) => void;
 }) {
   return (
-    <fieldset className="flex flex-col gap-4 border border-border bg-surface-raised p-6">
-      <legend className="px-2 font-mono text-meta uppercase text-accent-secondary">
+    <fieldset className="flex flex-col gap-3 p-5">
+      <legend className="font-mono text-meta uppercase text-accent-secondary">
         ¿Cuál te sirve?
       </legend>
 
-      <div className="flex flex-col gap-6 md:flex-row md:gap-12">
+      <div className="flex flex-col gap-5 sm:flex-row sm:gap-8">
         <ToggleField
           label="Trabajo"
           value={work}
@@ -225,20 +232,25 @@ function ToggleField({
         onValueChange={onValueChange}
         aria-label={label}
         variant="outline"
-        className="gap-0"
+        className="gap-2"
       >
         {options.map((option) => (
           <ToggleGroupItem
             key={option.value}
             value={option.value}
-            // Layout/state overrides only: active item adopts the clay accent
-            // language so the choice never relies on a single visual cue.
+            // Separated pills (gap-2 on the group): each is its own rounded
+            // control. The active item adopts the clay accent language (soft
+            // fill + accent border + a small hard shadow lift) so the choice
+            // never relies on a single visual cue.
             className={cn(
-              "h-auto px-4 py-2 text-body-sm text-text-secondary",
+              "h-auto rounded-input px-4 py-2.5 text-body-sm text-text-secondary",
               "border-border-strong",
-              "transition-colors duration-[var(--duration-micro)]",
+              "transition-all duration-[var(--duration-micro)]",
+              "hover:bg-surface-sunken/60",
+              "data-[state=on]:border-accent-secondary",
               "data-[state=on]:bg-accent-secondary-soft",
               "data-[state=on]:text-accent-secondary",
+              "data-[state=on]:shadow-hard-sm",
             )}
           >
             {option.label}
