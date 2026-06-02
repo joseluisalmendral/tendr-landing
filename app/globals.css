@@ -397,6 +397,83 @@
 }
 
 /* =========================================================================
+   WOW #2 -- PAGE-PEEL "Funciones" -> "Pricing" (page-turn cinematográfico).
+   "Funciones" se fija (.wow-peel-pin) y su hoja (.wow-peel-leaf) se inclina
+   hacia atrás (perspective + rotateX desde el borde superior) como una página
+   que se levanta, mientras "Pricing" (.wow-peel-cover) sube y la cubre. Mismo
+   mecanismo probado que el WOW #1 del Hero: SOLO transform/opacity (CLS 0); el
+   solape físico es un margin-top negativo ESTÁTICO. El "tiempo" lo marca un
+   view-timeline con nombre (--peel) declarado en la capa que sube y compartido
+   con la hoja vía timeline-scope en el grupo, para que peel y subida vayan
+   sincronizados.
+
+   z: --z-wow-peel-leaf = 10 (hoja que se pela, debajo) / --z-wow-peel-cover = 20
+   (Pricing que sube y tapa). Easing --ease-expo. Gateo: reduced-motion +
+   @supports; sin ellos, ambas secciones en flujo normal apiladas (estático).
+   ========================================================================= */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* Wrapper con perspectiva para el rotateX 3D de la hoja. No fija nada
+       (sin sticky): cada capa se anima con su PROPIO view() — mismo mecanismo
+       probado que .section-reveal / .wow-overlap-section. */
+    .wow-peel-pin {
+      position: relative;
+      z-index: 10; /* --z-wow-peel-leaf (debajo) */
+      perspective: 1400px;
+    }
+
+    /* La hoja (Funciones) se inclina hacia atrás desde el borde superior + leve
+       scale + fade mientras SALE por arriba del viewport (fase exit de su propio
+       view-timeline). Lee como una página que se levanta. */
+    .wow-peel-leaf {
+      transform-origin: center top;
+      animation: wow-peel-lift linear both;
+      animation-timeline: view();
+      /* arranca más tarde: el peel ocurre en la segunda mitad de la salida de
+         Funciones (cuando de verdad estás terminando la sección), no al primer
+         píxel en que su borde superior se va. */
+      animation-range: exit 35% exit 100%;
+      animation-timing-function: var(--ease-expo);
+      will-change: transform, opacity;
+    }
+
+    /* Pricing sube y CUBRE a Funciones: z por encima + margin-top negativo
+       estático (solape físico, no animado) + rise por su propio view() entry. */
+    .wow-peel-cover {
+      position: relative;
+      z-index: 20; /* --z-wow-peel-cover (encima) */
+      margin-top: -8vh;
+      animation: wow-peel-rise linear both;
+      animation-timeline: view();
+      /* también más tarde, para que el solape no salte pronto. */
+      animation-range: entry 20% entry 90%;
+      animation-timing-function: var(--ease-expo);
+      will-change: transform;
+    }
+
+    @keyframes wow-peel-lift {
+      from {
+        opacity: 1;
+        transform: rotateX(0deg) scale(1);
+      }
+      to {
+        opacity: 0.5;
+        transform: rotateX(-24deg) scale(0.94);
+      }
+    }
+
+    @keyframes wow-peel-rise {
+      from {
+        transform: translateY(10vh);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+/* =========================================================================
    HERO WASH AMBIENT -- loop continuo ~20s (design-spec-visual.md seccion 1
    trigger "continuo"; design.md patron #1 / motion catalog seccion 6.10
    "loop ambient"). Bloque INDEPENDIENTE del WOW #1 de arriba.
@@ -501,6 +578,26 @@
       to {
         opacity: 1;
         transform: translateY(0);
+      }
+    }
+
+    /* Heading accent rule: a short clay underline that grows (scaleX 0->1,
+       origin left) as each section enters. Pairs with the rise for a polished,
+       deliberate "section change" beat. Fallback / reduced-motion: full width
+       (no animation, base transform is identity). */
+    .section-rule {
+      animation: section-rule-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 42%;
+      animation-timing-function: var(--ease-out);
+    }
+
+    @keyframes section-rule-grow {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
       }
     }
   }

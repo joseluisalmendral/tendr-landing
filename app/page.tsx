@@ -157,17 +157,35 @@ export default function Home() {
         </Section>
         </div>
 
-        <Section
-          id="funciones"
-          heading="Un CRM con todo lo que necesitas"
-          divider
-        >
-          <FeatureShowcase />
-        </Section>
+        {/* WOW #2: page-peel Funciones -> Pricing. "Funciones" queda fijada
+            (.wow-peel-pin) y su hoja (.wow-peel-leaf) se inclina hacia atrás
+            (perspective + rotateX, origen arriba) como una página que se levanta,
+            mientras "Pricing" (.wow-peel-cover) sube y la cubre. Driven por un
+            view-timeline con nombre (--peel) compartido vía timeline-scope en el
+            grupo. CSS scroll-driven en globals.css, gateado por
+            prefers-reduced-motion + @supports: sin soporte/reduced-motion las dos
+            secciones van en flujo normal apiladas. */}
+        <div className="wow-peel-group">
+          <div className="wow-peel-pin">
+            <div className="wow-peel-leaf">
+              <Section
+                id="funciones"
+                heading="Un CRM con todo lo que necesitas"
+                divider
+              >
+                <FeatureShowcase />
+              </Section>
+            </div>
+          </div>
 
-        <Section id="precios" heading="Un plan para cada momento" divider>
-          <Pricing tiers={PRICING} />
-        </Section>
+          <Section
+            id="precios"
+            heading="Un plan para cada momento"
+            className="wow-peel-cover pt-24 md:pt-28"
+          >
+            <Pricing tiers={PRICING} />
+          </Section>
+        </div>
 
         {/* Testimonios: tablero de CORCHO a sangre completa con marco de madera
             visible (v2.2). En desktop con motion, el scroll vertical conduce un

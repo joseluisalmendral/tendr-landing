@@ -25,36 +25,27 @@ export function Section({
     <section
       id={id}
       className={cn(
-        "w-full bg-surface",
+        "relative w-full bg-surface",
         // Vertical section rhythm (design §2.4): space-16 between sections.
         "py-16",
+        // Sections that open with a fold seam get extra breathing room up top so
+        // the heading sits clearly below the soft shadow, not glued to the edge.
+        divider && "pt-24 md:pt-28",
         className,
       )}
     >
-      <div className="mx-auto w-full max-w-[1280px] px-6 md:px-8">
-        {/* Stitched seam: a hand-drawn clay dashed wave that marks the boundary
-            between sections so a fast scroll never feels like one long block.
-            Decorative; the heading below carries the meaning. */}
-        {divider ? (
-          <div aria-hidden="true" className="mb-14 flex justify-center">
-            <svg
-              viewBox="0 0 1200 24"
-              preserveAspectRatio="none"
-              className="h-5 w-full max-w-[640px] text-accent-secondary"
-            >
-              <path
-                d="M0 12 C 110 4, 210 20, 330 12 C 450 4, 560 20, 680 12 C 800 4, 910 20, 1030 12 C 1110 7, 1160 16, 1200 12"
-                fill="none"
-                stroke="currentColor"
-                strokeOpacity="0.4"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray="1 12"
-              />
-            </svg>
-          </div>
-        ) : null}
+      {/* Soft "fold" seam: instead of a drawn line, a gentle warm shadow at the
+          top edge — as if this sheet rests under the one above. Token-only
+          gradient (shadow-tint), decorative, pointer-events-none, no layout. It
+          marks the boundary naturally without a hard mark. */}
+      {divider ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-shadow-tint/8 to-transparent"
+        />
+      ) : null}
 
+      <div className="mx-auto w-full max-w-[1280px] px-6 md:px-8">
         {/* Content reveals on scroll-enter (CSS scroll-driven, globals.css).
             Wraps header + body so the whole block rises in as one beat. */}
         <div className="section-reveal">
@@ -71,6 +62,13 @@ export function Section({
               </span>
             ) : null}
             <h2 className="font-heading text-h2 text-text-primary">{heading}</h2>
+            {/* Accent rule: a short clay underline that grows in under the
+                heading as the section enters (scroll-driven scaleX in
+                globals.css). Decorative; fallback / reduced-motion = full. */}
+            <span
+              aria-hidden="true"
+              className="section-rule block h-[3px] w-16 origin-left rounded-full bg-accent-secondary"
+            />
           </header>
           {/* Internal rhythm (design §2.4): space-12 between heading and body. */}
           <div className="mt-12">{children}</div>
