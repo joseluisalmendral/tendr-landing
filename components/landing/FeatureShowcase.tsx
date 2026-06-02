@@ -1,7 +1,14 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { AnimationPlaybackControls } from "motion/react";
+import {
+  animate,
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+} from "motion/react";
 
 import { FEATURES } from "./feature-showcase-panels";
 
@@ -51,6 +58,13 @@ import { FEATURES } from "./feature-showcase-panels";
 const DESKTOP_QUERY = "(min-width: 768px)"; // Tailwind md breakpoint
 
 /**
+ * Seconds the active item's progress rail takes to fill top→bottom before the
+ * accordion auto-advances to the next feature (cycling 3→0). 7s ≈ enough to read
+ * the description and appreciate the panel's on-activation micro-demo.
+ */
+const AUTO_ADVANCE_SECONDS = 7;
+
+/**
  * SSR-safe desktop detector. useSyncExternalStore reads matchMedia on the client
  * without a setState-in-effect and returns `false` during SSR, so the first
  * client render matches the server (mobile layout) and enriches to desktop after
@@ -73,6 +87,48 @@ export function FeatureShowcase() {
   const [activeIndex, setActiveIndex] = useState(0);
   const isDesktop = useIsDesktop();
   const reduceMotion = useReducedMotion() ?? false;
+
+  // AUTO-ADVANCE + PROGRESS RAIL ----------------------------------------------
+  // `progress` (0..1) drives the active item's left rail fill (scaleY) as a
+  // motion value — a CONTINUOUS value, so NOT useState (React Compiler + perf).
+  // When it reaches 1, the accordion advances to the next feature (wrap 3→0).
+  const progress = useMotionValue(0);
+  // Imperative handle on the running animate() so hover/focus can pause/resume.
+  const controlsRef = useRef<AnimationPlaybackControls | null>(null);
+  // Tracks whether the user is currently hovering/focusing the showcase, so a
+  // mid-cycle index change re-starts already-paused if they never left.
+  const pausedRef = useRef(false);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      // No auto-advance: render the active rail statically full, nothing runs.
+      progress.set(1);
+      return;
+    }
+
+    progress.set(0);
+    const controls = animate(progress, 1, {
+      duration: AUTO_ADVANCE_SECONDS,
+      ease: "linear",
+      onComplete: () => setActiveIndex((i) => (i + 1) % FEATURES.length),
+    });
+    controlsRef.current = controls;
+    if (pausedRef.current) controls.pause();
+
+    return () => controls.stop();
+  }, [activeIndex, reduceMotion, progress]);
+
+  // Plain imperative handlers (NOT memoized, NOT in any deps array): they mutate
+  // pausedRef + drive controlsRef. Under reduceMotion controlsRef stays null, so
+  // these are harmless no-ops.
+  const pause = () => {
+    pausedRef.current = true;
+    controlsRef.current?.pause();
+  };
+  const resume = () => {
+    pausedRef.current = false;
+    controlsRef.current?.play();
+  };
 
   // Roving focus management for the APG arrow-key navigation. All header buttons
   // are natively focusable/tabbable (APG allows all-tabbable headers); arrow keys
@@ -116,7 +172,13 @@ export function FeatureShowcase() {
   const ActivePanel = FEATURES[activeIndex].Panel;
 
   return (
-    <div className="grid grid-cols-1 gap-8 md:grid-cols-[2fr_3fr] md:items-start lg:gap-12">
+    <div
+      className="grid grid-cols-1 gap-8 md:grid-cols-[2fr_3fr] md:items-start lg:gap-12"
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onFocusCapture={pause}
+      onBlurCapture={resume}
+    >
       {/* LEFT (~40%): WAI-ARIA accordion. Each item = heading > button + region.
           A small gap between items gives the list the generous, journey-coherent
           rhythm; the per-item vertical padding (py-6) carries the breathing room
@@ -132,10 +194,29 @@ export function FeatureShowcase() {
             <div
               key={feature.id}
               className={
-                "border-b transition-colors duration-200 " +
+                "relative border-b pl-5 transition-colors duration-200 " +
                 (isActive ? "border-accent-secondary" : "border-border")
               }
             >
+              {/* Vertical progress rail (left edge). TRACK: a faint full-height
+                  line on every item. FILL: on the ACTIVE item only, an accent
+                  line pinned origin-top whose scaleY is bound to `progress`, so
+                  it grows top→bottom over AUTO_ADVANCE_SECONDS across the WHOLE
+                  item (header + expanded description) as a time-to-advance cue.
+                  Both aria-hidden — purely decorative. Under reduced motion the
+                  fill renders full (progress set to 1) as a static active marker. */}
+              <span
+                aria-hidden="true"
+                className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full bg-border"
+              />
+              {isActive ? (
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute left-0 top-0 bottom-0 w-[2px] origin-top rounded-full bg-accent-secondary"
+                  style={{ scaleY: progress }}
+                />
+              ) : null}
+
               {/* Header: a heading wrapping the toggle button. The feature NAME is
                   always visible (APG accordion header). */}
               <h3 className="m-0">
@@ -150,7 +231,7 @@ export function FeatureShowcase() {
                   onClick={() => setActiveIndex(index)}
                   onKeyDown={(event) => handleHeaderKeyDown(event, index)}
                   className={
-                    "flex w-full items-center justify-between gap-3 py-6 text-left font-heading text-h2 transition-colors duration-200 " +
+                    "flex w-full items-center py-6 text-left font-heading text-h2 transition-colors duration-200 " +
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
                     (isActive
                       ? "text-accent-secondary"
@@ -158,15 +239,6 @@ export function FeatureShowcase() {
                   }
                 >
                   <span>{feature.name}</span>
-                  {/* Open-state marker: a clay bar that reads as the active rail.
-                      aria-hidden — the aria-expanded state already conveys this. */}
-                  <span
-                    aria-hidden="true"
-                    className={
-                      "h-px shrink-0 rounded-full bg-accent-secondary transition-all duration-200 " +
-                      (isActive ? "w-6 opacity-100" : "w-0 opacity-0")
-                    }
-                  />
                 </button>
               </h3>
 
