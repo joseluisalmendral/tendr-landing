@@ -196,28 +196,27 @@ function HandDrawnConnector({
       whileInView="visible"
       viewport={{ once: true, amount: 0.6 }}
     >
-      {/* Curved organic body, drawn top → bottom. Single smooth bend; terminal
-          point is exactly (96,70) so the arrowhead tip can coincide with it. */}
+      {/* Curved organic body that swooshes right and then drops STRAIGHT DOWN
+          into the next stage. The terminal point (70,64) is the arrow tip; the
+          last control point sits directly above it (70,46) so the end tangent is
+          exactly vertical (0,18) — the shaft enters the arrowhead head-on. */}
       <motion.path
-        d="M22 6 C 18 26, 40 30, 58 38 C 80 47, 102 50, 96 70"
+        d="M36 12 C 78 22, 70 46, 70 64"
         stroke="currentColor"
-        strokeWidth={3.5}
+        strokeWidth={3.8}
         strokeLinecap="round"
         strokeLinejoin="round"
         variants={draw}
       />
-      {/* Arrowhead. Tip = the body's terminal point (96,70). The body's end
-          tangent runs from its last control point (102,50) to the endpoint
-          (96,70): vector (-6,20) → reversed angle ≈ -73.3°. Two EQUAL-length
-          barbs (len 13) spring FROM the tip at ±28° around the reversed tangent,
-          so the head is symmetric about the curve's end direction and reads as
-          one continuous stroke with the body (same width + round caps):
-            barb A (-45.3°): (96,70) → (105.1,60.8)
-            barb B (-101.3°): (96,70) → (93.5,57.3) */}
+      {/* Arrowhead: a symmetric chevron at the tip (70,64) pointing DOWN. Because
+          the body arrives vertically, the shaft bisects the head and the two
+          EQUAL barbs (len 15) splay at ±32° from straight-up — both clearly
+          visible, neither parallel to the shaft, so it reads as a real arrowhead
+          (not a checkmark): (70,64) → (62,51.3) and (70,64) → (78,51.3). */}
       <motion.path
-        d="M96 70 L 105.1 60.8 M96 70 L 93.5 57.3"
+        d="M70 64 L 62 51.3 M70 64 L 78 51.3"
         stroke="currentColor"
-        strokeWidth={3.5}
+        strokeWidth={3.8}
         strokeLinecap="round"
         strokeLinejoin="round"
         variants={draw}
