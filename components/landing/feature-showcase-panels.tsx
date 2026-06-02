@@ -36,7 +36,8 @@
  * here so journey-stages.tsx stays untouched (design ADR-2).
  */
 import type { ComponentType, ReactNode } from "react";
-import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import type { Variants } from "motion/react";
 import {
   ArrowRight,
@@ -186,11 +187,13 @@ function MiniClientCard({
 type KanbanCard = { name: string; amount: string; highlight?: boolean };
 
 /** Settle beat for the protagonist case "landing" into its column: a small
- * upward y + scale overshoot that resolves to the resting card. transform-only,
- * EASE_SNAP (same vocabulary as FeaturesBoard's cerrado card). */
+ * horizontal + upward entrance with a scale overshoot, as if the card just
+ * ARRIVED into "En curso" from the previous column. Resolves to the resting
+ * card. transform-only, EASE_SNAP (same vocabulary as FeaturesBoard's card). */
 const kanbanSettle: Variants = {
-  rest: { y: 0, scale: 1, opacity: 1 },
+  rest: { x: 0, y: 0, scale: 1, opacity: 1 },
   drop: {
+    x: [-10, 0],
     y: [10, 0],
     scale: [0.96, 1.03, 1],
     opacity: [0.4, 1, 1],
@@ -343,8 +346,21 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
   return (
     <PanelShell label="Documentos · Estudio Hibö" active={active}>
       <div className="flex h-full flex-col gap-3">
-        {/* The uploaded document. */}
-        <div className="flex items-center gap-3 rounded-note border border-border-strong bg-surface px-3 py-2.5 shadow-hard-sm">
+        {/* The uploaded document. A thin accent scan line sweeps top→bottom once
+            on activation ("la IA lo lee") before the extraction staggers in.
+            Overlay is absolute inside the relative, clipped card; reduced motion
+            ⇒ not rendered. The resting card is unchanged. */}
+        <div className="relative flex items-center gap-3 overflow-hidden rounded-note border border-border-strong bg-surface px-3 py-2.5 shadow-hard-sm">
+          {active && !reduceMotion ? (
+            <motion.span
+              key={`scan-${active}`}
+              className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-accent-secondary opacity-40"
+              aria-hidden="true"
+              initial={{ y: 0 }}
+              animate={{ y: [0, 54] }}
+              transition={{ duration: 0.6, ease: EASE_OUT }}
+            />
+          ) : null}
           <span
             className="flex size-9 shrink-0 items-center justify-center rounded-input border border-border-strong bg-surface-sunken text-text-secondary"
             aria-hidden="true"
@@ -464,14 +480,145 @@ function VarChip({
   return <span className={className}>{children}</span>;
 }
 
-export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
+/** The two views the Plantillas panel alternates between. */
+type PlantillasView = "template" | "preview";
+
+/** Crossfade between the two stacked views: a calm opacity dissolve. Reduced
+ * motion collapses to instant (the consumer passes initial={false} + 0 dur). */
+const viewCrossfade: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.3, ease: EASE_OUT } },
+  exit: { opacity: 0, transition: { duration: 0.3, ease: EASE_OUT } },
+};
+
+/** Segmented toggle: two real buttons acting as a radiogroup. The active pill
+ * uses accent styling; the inactive pill is muted. Subtle and professional. */
+function ViewToggle({
+  view,
+  onSelect,
+}: {
+  view: PlantillasView;
+  onSelect: (next: PlantillasView) => void;
+}) {
+  const base =
+    "flex-1 rounded-input px-2.5 py-1 font-mono text-meta uppercase transition-colors";
+  const activeCls = "bg-accent-primary text-on-accent shadow-hard-sm";
+  const idleCls = "text-text-muted hover:text-text-secondary";
   return (
-    <PanelShell label="Plantillas · Propuesta" active={active}>
-      <div className="flex h-full flex-col gap-3">
-        {/* Brand row = "Tu marca": sender identity / signature. */}
-        <div className="flex items-center gap-2 rounded-input border border-border bg-surface px-3 py-2">
+    <div
+      role="radiogroup"
+      aria-label="Vista de la plantilla"
+      className="flex items-center gap-1 rounded-input border border-border bg-surface-sunken p-1"
+    >
+      <button
+        type="button"
+        role="radio"
+        aria-checked={view === "template"}
+        onClick={() => onSelect("template")}
+        className={base + " " + (view === "template" ? activeCls : idleCls)}
+      >
+        Plantilla
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={view === "preview"}
+        onClick={() => onSelect("preview")}
+        className={base + " " + (view === "preview" ? activeCls : idleCls)}
+      >
+        Vista previa
+      </button>
+    </div>
+  );
+}
+
+/** View A — the sober, editable template source: brand row + body with the
+ * {{empresa}}/{{nombre}}/{{servicio}} variable tokens. Reads as the EDITABLE
+ * SOURCE. The var chips play their highlight beat once on activation. */
+function TemplateView({
+  active,
+  reduceMotion,
+}: {
+  active: boolean;
+  reduceMotion: boolean;
+}) {
+  return (
+    <div className="flex h-full flex-col gap-3">
+      {/* Brand row = "Tu marca": sender identity / signature. */}
+      <div className="flex items-center gap-2 rounded-input border border-border bg-surface px-3 py-2">
+        <span
+          className="flex size-7 shrink-0 items-center justify-center rounded-input border border-border-strong bg-accent-primary font-mono text-meta uppercase text-on-accent"
+          aria-hidden="true"
+        >
+          T
+        </span>
+        <span className="flex min-w-0 flex-col leading-tight">
+          <span className="truncate text-body-sm text-text-primary">
+            Tu marca
+          </span>
+          <span className="font-mono text-meta uppercase text-text-muted">
+            Remitente · firma propia
+          </span>
+        </span>
+      </div>
+
+      {/* Template body with variable chips. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-note border border-border bg-surface px-3 py-2.5">
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-meta uppercase text-text-muted">
+            Asunto
+          </span>
+          <span className="flex flex-wrap items-baseline gap-1 text-body-sm text-text-primary">
+            Propuesta para{" "}
+            <VarChip beat={active} reduceMotion={reduceMotion}>
+              {"{{empresa}}"}
+            </VarChip>
+          </span>
+        </div>
+        <div className="flex flex-col gap-1 text-body-sm leading-relaxed text-text-secondary">
+          <span className="flex flex-wrap items-baseline gap-1">
+            Hola{" "}
+            <VarChip beat={active} reduceMotion={reduceMotion}>
+              {"{{nombre}}"}
+            </VarChip>
+            , te paso la propuesta de
+          </span>
+          <span className="flex flex-wrap items-baseline gap-1">
+            <VarChip beat={active} reduceMotion={reduceMotion}>
+              {"{{servicio}}"}
+            </VarChip>{" "}
+            que comentamos.
+          </span>
+        </div>
+      </div>
+
+      {/* Copy affordance (no campaigns, no mass email). */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 font-mono text-meta uppercase text-text-muted">
+          <EnvelopeSimple size={14} aria-hidden="true" />
+          Plantilla con tus variables
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-control border border-border-strong bg-surface-raised px-3 py-1.5 text-body-sm text-text-primary shadow-hard-sm">
+          <Copy size={14} weight="bold" aria-hidden="true" />
+          Copiar
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** View B — the PROFESSIONAL RENDERED EMAIL the client actually receives, with
+ * REAL resolved values (no {{}}). Branded header band + hairline + subject +
+ * greeting + body + faux CTA + signature. This is the "wow": the same template,
+ * filled with the client's data, on-brand. */
+function PreviewView() {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-note border border-border bg-surface">
+        {/* Branded header band: monogram + sender + recipient meta. */}
+        <div className="flex items-center gap-2 bg-surface-sunken px-3 py-2.5">
           <span
-            className="flex size-7 shrink-0 items-center justify-center rounded-input border border-border-strong bg-accent-primary font-mono text-meta uppercase text-on-accent"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-primary font-mono text-meta uppercase text-on-accent"
             aria-hidden="true"
           >
             T
@@ -481,59 +628,86 @@ export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
               Tu marca
             </span>
             <span className="font-mono text-meta uppercase text-text-muted">
-              Remitente · firma propia
+              para Estudio Hibö
             </span>
           </span>
         </div>
 
-        {/* Template body with variable chips. */}
-        <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-note border border-border bg-surface px-3 py-2.5">
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-meta uppercase text-text-muted">
-              Asunto
-            </span>
-            <span className="flex flex-wrap items-baseline gap-1 text-body-sm text-text-primary">
-              Propuesta para{" "}
-              <VarChip beat={active} reduceMotion={reduceMotion}>
-                {"{{empresa}}"}
-              </VarChip>
-            </span>
-          </div>
-          <div className="flex flex-col gap-1 text-body-sm leading-relaxed text-text-secondary">
-            <span className="flex flex-wrap items-baseline gap-1">
-              Hola{" "}
-              <VarChip beat={active} reduceMotion={reduceMotion}>
-                {"{{nombre}}"}
-              </VarChip>
-              , te paso la propuesta de
-            </span>
-            <span className="flex flex-wrap items-baseline gap-1">
-              <VarChip beat={active} reduceMotion={reduceMotion}>
-                {"{{servicio}}"}
-              </VarChip>{" "}
-              que comentamos.
-            </span>
-          </div>
-        </div>
+        <div className="h-px w-full bg-border" aria-hidden="true" />
 
-        {/* Preview filled from client data + copy affordance (no campaigns).
-            The preview line resolves (opacity + small y) just after the chips
-            beat, as if the vars filled in. Reduced motion ⇒ shown as-is. */}
-        <motion.div
-          className="flex items-center justify-between gap-2"
-          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, ease: EASE_OUT, delay: 0.32 }}
-        >
-          <span className="inline-flex items-center gap-1.5 font-mono text-meta uppercase text-text-muted">
-            <EnvelopeSimple size={14} aria-hidden="true" />
-            Vista previa: Estudio Hibö
+        {/* Email body. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-3">
+          <p className="font-heading text-body-sm font-semibold text-text-primary">
+            Propuesta de rediseño de marca
+          </p>
+          <p className="text-body-sm text-text-secondary">Hola, Lucía:</p>
+          <p className="text-body-sm leading-relaxed text-text-secondary">
+            Te paso la propuesta que comentamos para el rediseño de marca de
+            Estudio Hibö.
+          </p>
+          <p className="text-body-sm leading-relaxed text-text-secondary">
+            Dentro tienes el alcance, los plazos y el presupuesto.
+          </p>
+          <span
+            className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-control bg-accent-primary px-3 py-1.5 text-body-sm text-on-accent shadow-hard-sm"
+            aria-hidden="true"
+          >
+            Ver propuesta
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-control border border-border-strong bg-surface-raised px-3 py-1.5 text-body-sm text-text-primary shadow-hard-sm">
-            <Copy size={14} weight="bold" aria-hidden="true" />
-            Copiar
-          </span>
-        </motion.div>
+          <p className="mt-auto text-meta text-text-muted">
+            Un saludo, — Tu marca
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
+  const [view, setView] = useState<PlantillasView>("template");
+
+  // AUTO-ALTERNATION: on each activation (motion allowed) start on the template,
+  // then resolve into the polished rendered email once (~2.4s). One transition
+  // per activation — calm, not a loop. Reduced motion ⇒ stay on the template
+  // (toggle still reaches the preview). Both setView calls are scheduled (not a
+  // direct synchronous setState in the effect body — react-hooks/set-state-in-
+  // effect), and the cleanup clears both pending timers.
+  useEffect(() => {
+    if (!active || reduceMotion) return;
+    const resetId = setTimeout(() => setView("template"), 0);
+    const previewId = setTimeout(() => setView("preview"), 2400);
+    return () => {
+      clearTimeout(resetId);
+      clearTimeout(previewId);
+    };
+  }, [active, reduceMotion]);
+
+  return (
+    <PanelShell label="Plantillas · Email" active={active}>
+      <div className="flex h-full flex-col gap-3">
+        <ViewToggle view={view} onSelect={setView} />
+
+        {/* Both views are absolute-stacked in this flex-1 body so toggling never
+            reflows the stage (CLS 0). AnimatePresence (no mode="wait") overlaps
+            the crossfade so the stage is never empty. Reduced motion ⇒ instant. */}
+        <div className="relative min-h-0 flex-1">
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={view}
+              className="absolute inset-0"
+              variants={reduceMotion ? undefined : viewCrossfade}
+              initial={reduceMotion ? false : "hidden"}
+              animate={reduceMotion ? undefined : "show"}
+              exit={reduceMotion ? undefined : "exit"}
+            >
+              {view === "template" ? (
+                <TemplateView active={active} reduceMotion={reduceMotion} />
+              ) : (
+                <PreviewView />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </PanelShell>
   );
@@ -579,12 +753,25 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
           variants={staggerItem}
           className="flex items-start gap-3 rounded-note border border-accent-secondary bg-accent-secondary-soft px-3 py-2.5 shadow-hard-sm"
         >
-          <span
-            className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-input border border-accent-secondary bg-surface-raised text-accent-secondary"
-            aria-hidden="true"
-          >
-            <MagicWand size={16} weight="fill" />
-          </span>
+          {active && !reduceMotion ? (
+            <motion.span
+              key={`wand-${active}`}
+              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-input border border-accent-secondary bg-surface-raised text-accent-secondary"
+              aria-hidden="true"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: [0.9, 1.08, 1] }}
+              transition={{ duration: 0.45, ease: EASE_SNAP, delay: 0.2 }}
+            >
+              <MagicWand size={16} weight="fill" />
+            </motion.span>
+          ) : (
+            <span
+              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-input border border-accent-secondary bg-surface-raised text-accent-secondary"
+              aria-hidden="true"
+            >
+              <MagicWand size={16} weight="fill" />
+            </span>
+          )}
           <span className="flex min-w-0 flex-col gap-0.5">
             <span className="font-mono text-meta uppercase text-accent-secondary">
               Próxima acción sugerida
