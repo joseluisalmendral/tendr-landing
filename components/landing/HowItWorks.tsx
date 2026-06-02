@@ -3,11 +3,13 @@
 /**
  * HowItWorks ("Cómo funciona" → el viaje de un cliente, change
  * como-funciona-client-journey). Three rich, STATIC, product-grade backdrops —
- * the intake form, the pipeline, the invoice — each SELF-CONTAINED. The SAME
- * client ("Estudio Hibö") appears in all three (populated alta row → highlighted
- * "En curso" card → invoice header), so the journey reads as one client across
- * three moments. Continuity is conveyed by the repeated client + the 01/02/03
- * narrative, NOT by a traveling card.
+ * the intake form, the pipeline, the closed/paid case — each SELF-CONTAINED. The
+ * SAME client ("Estudio Hibö") appears in all three (populated alta row →
+ * highlighted "En curso" card → closed "Cobrado" case), so the journey reads as
+ * one client across three moments. Continuity is conveyed by the repeated client
+ * + the 01/02/03 narrative, NOT by a traveling card. (Faithful to product.md:
+ * Tendr has casos with a pipeline of states and markdown notes, NO billing
+ * module — stage 3 is a case in the closed/paid state, never an invoice.)
  *
  * PIVOT (design ADR-12): the previous single-traveling-card FLIP (one card
  * re-parenting between distant vertically-stacked slots, advanced by an in-view
@@ -126,6 +128,96 @@ const handVariants: Variants = {
   },
 };
 
+/* ------------------------------------------------------------------------- *
+ * HandDrawnConnector: a curved CLAY ink arrow that UNIFIES the three stages,
+ * leading the eye from one block to the next (1→2, 2→3). Same hand-drawn ink
+ * language as the cork hand and the FeaturesBoard at-risk circle / Pricing
+ * annotation: an organic, slightly wobbly `motion.path` body plus a two-stroke
+ * arrowhead, drawn via `pathLength` (the one allowed non-transform animation,
+ * exactly as the at-risk ring and the pricing box). Stroke is the clay token
+ * (var(--color-accent-secondary)).
+ *
+ * - Draw-in once on `whileInView` (the arrows belong to the scroll narrative,
+ *   so they reveal as the user reaches each seam — not all at mount).
+ * - prefers-reduced-motion → rendered STATIC, already drawn (pathLength 1,
+ *   opacity 1), with no animation, via the `draw` variants gate (Pricing
+ *   pattern). The `whileInView` target equals the static state, so nothing
+ *   visibly moves.
+ * - Decorative → aria-hidden. The journey order is already conveyed by the
+ *   01/02/03 narrative, so the arrow carries no semantic load.
+ * - CLS 0: the connector occupies a fixed-height row in the flow (h-16/md:h-20),
+ *   so reserving its box never reflows the stages. The SVG fills that reserved
+ *   box; viewBox + preserveAspectRatio keep the curve stable across widths.
+ * - Hidden < md: on the mobile stacked layout the long vertical gaps make a
+ *   drawn connector read as clutter, so it only renders at md+ (the stages
+ *   still read top-to-bottom). transform/opacity + pathLength only.
+ * ------------------------------------------------------------------------- */
+function connectorDraw(reduceMotion: boolean): Variants {
+  return {
+    // Under reduced-motion the hidden state already equals the final drawn
+    // state, so whileInView is a no-op and the arrow is static.
+    hidden: {
+      pathLength: reduceMotion ? 1 : 0,
+      opacity: reduceMotion ? 1 : 0,
+    },
+    visible: {
+      pathLength: 1,
+      opacity: 1,
+      transition: {
+        pathLength: { duration: reduceMotion ? 0 : 0.7, ease: EASE_OUT },
+        opacity: { duration: reduceMotion ? 0 : 0.2 },
+      },
+    },
+  };
+}
+
+/** `flip` = true mirrors the curve horizontally so consecutive connectors lean
+ * opposite ways (1→2 sweeps right-to-left under the right-aligned backdrop,
+ * 2→3 left-to-right), echoing the zig-zag of the alternating stage columns. */
+function HandDrawnConnector({
+  reduceMotion,
+  flip,
+}: {
+  reduceMotion: boolean;
+  flip: boolean;
+}) {
+  const draw = connectorDraw(reduceMotion);
+  return (
+    <motion.svg
+      aria-hidden="true"
+      className={
+        "pointer-events-none mx-auto hidden h-16 w-40 text-accent-secondary md:block md:h-20 " +
+        (flip ? "-scale-x-100" : "")
+      }
+      viewBox="0 0 120 80"
+      fill="none"
+      preserveAspectRatio="xMidYMid meet"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.6 }}
+    >
+      {/* Curved organic body, drawn top → bottom. */}
+      <motion.path
+        d="M22 6 C 18 26, 40 30, 58 38 C 80 47, 102 50, 96 70"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        variants={draw}
+      />
+      {/* Two-stroke arrowhead at the tail end (≈96,70), pointing down-right. */}
+      <motion.path
+        d="M96 70 L 85 66 M96 70 L 99 58"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        variants={draw}
+      />
+    </motion.svg>
+  );
+}
+
 function PlacingHand() {
   const controls = useAnimationControls();
 
@@ -171,8 +263,10 @@ export function HowItWorks() {
   // The hand only places the alta card on desktop with motion allowed.
   const handOn = isDesktop && !reduceMotion;
 
+  const lastIndex = JOURNEY_STAGES.length - 1;
+
   return (
-    <ol className="flex flex-col gap-6 md:gap-8">
+    <ol className="flex flex-col gap-12 md:gap-20">
       {JOURNEY_STAGES.map((s, index) => {
         const Backdrop = STAGE_COMPONENTS[index];
 
@@ -203,10 +297,10 @@ export function HowItWorks() {
                 >
                   {s.n}
                 </span>
-                <h3 className="font-heading text-h3 text-text-primary">
+                <h3 className="font-heading text-h2 text-text-primary">
                   {s.title}
                 </h3>
-                <p className="max-w-[46ch] text-body text-text-secondary">
+                <p className="max-w-[46ch] text-body-lg text-text-secondary">
                   {s.body}
                 </p>
               </div>
@@ -227,6 +321,20 @@ export function HowItWorks() {
                 {handOn && index === 0 ? <PlacingHand /> : null}
               </div>
             </div>
+
+            {/* Clay connector leading to the next stage (1→2, 2→3). Kept inside
+                the <li> (valid list markup, decorative aria-hidden), placed
+                below the grid so it sits in the seam between this block and the
+                next. Its reserved fixed-height box means it never reflows the
+                stages (CLS 0). Alternate the curve direction per seam to echo
+                the zig-zag of the alternating columns. Omitted after the last
+                stage (nothing to connect to). */}
+            {index !== lastIndex ? (
+              <HandDrawnConnector
+                reduceMotion={!!reduceMotion}
+                flip={index % 2 === 1}
+              />
+            ) : null}
           </motion.li>
         );
       })}
