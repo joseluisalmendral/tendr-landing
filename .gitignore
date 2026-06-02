@@ -150,3 +150,9 @@ next-env.d.ts
 
 # neonctl local context (may contain project/credential data)
 .neon
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

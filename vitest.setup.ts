@@ -6,6 +6,29 @@ import { toHaveNoViolations } from "jest-axe";
 // jest-axe matcher: enables `expect(...).toHaveNoViolations()` in component a11y tests.
 expect.extend(toHaveNoViolations);
 
+// jsdom has no IntersectionObserver, which Motion's `whileInView` (used by the
+// time-based testimonial entrance) requires at render time. Provide a no-op mock
+// so components that use whileInView render in tests (the entrance itself is not
+// under unit test; behaviour like keyboard focus is).
+if (!("IntersectionObserver" in globalThis)) {
+  class MockIntersectionObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+    root = null;
+    rootMargin = "";
+    thresholds = [];
+  }
+  Object.defineProperty(globalThis, "IntersectionObserver", {
+    writable: true,
+    configurable: true,
+    value: MockIntersectionObserver,
+  });
+}
+
 // Mock next/image to a plain <img> so jsdom exposes real src/alt/width/height for
 // assertions. Strip non-DOM props (preload/priority/fill/placeholder/blurDataURL/sizes)
 // that React would otherwise warn about or that are not valid <img> attributes.
