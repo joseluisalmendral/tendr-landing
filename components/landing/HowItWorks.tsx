@@ -1,349 +1,235 @@
 "use client";
 
 /**
- * HowItWorks ("Cómo funciona", spec §2): bespoke editorial numbered list.
+ * HowItWorks ("Cómo funciona" → el viaje de un cliente, change
+ * como-funciona-client-journey). Three rich, STATIC, product-grade backdrops —
+ * the intake form, the pipeline, the invoice — each SELF-CONTAINED. The SAME
+ * client ("Estudio Hibö") appears in all three (populated alta row → highlighted
+ * "En curso" card → invoice header), so the journey reads as one client across
+ * three moments. Continuity is conveyed by the repeated client + the 01/02/03
+ * narrative, NOT by a traveling card.
  *
- * NOT a grid of three equal Feature cards with an icon on top (negative #6).
- * Instead: an ordered list with small editorial mono numbers (01 / 02 / 03)
- * and a DISTINCT faux-UI mini-illustration per step (the Cal trick), so the
- * movement teaches the flow instead of decorating it. A hand-drawn clay arrow
- * between steps guides the reading like a manual annotation, not an ornament.
+ * PIVOT (design ADR-12): the previous single-traveling-card FLIP (one card
+ * re-parenting between distant vertically-stacked slots, advanced by an in-view
+ * sentinel stage trigger) was DROPPED after visual verification. The backdrops
+ * are tall and far apart, so the stepped trigger advanced while the user was
+ * still reading the previous stage (leaving the alta form with an empty slot)
+ * and the FLIP happened off-screen. Each backdrop is now independent.
  *
- * Client leaf (uses Motion hooks). It renders inside the server-side Section,
- * which owns the <h2> "Cómo funciona" heading, so we do NOT repeat it here.
+ * Core principle: VISUAL richness ≠ MOTION richness. The backdrops are dense and
+ * realistic but STATIC (they live in journey-stages.tsx). The only motion is:
+ *   1. A subtle per-backdrop in-view ENTRANCE — each stage block reveals once
+ *      with opacity 0→1 + a small y rise (transform/opacity, EASE_OUT, ~0.5s)
+ *      via `whileInView` (once). Reduced-motion → no reveal (static). Mobile →
+ *      degrades gracefully (whileInView is SSR-safe, no hydration mismatch).
+ *   2. Hand once — the shared CorkHand places/nudges the now-populated alta
+ *      client card a single time on in-view, then leaves (transform/opacity,
+ *      HeroPipeline imperative pattern). Gated OFF under reduced-motion / mobile.
  *
- * Motion (spec §2):
- * - Reveal of each step: Motion whileInView, once, stagger 60-100ms,
- *   --ease-out, --duration-reveal (opacity 0->1, y 24->0).
- * - Draw-in of the clay arrows: stroke-dashoffset / pathLength in-view once,
- *   --ease-out, ~600ms.
- * - prefers-reduced-motion: no transform/opacity animation; arrow renders in
- *   its final drawn (visible) state. pathLength is NOT a transform and may not
- *   degrade on its own, so we gate it explicitly with useReducedMotion().
+ * Client leaf: renders inside the server Section that owns the <h2> "Cómo
+ * funciona" heading, so we do NOT repeat it here. The export name stays
+ * `HowItWorks` so the app/page.tsx slot inside `.wow-overlap-section` is
+ * byte-unchanged.
  *
- * NOTE: this section is the DESTINATION of wow #1 (the sticky overlap
- * Hero -> Cómo funciona). That choreography is wired separately and is NOT
- * implemented here; this file only owns the reveal + arrow draw-in.
+ * Fallbacks (mandatory):
+ * - prefers-reduced-motion: no reveal (blocks render in their final state), no
+ *   hand. All three stages + their cards are present and legible.
+ * - mobile (<md): static stacked layout, SSR-safe via useSyncExternalStore
+ *   (server snapshot false → mobile is the deterministic first paint, no
+ *   hydration mismatch). No hand. The reveal still applies (it degrades fine).
  */
-import { motion, useReducedMotion, type Variants } from "motion/react";
+import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 import {
-  ArrowRight,
-  Check,
-  DotsThreeVertical,
-  FileText,
-  Plus,
-} from "@phosphor-icons/react/dist/ssr";
+  motion,
+  useAnimationControls,
+  useReducedMotion,
+  type Variants,
+} from "motion/react";
 
-import type { ReactNode } from "react";
+import { CorkHand } from "@/components/landing/CorkHand";
+import {
+  JOURNEY_STAGES,
+  StageFormFaux,
+  StagePipelineFaux,
+  StageReportFaux,
+} from "@/components/landing/journey-stages";
 
-// --ease-out = cubic-bezier(0.22, 1, 0.36, 1); --duration-reveal = 480ms.
+// --ease-out for the reveal + the hand.
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
-const DURATION_REVEAL = 0.48;
-const DURATION_DRAW = 0.6;
-const STAGGER = 0.08; // 80ms between a step's elements.
+const REVEAL_DURATION = 0.5;
+const MD_QUERY = "(min-width: 768px)";
 
-type Step = {
-  n: string;
-  title: string;
-  body: string;
-  illustration: ReactNode;
+/** SSR-safe media-query subscription (verbatim from TestimonialsCork:130-139).
+ * Server snapshot is `false`, so mobile/static is the deterministic first
+ * paint → no hydration mismatch. Duplicated inline to avoid touching cork;
+ * promotion to a shared hook is out of scope for this change. */
+function useMediaQuery(query: string): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
+}
+
+// Run before paint on the client, fall back to useEffect during SSR (HeroPipeline
+// pattern) so the hand never flashes its final state for one frame.
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+/* ------------------------------------------------------------------------- *
+ * Per-backdrop in-view entrance. Reveals once when the stage block scrolls into
+ * view: opacity 0→1 + a small y rise. transform/opacity only (GPU), so no
+ * reflow (CLS 0 — the backdrop reserves its full box via FauxShell min-h). A
+ * light stagger by stage index gives the three blocks a gentle cascade.
+ * ------------------------------------------------------------------------- */
+const revealVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: REVEAL_DURATION, ease: EASE_OUT },
+  },
 };
+
+/* ------------------------------------------------------------------------- *
+ * Hand-once choreography (ADR-8). CorkHand wrapped in a motion.div (animate the
+ * WRAPPER, not the SVG — vercel rendering-animate-svg-wrapper), absolutely
+ * positioned bottom-right of the alta backdrop, pointer-events-none, aria-hidden.
+ * Plays ONCE on mount via imperative controls (HeroPipeline pattern): enter from
+ * bottom-right → small nudge toward the populated client card → lift + fade out.
+ * Only mounted when isDesktop && !reduceMotion, so it never runs under
+ * reduced-motion or on mobile, and it animates over a card that is actually there.
+ * ------------------------------------------------------------------------- */
+const handVariants: Variants = {
+  hidden: { opacity: 0, x: 48, y: 56, rotate: 8 },
+  enter: {
+    opacity: 1,
+    x: 12,
+    y: 12,
+    rotate: -2,
+    transition: { duration: 0.5, ease: EASE_OUT },
+  },
+  nudge: {
+    y: 0,
+    transition: { duration: 0.22, ease: EASE_OUT },
+  },
+  leave: {
+    opacity: 0,
+    x: 40,
+    y: 60,
+    rotate: 8,
+    transition: { duration: 0.4, ease: EASE_OUT },
+  },
+};
+
+function PlacingHand() {
+  const controls = useAnimationControls();
+
+  useIsoLayoutEffect(() => {
+    // Single play-once sequence; the parent only mounts this on
+    // desktop && !reduced-motion, so no extra gate is needed here.
+    let cancelled = false;
+    async function play() {
+      controls.set("hidden");
+      await controls.start("enter");
+      if (cancelled) return;
+      await controls.start("nudge");
+      if (cancelled) return;
+      await controls.start("leave");
+    }
+    void play();
+    return () => {
+      cancelled = true;
+    };
+    // `controls` is stable.
+  }, [controls]);
+
+  return (
+    <motion.div
+      aria-hidden="true"
+      initial="hidden"
+      animate={controls}
+      variants={handVariants}
+      className="pointer-events-none absolute -bottom-2 right-2 z-20 h-28 w-28"
+    >
+      <CorkHand />
+    </motion.div>
+  );
+}
+
+/* Each backdrop is self-contained (renders its own Estudio Hibö card). */
+const STAGE_COMPONENTS = [StageFormFaux, StagePipelineFaux, StageReportFaux] as const;
 
 export function HowItWorks() {
   const reduceMotion = useReducedMotion();
+  const isDesktop = useMediaQuery(MD_QUERY);
 
-  // Parent orchestrates the per-step stagger; children inherit the trigger.
-  const stepVariants: Variants = {
-    hidden: { opacity: reduceMotion ? 1 : 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: reduceMotion ? 0 : STAGGER },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: reduceMotion ? 0 : DURATION_REVEAL, ease: EASE_OUT },
-    },
-  };
-
-  const steps: Step[] = [
-    {
-      n: "01",
-      title: "Añade tus clientes",
-      body: "Da de alta cada cliente con sus datos de contacto y etiquetas. En un minuto tienes tu cartera ordenada.",
-      illustration: <AddClientFaux />,
-    },
-    {
-      n: "02",
-      title: "Gestiona tu pipeline",
-      body: "Mueve cada caso entre los estados del tablero. El pipeline refleja al momento en qué punto está la relación.",
-      illustration: <PipelineFaux />,
-    },
-    {
-      n: "03",
-      title: "Reporta el avance al cliente",
-      body: "Genera un reporte claro de la relación con un clic y compártelo. El cliente ve el avance sin que reescribas nada.",
-      illustration: <ReportFaux />,
-    },
-  ];
+  // The hand only places the alta card on desktop with motion allowed.
+  const handOn = isDesktop && !reduceMotion;
 
   return (
-    <ol className="flex flex-col">
-      {steps.map((step, index) => {
-        const reverse = index % 2 === 1;
+    <ol className="flex flex-col gap-6 md:gap-8">
+      {JOURNEY_STAGES.map((s, index) => {
+        const Backdrop = STAGE_COMPONENTS[index];
+
         return (
-          <li key={step.n} className="flex flex-col">
-            <motion.div
-              variants={stepVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.4 }}
-              className="grid grid-cols-1 items-center gap-6 md:grid-cols-12 md:gap-8"
-            >
-              {/* Text column with the small editorial mono number. */}
-              <motion.div
-                variants={itemVariants}
+          <motion.li
+            key={s.n}
+            className="flex flex-col gap-4"
+            // Subtle in-view entrance. Under reduced-motion we skip the initial
+            // hidden state entirely so the block renders static in place.
+            initial={reduceMotion ? false : "hidden"}
+            whileInView={reduceMotion ? undefined : "visible"}
+            viewport={{ once: true, amount: 0.3 }}
+            variants={revealVariants}
+            transition={{ delay: reduceMotion ? 0 : index * 0.08 }}
+          >
+            <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-12 md:gap-8">
+              {/* Narrative column with the small editorial mono number. */}
+              <div
                 className={
-                  reverse
-                    ? "flex flex-col gap-3 md:order-2 md:col-span-6 md:pl-4"
-                    : "flex flex-col gap-3 md:col-span-6"
+                  index % 2 === 1
+                    ? "flex flex-col gap-3 md:order-2 md:col-span-5 md:pl-2"
+                    : "flex flex-col gap-3 md:col-span-5"
                 }
               >
                 <span
                   aria-hidden="true"
-                  className="text-meta font-mono uppercase text-accent-secondary"
+                  className="font-mono text-meta uppercase text-accent-secondary"
                 >
-                  {step.n}
+                  {s.n}
                 </span>
                 <h3 className="font-heading text-h3 text-text-primary">
-                  {step.title}
+                  {s.title}
                 </h3>
                 <p className="max-w-[46ch] text-body text-text-secondary">
-                  {step.body}
+                  {s.body}
                 </p>
-              </motion.div>
+              </div>
 
-              {/* Faux-UI slot. Dimensions reserved (CLS 0). One idea per piece. */}
-              <motion.div
-                variants={itemVariants}
-                className={reverse ? "md:order-1 md:col-span-6" : "md:col-span-6"}
+              {/* Backdrop column. relative so the hand can be absolutely placed
+                  inside the alta backdrop only. */}
+              <div
+                className={
+                  index % 2 === 1
+                    ? "relative md:order-1 md:col-span-7"
+                    : "relative md:col-span-7"
+                }
               >
-                {step.illustration}
-              </motion.div>
-            </motion.div>
-
-            {/* Hand-drawn clay arrow between steps (not after the last). */}
-            {index < steps.length - 1 ? (
-              <HandDrawnArrow reverse={reverse} reduceMotion={!!reduceMotion} />
-            ) : null}
-          </li>
+                {/* Each backdrop is always active (full opacity) now that there
+                    is no stage focus to dim toward. */}
+                <Backdrop active />
+                {/* Hand once, alta only, desktop + motion only. */}
+                {handOn && index === 0 ? <PlacingHand /> : null}
+              </div>
+            </div>
+          </motion.li>
         );
       })}
     </ol>
-  );
-}
-
-/* ------------------------------------------------------------------------- *
- * Faux-UI pieces. Each shows ONE moment of the CRM working, built from divs
- * and tokens only (zero hardcoded hex). A fixed min-height reserves space so
- * the reveal never shifts layout (CLS 0).
- * ------------------------------------------------------------------------- */
-
-/** Shared shell: a small stylized CRM window, paper-raised with a hairline. */
-function FauxShell({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="min-h-[15rem] w-full border border-border bg-surface-raised shadow-soft">
-      <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <span className="text-meta font-mono uppercase text-text-muted">
-          {label}
-        </span>
-        <span className="flex gap-1" aria-hidden="true">
-          <span className="size-1.5 bg-border" />
-          <span className="size-1.5 bg-border" />
-          <span className="size-1.5 bg-border" />
-        </span>
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  );
-}
-
-/** Step 1: adding a client. A form row being filled, with a primary action. */
-function AddClientFaux() {
-  return (
-    <FauxShell label="Nuevo cliente">
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <span className="text-meta font-mono uppercase text-text-muted">
-            Nombre
-          </span>
-          <div className="flex h-8 items-center border border-border bg-surface px-3 text-body-sm text-text-primary">
-            Estudio Hibö
-          </div>
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-meta font-mono uppercase text-text-muted">
-            Email
-          </span>
-          <div className="flex h-8 items-center border border-border bg-surface px-3 text-body-sm text-text-secondary">
-            hola@hibo.studio
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 text-meta font-mono uppercase text-accent-secondary">
-            Diseño
-          </span>
-          <span className="border border-border px-2 py-0.5 text-meta font-mono uppercase text-text-muted">
-            Retainer
-          </span>
-        </div>
-        <div className="flex items-center justify-end gap-2 pt-1">
-          <span className="inline-flex items-center gap-1 border border-border-strong bg-accent-primary px-3 py-1.5 text-body-sm text-on-accent shadow-hard-sm">
-            <Plus size={14} weight="bold" aria-hidden="true" />
-            Guardar cliente
-          </span>
-        </div>
-      </div>
-    </FauxShell>
-  );
-}
-
-/** Step 2: managing the pipeline. A card moved between two kanban columns. */
-function PipelineFaux() {
-  return (
-    <FauxShell label="Pipeline">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-2">
-          <span className="text-meta font-mono uppercase text-text-muted">
-            Contactado
-          </span>
-          <div className="flex min-h-[6rem] flex-col gap-2 border border-dashed border-border p-2">
-            <div className="flex items-center justify-between border border-border bg-surface px-2 py-1.5">
-              <span className="text-body-sm text-text-secondary">Marea</span>
-              <DotsThreeVertical
-                size={14}
-                className="text-text-muted"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <span className="text-meta font-mono uppercase text-accent-secondary">
-            Propuesta
-          </span>
-          <div className="flex min-h-[6rem] flex-col gap-2 border border-dashed border-accent-secondary p-2">
-            {/* The card that just moved: highlighted, clay-bordered. */}
-            <div className="flex items-center justify-between border border-accent-secondary bg-accent-secondary-soft px-2 py-1.5 shadow-hard-sm">
-              <span className="text-body-sm text-text-primary">Cuaderno</span>
-              <ArrowRight
-                size={14}
-                weight="bold"
-                className="text-accent-secondary"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </FauxShell>
-  );
-}
-
-/** Step 3: reporting progress. A report document being generated for a client. */
-function ReportFaux() {
-  return (
-    <FauxShell label="Reporte de cliente">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start gap-3 border border-border bg-surface p-3">
-          <FileText
-            size={28}
-            className="shrink-0 text-accent-secondary"
-            aria-hidden="true"
-          />
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="h-2.5 w-2/3 bg-text-muted/30" aria-hidden="true" />
-            <div className="h-2 w-full bg-border" aria-hidden="true" />
-            <div className="h-2 w-5/6 bg-border" aria-hidden="true" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 border border-success bg-success-soft px-2 py-1 text-meta font-mono uppercase text-success">
-            <Check size={12} weight="bold" aria-hidden="true" />
-            Generado
-          </span>
-          <span className="text-meta font-mono uppercase text-text-muted">
-            Marzo · 8 acciones
-          </span>
-        </div>
-      </div>
-    </FauxShell>
-  );
-}
-
-/* ------------------------------------------------------------------------- *
- * HandDrawn clay arrow connector. Drawn as a wobbly hand-made path (NOT a
- * geometric arrow), draws itself in-view once via pathLength. Under
- * reduced-motion it renders in its final static state (fully drawn, visible).
- * ------------------------------------------------------------------------- */
-function HandDrawnArrow({
-  reverse,
-  reduceMotion,
-}: {
-  reverse: boolean;
-  reduceMotion: boolean;
-}) {
-  // pathLength normalizes the path to 0..1, so dash values are length-agnostic.
-  const draw = {
-    hidden: { pathLength: reduceMotion ? 1 : 0, opacity: reduceMotion ? 1 : 0 },
-    visible: {
-      pathLength: 1,
-      opacity: 1,
-      transition: {
-        pathLength: { duration: reduceMotion ? 0 : DURATION_DRAW, ease: EASE_OUT },
-        opacity: { duration: reduceMotion ? 0 : 0.12 },
-      },
-    },
-  };
-
-  return (
-    <div
-      aria-hidden="true"
-      className="flex justify-center py-8 md:py-10"
-    >
-      <motion.svg
-        width="120"
-        height="80"
-        viewBox="0 0 120 80"
-        fill="none"
-        className={reverse ? "-scale-x-100 text-accent-secondary" : "text-accent-secondary"}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.6 }}
-      >
-        {/* Wobbly hand-drawn descending curve. */}
-        <motion.path
-          d="M70 6 C 64 24, 56 30, 58 44 C 60 56, 50 60, 44 70"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          variants={draw}
-        />
-        {/* Arrowhead, two short hand-drawn strokes. */}
-        <motion.path
-          d="M44 70 L 56 64 M44 70 L 48 57"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          variants={draw}
-        />
-      </motion.svg>
-    </div>
   );
 }
