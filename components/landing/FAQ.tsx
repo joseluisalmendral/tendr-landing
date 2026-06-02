@@ -56,11 +56,11 @@ export function FAQ({ items }: FaqProps) {
             value={`faq-${index}`}
             className="border-b border-border"
           >
-            <AccordionTrigger className="py-5 font-heading text-h3 text-text-primary hover:no-underline">
+            <AccordionTrigger className="py-6 font-heading text-h3 leading-snug text-text-primary hover:no-underline md:text-[1.75rem]">
               {item.question}
             </AccordionTrigger>
-            <AccordionContent className="text-body text-text-secondary">
-              <p>{item.answer}</p>
+            <AccordionContent className="text-body-lg text-text-secondary">
+              <p className="max-w-[68ch]">{item.answer}</p>
             </AccordionContent>
           </AccordionItem>
         ))}

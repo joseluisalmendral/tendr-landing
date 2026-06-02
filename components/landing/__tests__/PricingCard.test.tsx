@@ -69,11 +69,14 @@ describe("PricingCard", () => {
     expect(link).toHaveAttribute("href", "/registro");
   });
 
-  it("shows a textual recommendation badge and accent border when highlighted", () => {
+  it("applies the accent emphasis (2px accent border) when highlighted", () => {
     const { container } = renderCard({ highlighted: true });
 
-    // Recommendation is textual, not color-only (a11y color-not-only).
-    expect(screen.getByText("Recomendado")).toBeInTheDocument();
+    // `highlighted` is now PURELY visual emphasis on the target tier. The
+    // textual recommendation (a11y color-not-only) lives in the Pricing
+    // recommender (conclusion panel + moving annotation), not in this card, so
+    // a standalone card must NOT print a "Recomendado" badge.
+    expect(screen.queryByText("Recomendado")).toBeNull();
 
     const card = container.querySelector('[data-slot="card"]');
     expect(card).not.toBeNull();
