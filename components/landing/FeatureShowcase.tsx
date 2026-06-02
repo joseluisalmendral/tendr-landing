@@ -18,11 +18,12 @@ import { FEATURES } from "./feature-showcase-panels";
  *    measurement, NO `height:auto` guess). Single-open, first-open (activeIndex
  *    default 0). Keyboard per APG: Enter/Space activate the focused header,
  *    ArrowUp/Down move focus between headers (wrap), Home/End jump to first/last.
- *  - RIGHT (~60%): a reserved-height stage (CLS 0) rendering ONLY the active
- *    panel inside <AnimatePresence mode="wait"> keyed by activeIndex — the panel
- *    is `absolute inset-0` and crossfades on opacity (in ~0.3s, exit ~0.2s), so
- *    switching never reflows (CLS 0). The incoming panel plays its own
- *    on-activation micro-demo (panels file).
+ *  - RIGHT (~60%): a reserved-height stage (CLS 0) rendering the active panel
+ *    inside <AnimatePresence> (default/sync mode) keyed by activeIndex — incoming
+ *    and outgoing panels are both `absolute inset-0` and OVERLAP, crossfading on
+ *    opacity (~0.3s), so the stage is never empty and switching never reflows
+ *    (CLS 0). The incoming panel plays its own on-activation micro-demo (panels
+ *    file).
  *  - Mobile (<md): single column. The accordion stacks and the active item's
  *    PANEL renders INLINE in a reserved-height box right after its description,
  *    with its own keyed fade on switch. `useIsDesktop()` (useSyncExternalStore,
