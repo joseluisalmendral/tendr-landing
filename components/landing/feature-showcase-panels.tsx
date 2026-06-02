@@ -1,6 +1,6 @@
 /**
- * feature-showcase-panels: the 4 RICH, STATIC product-grade demo panels for the
- * "#funciones → Un CRM con todo lo que necesitas" section (change
+ * feature-showcase-panels: the 4 RICH, PROFESSIONAL, LOOPING product-flow demo
+ * panels for the "#funciones → Un CRM con todo lo que necesitas" section (change
  * funciones-feature-showcase, spec R5/R9/R10, design ADR-1/ADR-2/ADR-5/ADR-7).
  *
  * Each panel is a believable Tendr screen rendered with tokens only (ZERO hex),
@@ -11,29 +11,28 @@
  * NO facturación/billing, NO email marketing masivo, NO integraciones externas
  * (Salesforce/HubSpot/Slack/Notion), NO SSO, NO self-host, NO multi-idioma.
  * The AI cost model is the user's OWN encrypted BYO API key (AES-256-GCM).
+ * Consistent mock data across panels: client "Estudio Hibö", contact "Lucía",
+ * service "rediseño de marca".
  *
- * VISUAL richness ≠ MOTION richness: every panel already renders its final,
- * fully-legible RESTING state. The Commit-3 micro-demos animate INTO that exact
- * resting state on activation — they never change it — so reduced-motion / SSR
- * (which skip the keyframes) show the identical content. All numbers are mock
- * (design-taste §4.9).
+ * MOTION-GRAPHICS LAYER — the host accordion (FeatureShowcase) AUTO-ADVANCES
+ * every 8s and NEVER pauses on hover/focus; only the active panel is mounted.
+ * So each panel gets ~8s and is keyed by `active`: its narrative replays each
+ * time the accordion lands on it (the 8s cadence IS the loop). Narratives resolve
+ * to a calm RESTING state by ~3.5s, leaving breathing room before the advance.
+ * The single TRUE continuous loop is Clientes: a case TRAVELS across the kanban
+ * states and loops, demonstrating "mueves cada caso por sus estados".
  *
- * COMMIT 3 MOTION LAYER (this file): each panel takes `active` + `reduceMotion`.
- * When the panel becomes `active` and motion is allowed, a SHORT (~0.4-0.7s),
- * once-per-activation, transform/opacity-only beat plays (MEDIUM budget, NO loops,
- * NO auto-advance). The beat is keyed by `active` so it replays each time the
- * panel is (re)activated. `reduceMotion` ⇒ panels render the final state with NO
- * keyframes (initial={false}). Motion ledger (design #491):
- *   - Clientes: protagonist case settles into "En curso" (small y + scale beat).
- *   - Documentos: IA chip pulse + extracted items stagger-in (opacity + small y).
- *   - Plantillas: {{var}} chips highlight-beat then the preview line resolves.
- *   - Asistente: resumen + suggestion + chip stagger-in (opacity + small y).
+ * RULES: transform/opacity-only (GPU); the one non-transform allowed is SVG
+ * pathLength (unused here). NEVER animate a Phosphor <svg> directly — animate its
+ * wrapper. CLS 0: content that SWAPS between phases is absolute-stacked + crossfaded
+ * or kept rendered with reserved space so nothing jumps. reduced-motion / SSR ⇒
+ * every panel renders its FINAL resting state with NO loops/timers/keyframes.
+ * No useMemo/useCallback (React Compiler). State changes only inside timer
+ * callbacks (never a synchronous setState in an effect body). Every timer is
+ * cleaned up so it stops when the panel unmounts / active flips false.
  *
- * Module-level, hoisted components + variants (vercel rerender-no-inline-components,
- * rendering-hoist-jsx). Animate wrapper divs, NEVER the Phosphor <svg>
- * (rendering-animate-svg-wrapper). NO manual useMemo/useCallback (React Compiler).
- * Token classes are the contract; shell primitives are re-implemented compactly
- * here so journey-stages.tsx stays untouched (design ADR-2).
+ * Module-level, hoisted components + variants (vercel rerender-no-inline-components).
+ * NO manual useMemo/useCallback (React Compiler).
  */
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -52,10 +51,11 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 
 /* --- Motion timing tokens (mirror globals.css) + shared variants ---------- *
- * transform/opacity only (GPU). EASE_OUT for reveals, EASE_SNAP for the kanban
- * settle (matches FeaturesBoard/HeroPipeline). All beats are SHORT and calm. */
+ * transform/opacity only (GPU). EASE_OUT for reveals, EASE_SNAP for settles/pops
+ * (matches FeaturesBoard/HeroPipeline). All beats are SHORT and calm. */
 const EASE_OUT = [0.22, 1, 0.36, 1] as const; // --ease-out
 const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const; // --ease-snap
+const EASE_INOUT = [0.4, 0, 0.2, 1] as const; // --ease-inout (travel)
 
 /** Panels share one shape: ({ active, reduceMotion }). */
 type PanelProps = { active: boolean; reduceMotion: boolean };
@@ -64,33 +64,18 @@ type PanelProps = { active: boolean; reduceMotion: boolean };
  * `hidden`/`show` are toggled via the `animate` prop on the panel root. */
 const staggerContainer: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } },
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
 
 /** Stagger item: opacity + small upward y settle (reveal). */
 const staggerItem: Variants = {
-  hidden: { opacity: 0, y: 6 },
+  hidden: { opacity: 0, y: 8 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.32, ease: EASE_OUT },
+    transition: { duration: 0.34, ease: EASE_OUT },
   },
 };
-
-/**
- * Resolve the motion props for a panel root running a stagger reveal.
- * Reduced motion ⇒ no keyframes, content sits in its final "show" state.
- * `active` keys the variant so the reveal replays on each (re)activation.
- */
-function staggerRootProps(active: boolean, reduceMotion: boolean) {
-  if (reduceMotion) {
-    return { initial: false as const, animate: "show" as const };
-  }
-  return {
-    initial: "hidden" as const,
-    animate: active ? ("show" as const) : ("hidden" as const),
-  };
-}
 
 /* ------------------------------------------------------------------------- *
  * Shared shell + primitives (local re-implementation of the journey faux-UI
@@ -120,7 +105,7 @@ function PanelShell({
           : "border-border opacity-100 shadow-soft")
       }
     >
-      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
         <span className="font-mono text-meta uppercase text-text-muted">
           {label}
         </span>
@@ -130,7 +115,7 @@ function PanelShell({
           <span className="size-2 rounded-full bg-border" />
         </span>
       </div>
-      <div className="flex-1 overflow-hidden p-4">{children}</div>
+      <div className="flex-1 overflow-hidden p-5">{children}</div>
     </div>
   );
 }
@@ -186,36 +171,81 @@ function MiniClientCard({
 
 type KanbanCard = { name: string; amount: string; highlight?: boolean };
 
-/** Settle beat for the protagonist case "landing" into its column: a small
- * horizontal + upward entrance with a scale overshoot, as if the card just
- * ARRIVED into "En curso" from the previous column. Resolves to the resting
- * card. transform-only, EASE_SNAP (same vocabulary as FeaturesBoard's card). */
-const kanbanSettle: Variants = {
-  rest: { x: 0, y: 0, scale: 1, opacity: 1 },
-  drop: {
-    x: [-10, 0],
-    y: [10, 0],
-    scale: [0.96, 1.03, 1],
-    opacity: [0.4, 1, 1],
-    transition: { duration: 0.5, ease: EASE_SNAP },
-  },
-};
+/* ------------------------------------------------------------------------- *
+ * Panel 1 — Clientes y casos: a 3-column kanban (Contacto → Propuesta →
+ * En curso). The CONTINUOUS motion-graphics moment: the protagonist case
+ * "Estudio Hibö" TRAVELS Contacto → Propuesta → En curso and loops, via a shared
+ * layoutId card that re-parents between dropzones (Motion animates its position).
+ * The destination dropzone briefly reads as a drop target, the card settles, and
+ * becomes the clay-highlight variant once it reaches "En curso" (its home).
+ * reduced-motion / SSR ⇒ the card sits HIGHLIGHTED in "En curso", no travel.
+ * ------------------------------------------------------------------------- */
+const KANBAN_CONTACTO: KanbanCard[] = [
+  { name: "Marea", amount: "€900" }, // mock
+  { name: "Cuaderno", amount: "€600" }, // mock
+];
+const KANBAN_PROPUESTA: KanbanCard[] = [
+  { name: "Faro", amount: "€1.500" }, // mock
+  { name: "Norte", amount: "€2.400" }, // mock
+];
+const KANBAN_EN_CURSO: KanbanCard[] = [
+  { name: "Roble", amount: "€1.100" }, // mock
+];
 
-/** One kanban column: title + count badge + stacked mini-cards in a dashed
- * dropzone (same look as the journey pipeline). When `demo` is true (and motion
- * allowed) the highlighted card plays the settle beat once on activation. */
+/** The three pipeline states the protagonist case travels through, in order. */
+const PIPELINE_STEPS = [
+  { title: "Contacto", base: KANBAN_CONTACTO },
+  { title: "Propuesta", base: KANBAN_PROPUESTA },
+  { title: "En curso", base: KANBAN_EN_CURSO },
+] as const;
+
+/** Per-step dwell. "En curso" (its home) holds a touch longer before looping. */
+const STEP_DWELL_MS = [1800, 1800, 2200] as const;
+
+/** The travelling protagonist card. Rendered inside the dropzone of the current
+ * step with a shared layoutId so Motion animates its position as it re-parents.
+ * A small arrival settle (y + scale, EASE_SNAP) plays via the `arrive` key. */
+function TravellingCase({
+  inProgress,
+  arriveKey,
+}: {
+  inProgress: boolean;
+  arriveKey: number;
+}) {
+  return (
+    <motion.div layout layoutId="caso-hibo" transition={{ duration: 0.55, ease: EASE_INOUT }}>
+      <motion.div
+        key={arriveKey}
+        initial={{ y: -6, scale: 0.97 }}
+        animate={{ y: 0, scale: [0.97, 1.03, 1] }}
+        transition={{ duration: 0.4, ease: EASE_SNAP }}
+      >
+        <MiniClientCard name="Estudio Hibö" amount="€2.000" highlight={inProgress} />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/** One kanban column. When `isTarget` (the card just arrived here) the dropzone
+ * briefly highlights as a drop target (border + ring via tokens), then relaxes.
+ * Fixed min-height comfortably holds base cards + the visiting card so the column
+ * never reflows as the travelling card enters/leaves (CLS 0 inside the panel). */
 function PipelineColumn({
   title,
   count,
   cards,
-  demo,
-  reduceMotion,
+  isTarget,
+  visiting,
+  inProgress,
+  arriveKey,
 }: {
   title: string;
   count: number;
   cards: KanbanCard[];
-  demo?: boolean;
-  reduceMotion?: boolean;
+  isTarget: boolean;
+  visiting: boolean;
+  inProgress: boolean;
+  arriveKey: number;
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
@@ -227,36 +257,156 @@ function PipelineColumn({
           {count}
         </span>
       </div>
-      <div className="flex min-h-[9rem] flex-col gap-2 rounded-input border border-dashed border-border p-1.5">
-        {cards.map((c) =>
-          c.highlight && demo && !reduceMotion ? (
-            <motion.div
-              key={c.name}
-              variants={kanbanSettle}
-              initial="rest"
-              animate="drop"
-            >
-              <MiniClientCard {...c} />
-            </motion.div>
-          ) : (
-            <MiniClientCard key={c.name} {...c} />
-          ),
-        )}
+      <div className="relative flex min-h-[10.5rem] flex-col gap-2 rounded-input border border-dashed border-border p-1.5">
+        {/* Drop-target cue: a token-colored accent ring overlay that fades in
+            when the card lands here, then relaxes. Opacity-only (no animated
+            color), so it stays GPU-friendly and token-pure. */}
+        <motion.span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-input border border-dashed border-accent-secondary ring-1 ring-accent-secondary"
+          initial={false}
+          animate={{ opacity: isTarget ? 1 : 0 }}
+          transition={{ duration: 0.45, ease: EASE_OUT }}
+        />
+        {cards.map((c) => (
+          <MiniClientCard key={c.name} {...c} />
+        ))}
+        {visiting ? (
+          <TravellingCase inProgress={inProgress} arriveKey={arriveKey} />
+        ) : null}
       </div>
     </div>
   );
 }
 
-/** A small clay "IA" marker chip used to label AI-produced content. When
- * `pulse` is true (and motion allowed) it plays a single subtle scale/opacity
- * beat — "the AI just produced this". Animate the wrapper, not the Phosphor svg. */
-function AIChip({
-  pulse,
-  reduceMotion,
+/** Static resting column (reduced-motion / SSR): no travel, no drop-target cue.
+ * The protagonist sits highlighted in its "En curso" home. */
+function RestPipelineColumn({
+  title,
+  count,
+  cards,
 }: {
-  pulse?: boolean;
-  reduceMotion?: boolean;
+  title: string;
+  count: number;
+  cards: KanbanCard[];
 }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="truncate font-mono text-meta uppercase text-text-muted">
+          {title}
+        </span>
+        <span className="rounded-input bg-surface-sunken px-1.5 font-mono text-meta text-text-muted">
+          {count}
+        </span>
+      </div>
+      <div className="flex min-h-[10.5rem] flex-col gap-2 rounded-input border border-dashed border-border p-1.5">
+        {cards.map((c) => (
+          <MiniClientCard key={c.name} {...c} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ClientesPanel({ active, reduceMotion }: PanelProps) {
+  // Discrete travel step (0=Contacto, 1=Propuesta, 2=En curso). Advances on a
+  // per-step timer and loops back to 0. `arriveKey` increments on each landing so
+  // the arrival settle replays. State is set only inside the timeout callback
+  // (never synchronously in the effect body) and the timer is cleaned up so the
+  // loop stops the instant the panel unmounts / active flips false.
+  const [step, setStep] = useState(0);
+  const [arriveKey, setArriveKey] = useState(0);
+
+  useEffect(() => {
+    if (!active || reduceMotion) return;
+    const id = setTimeout(() => {
+      setStep((s) => (s + 1) % PIPELINE_STEPS.length);
+      setArriveKey((k) => k + 1);
+    }, STEP_DWELL_MS[step]);
+    return () => clearTimeout(id);
+  }, [active, reduceMotion, step]);
+
+  const loop = active && !reduceMotion;
+
+  return (
+    <PanelShell label="Clientes · Pipeline" active={active}>
+      <div className="flex h-full flex-col gap-5">
+        <p className="font-heading text-h3 text-text-primary">
+          Cada cliente, en su sitio
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {loop
+            ? PIPELINE_STEPS.map((col, i) => (
+                <PipelineColumn
+                  key={col.title}
+                  title={col.title}
+                  count={col.base.length + (step === i ? 1 : 0)}
+                  cards={col.base}
+                  isTarget={step === i}
+                  visiting={step === i}
+                  inProgress={i === 2}
+                  arriveKey={arriveKey}
+                />
+              ))
+            : // Reduced-motion / SSR resting scene: protagonist highlighted in
+              // "En curso", counts reflect its presence there.
+              PIPELINE_STEPS.map((col, i) => (
+                <RestPipelineColumn
+                  key={col.title}
+                  title={col.title}
+                  count={col.base.length + (i === 2 ? 1 : 0)}
+                  cards={
+                    i === 2
+                      ? [
+                          ...col.base,
+                          {
+                            name: "Estudio Hibö",
+                            amount: "€2.000",
+                            highlight: true,
+                          },
+                        ]
+                      : col.base
+                  }
+                />
+              ))}
+        </div>
+        <p className="mt-auto text-body-sm text-text-secondary">
+          Mueves cada caso por sus estados y sabes de un vistazo qué tienes
+          abierto con cada cliente.
+        </p>
+      </div>
+    </PanelShell>
+  );
+}
+
+/* ------------------------------------------------------------------------- *
+ * Panel 2 — Documentos con IA: upload doc → IA reads it → extracts deals +
+ * next steps (docs/product.md "AI extractor saca deals y next steps"). NO
+ * facturación. The narrative replays on each activation and resolves ~3.5s:
+ *   A (0–0.9s): scan-line sweep over the doc + "Analizando documento…" with a
+ *               looping indeterminate bar (scaleX, transform-only).
+ *   B (~1s):    header crossfades "Analizando…" → "Extraído del documento" + AIChip pulse.
+ *   C (1.2–2.8s): "Deals detectados" then "Próximos pasos" stagger in.
+ *   D (~3s):    a muted mono summary line "2 deals · 3 próximos pasos" fades in.
+ * reduced-motion / SSR ⇒ full extracted state, static. Header height is reserved
+ * (absolute-stacked crossfade) so the label swap never shifts content.
+ * ------------------------------------------------------------------------- */
+const EXTRACTED_DEALS: string[] = [
+  "Rediseño de marca · €2.000", // mock
+  "Diseño de papelería · €600", // mock
+];
+const EXTRACTED_NEXT_STEPS: string[] = [
+  "Enviar contrato firmado", // mock
+  "Agendar kickoff esta semana", // mock
+  "Pedir manual de marca actual", // mock
+];
+
+type DocPhase = "analyzing" | "extracted";
+
+/** AI marker chip. `pulse` plays one subtle scale/opacity beat ("the AI just
+ * produced this"). Animate the wrapper, never the Phosphor svg. */
+function AIChip({ pulse, reduceMotion }: { pulse?: boolean; reduceMotion?: boolean }) {
   const className =
     "inline-flex items-center gap-1 rounded-input border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary";
   if (pulse && !reduceMotion) {
@@ -280,85 +430,59 @@ function AIChip({
   );
 }
 
-/* ------------------------------------------------------------------------- *
- * Panel 1 — Clientes y casos: a 3-column kanban (Contacto → Propuesta →
- * En curso). Faithful to the product pipeline (prospect → propuesta → en curso
- * → cerrado); the protagonist case "Estudio Hibö" sits highlighted in "En
- * curso". Static here; Commit 3 advances one card a column on activation.
- * ------------------------------------------------------------------------- */
-const KANBAN_CONTACTO: KanbanCard[] = [
-  { name: "Marea", amount: "€900" }, // mock
-  { name: "Cuaderno", amount: "€600" }, // mock
-];
-const KANBAN_PROPUESTA: KanbanCard[] = [
-  { name: "Faro", amount: "€1.500" }, // mock
-  { name: "Norte", amount: "€2.400" }, // mock
-];
-const KANBAN_EN_CURSO: KanbanCard[] = [
-  { name: "Roble", amount: "€1.100" }, // mock
-  { name: "Estudio Hibö", amount: "€2.000", highlight: true }, // mock
-];
-
-export function ClientesPanel({ active, reduceMotion }: PanelProps) {
+/** Thin indeterminate "working" bar: a clipped track with an accent segment that
+ * loops left→right via scaleX + x (transform-only). Used during the analyzing
+ * phase. Reserved 0.5rem track height — no reflow when it disappears. */
+function WorkingBar() {
   return (
-    <PanelShell label="Clientes · Pipeline" active={active}>
-      <div className="flex h-full flex-col gap-4">
-        <p className="font-heading text-h3 text-text-primary">
-          Cada cliente, en su sitio
-        </p>
-        <div className="grid grid-cols-3 gap-2">
-          <PipelineColumn title="Contacto" count={2} cards={KANBAN_CONTACTO} />
-          <PipelineColumn title="Propuesta" count={2} cards={KANBAN_PROPUESTA} />
-          <PipelineColumn
-            title="En curso"
-            count={2}
-            cards={KANBAN_EN_CURSO}
-            demo={active}
-            reduceMotion={reduceMotion}
-          />
-        </div>
-        <p className="mt-auto text-body-sm text-text-secondary">
-          Arrastra el caso a su estado y sabes de un vistazo qué tienes abierto
-          con cada cliente.
-        </p>
-      </div>
-    </PanelShell>
+    <span
+      className="relative block h-0.5 w-full overflow-hidden rounded-full bg-surface-sunken"
+      aria-hidden="true"
+    >
+      <motion.span
+        className="absolute inset-y-0 left-0 w-1/3 origin-left rounded-full bg-accent-secondary"
+        initial={{ x: "-100%" }}
+        animate={{ x: ["-100%", "300%"] }}
+        transition={{ duration: 1.1, ease: EASE_INOUT, repeat: Infinity }}
+      />
+    </span>
   );
 }
 
-/* ------------------------------------------------------------------------- *
- * Panel 2 — Documentos con IA: a document card + an AI-extracted block. Sube un
- * documento por cliente y la IA saca los deals y los próximos pasos
- * (docs/product.md "AI extractor saca deals y next steps"). NO facturación.
- * Static here; Commit 3 plays the "Analizando…" → "Extraído" stagger.
- * ------------------------------------------------------------------------- */
-const EXTRACTED_DEALS: string[] = [
-  "Rediseño de marca · €2.000", // mock
-  "Diseño de papelería · €600", // mock
-];
-const EXTRACTED_NEXT_STEPS: string[] = [
-  "Enviar contrato firmado", // mock
-  "Agendar kickoff esta semana", // mock
-  "Pedir manual de marca actual", // mock
-];
-
 export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
+  // Phase machine. Starts "analyzing" on activation, flips to "extracted" once.
+  // reduced-motion ⇒ pinned to "extracted" with no timers. State changes only in
+  // the timeout callback; the timer is cleared on unmount / active flip.
+  const [phase, setPhase] = useState<DocPhase>(reduceMotion ? "extracted" : "analyzing");
+
+  useEffect(() => {
+    if (!active || reduceMotion) return;
+    const startId = setTimeout(() => setPhase("analyzing"), 0);
+    const extractId = setTimeout(() => setPhase("extracted"), 950);
+    return () => {
+      clearTimeout(startId);
+      clearTimeout(extractId);
+    };
+  }, [active, reduceMotion]);
+
+  const extracted = phase === "extracted" || reduceMotion;
+  const showItems = active && extracted;
+
   return (
     <PanelShell label="Documentos · Estudio Hibö" active={active}>
-      <div className="flex h-full flex-col gap-3">
-        {/* The uploaded document. A thin accent scan line sweeps top→bottom once
-            on activation ("la IA lo lee") before the extraction staggers in.
-            Overlay is absolute inside the relative, clipped card; reduced motion
-            ⇒ not rendered. The resting card is unchanged. */}
-        <div className="relative flex items-center gap-3 overflow-hidden rounded-note border border-border-strong bg-surface px-3 py-2.5 shadow-hard-sm">
+      <div className="flex h-full flex-col gap-4">
+        {/* The uploaded document. A thin accent scan line sweeps top→bottom on
+            activation ("la IA lo lee"). Overlay is absolute inside the relative,
+            clipped card; reduced motion ⇒ not rendered, resting card unchanged. */}
+        <div className="relative flex items-center gap-3 overflow-hidden rounded-note border border-border-strong bg-surface px-3 py-3 shadow-hard-sm">
           {active && !reduceMotion ? (
             <motion.span
               key={`scan-${active}`}
               className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-accent-secondary opacity-40"
               aria-hidden="true"
               initial={{ y: 0 }}
-              animate={{ y: [0, 54] }}
-              transition={{ duration: 0.6, ease: EASE_OUT }}
+              animate={{ y: [0, 60] }}
+              transition={{ duration: 0.7, ease: EASE_OUT }}
             />
           ) : null}
           <span
@@ -377,122 +501,216 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
           </span>
         </div>
 
-        {/* AI-extracted block. The extracted items stagger-in (opacity + small
-            y) as if the IA just pulled them; the IA chip pulses once. The block
-            is the stagger container, keyed on `active` so it replays each
-            activation. Reduced motion ⇒ all items in their final shown state. */}
-        <motion.div
-          className="flex min-h-0 flex-1 flex-col gap-3 rounded-note border border-border bg-surface px-3 py-2.5"
-          variants={staggerContainer}
-          {...staggerRootProps(active, reduceMotion)}
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-meta uppercase text-text-muted">
-              Extraído del documento
+        {/* AI-extracted block. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-note border border-border bg-surface px-3 py-3">
+          {/* Header row. The label SWAPS "Analizando…" → "Extraído"; both are
+              absolute-stacked + crossfaded inside a fixed-height slot so nothing
+              shifts (CLS 0). The AIChip pulses once extraction lands. */}
+          <div className="flex items-center justify-between gap-2">
+            <span className="relative block h-4 min-w-0 flex-1">
+              {/* SEQUENTIAL swap (mode="wait"): the exiting label fades fully out
+                  before the entering one fades in, so the two DIFFERENT texts are
+                  never simultaneously legible on top of each other. Absolute-stacked
+                  in a fixed-height (h-4) slot ⇒ zero layout shift (CLS 0). */}
+              <AnimatePresence initial={false} mode="wait">
+                {!extracted ? (
+                  <motion.span
+                    key="analyzing"
+                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                    initial={reduceMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reduceMotion ? undefined : { opacity: 0 }}
+                    transition={{ duration: 0.2, ease: EASE_OUT }}
+                  >
+                    Analizando documento…
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="extracted"
+                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                    initial={reduceMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reduceMotion ? undefined : { opacity: 0 }}
+                    transition={{ duration: 0.2, ease: EASE_OUT }}
+                  >
+                    Extraído del documento
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </span>
-            <AIChip pulse={active} reduceMotion={reduceMotion} />
+            <AIChip pulse={active && extracted} reduceMotion={reduceMotion} />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-meta uppercase text-text-muted">
-              Deals detectados
-            </span>
-            {EXTRACTED_DEALS.map((deal) => (
-              <motion.div
-                key={deal}
-                variants={staggerItem}
-                className="flex items-center gap-2 rounded-input border border-border bg-surface-raised px-2 py-1.5"
-              >
-                <span
-                  className="size-2 shrink-0 rounded-full bg-accent-secondary"
-                  aria-hidden="true"
-                />
-                <span className="truncate text-body-sm text-text-primary">
-                  {deal}
-                </span>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-meta uppercase text-text-muted">
-              Próximos pasos
-            </span>
-            <ul className="flex flex-col gap-1.5">
-              {EXTRACTED_NEXT_STEPS.map((step) => (
-                <motion.li
-                  key={step}
-                  variants={staggerItem}
-                  className="flex items-center gap-2"
+          {/* Working bar (analyzing only). Reserve its 0.5rem track height with a
+              crossfade so the body below does not jump when it vanishes. */}
+          <span className="relative block h-0.5 w-full">
+            <AnimatePresence initial={false}>
+              {!extracted && !reduceMotion ? (
+                <motion.span
+                  key="working"
+                  className="absolute inset-0"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: EASE_OUT }}
                 >
-                  <CheckCircle
-                    size={15}
-                    className="shrink-0 text-text-muted"
+                  <WorkingBar />
+                </motion.span>
+              ) : null}
+            </AnimatePresence>
+          </span>
+
+          {/* Extracted content. Kept rendered with reserved space; opacity-staggers
+              in once extracted so the layout never shifts (CLS 0). */}
+          <motion.div
+            className="flex min-h-0 flex-1 flex-col gap-3"
+            variants={staggerContainer}
+            initial={reduceMotion ? false : "hidden"}
+            animate={reduceMotion ? "show" : showItems ? "show" : "hidden"}
+          >
+            <div className="flex flex-col gap-1.5">
+              <span className="font-mono text-meta uppercase text-text-muted">
+                Deals detectados
+              </span>
+              {EXTRACTED_DEALS.map((deal) => (
+                <motion.div
+                  key={deal}
+                  variants={staggerItem}
+                  className="flex items-center gap-2 rounded-input border border-border bg-surface-raised px-2 py-1.5"
+                >
+                  <span
+                    className="size-2 shrink-0 rounded-full bg-accent-secondary"
                     aria-hidden="true"
                   />
-                  <span className="truncate text-body-sm text-text-secondary">
-                    {step}
+                  <span className="truncate text-body-sm text-text-primary">
+                    {deal}
                   </span>
-                </motion.li>
+                </motion.div>
               ))}
-            </ul>
-          </div>
-        </motion.div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="font-mono text-meta uppercase text-text-muted">
+                Próximos pasos
+              </span>
+              <ul className="flex flex-col gap-1.5">
+                {EXTRACTED_NEXT_STEPS.map((stepText) => (
+                  <motion.li
+                    key={stepText}
+                    variants={staggerItem}
+                    className="flex items-center gap-2"
+                  >
+                    <motion.span
+                      className="flex shrink-0 text-success"
+                      variants={staggerItem}
+                      aria-hidden="true"
+                    >
+                      <CheckCircle size={15} weight="fill" />
+                    </motion.span>
+                    <span className="truncate text-body-sm text-text-secondary">
+                      {stepText}
+                    </span>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Phase D — faithful summary line. Reserved at the bottom; fades in
+                after the items. Mono + muted so it reads as a quiet recap. */}
+            <span className="relative mt-auto block h-4">
+              <motion.span
+                className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                variants={staggerItem}
+              >
+                2 deals · 3 próximos pasos {/* mock */}
+              </motion.span>
+            </span>
+          </motion.div>
+        </div>
       </div>
     </PanelShell>
   );
 }
 
 /* ------------------------------------------------------------------------- *
- * Panel 3 — Plantillas de email: a template with brand header + {{variables}}
- * and a preview filled from client data (docs/product.md "Plantillas con marca
- * propia, variables del cliente, preview"). Send affordance is "Copiar" /
- * mailto only — NO campañas, NO email marketing masivo.
- * Static here; Commit 3 crossfades {{variables}} → resolved values.
+ * Panel 3 — Plantillas de email: write a template with {{variables}} → Tendr
+ * RESOLVES them from client data → the on-brand email assembles
+ * (docs/product.md "Plantillas con marca propia, variables del cliente, preview").
+ * Send affordance is "Copiar" / mailto only — NO campañas, NO email marketing.
+ * Narrative on each activation:
+ *   A (0–1.6s): TEMPLATE view with {{empresa}}/{{nombre}}/{{servicio}} chips.
+ *   B (1.6–2.6s): each chip RESOLVES token→value with a staggered flip
+ *                 ({{empresa}}→"Estudio Hibö", {{nombre}}→"Lucía",
+ *                 {{servicio}}→"rediseño de marca") + restyles to "real data".
+ *   C (2.8–3.2s): crossfade TEMPLATE → rendered EMAIL; toggle flips to preview.
+ * Rest on the email. The ViewToggle stays clickable (manual override → template).
+ * reduced-motion / SSR ⇒ TEMPLATE view static (chips, not resolved); toggle still
+ * reaches the preview. No resolution beat, no auto-switch.
  * ------------------------------------------------------------------------- */
 
-/** A highlighted template variable token like {{nombre}}. On `beat` (motion
- * allowed) it plays a single highlight pulse (opacity + small scale) — the var
- * "filling in" — resolving to the resting chip. Resting look is unchanged. */
-function VarChip({
-  children,
-  beat,
+/** A template variable that RESOLVES from its {{token}} to the real value. The
+ * resolution is a quick rotateX/opacity crossfade in place (motion-graphics flip)
+ * and a restyle from accent-outline (editable token) to a calmer "real data"
+ * look. Both states are absolute-stacked in a fixed slot so nothing rewraps. */
+function ResolvingVar({
+  token,
+  value,
+  resolved,
   reduceMotion,
 }: {
-  children: ReactNode;
-  beat?: boolean;
-  reduceMotion?: boolean;
+  token: string;
+  value: string;
+  resolved: boolean;
+  reduceMotion: boolean;
 }) {
-  const className =
+  const tokenCls =
     "rounded-input border border-accent-secondary bg-accent-secondary-soft px-1.5 py-0.5 font-mono text-meta text-accent-secondary";
-  if (beat && !reduceMotion) {
-    return (
-      <motion.span
-        className={className}
-        initial={{ opacity: 0.5, scale: 0.94 }}
-        animate={{ opacity: [0.5, 1, 1], scale: [0.94, 1.06, 1] }}
-        transition={{ duration: 0.45, ease: EASE_SNAP }}
-      >
-        {children}
-      </motion.span>
-    );
+  const valueCls =
+    "rounded-input border border-border bg-surface-sunken px-1.5 py-0.5 text-body-sm text-text-primary";
+
+  if (reduceMotion) {
+    // Resting source state under reduced motion: the editable token.
+    return <span className={tokenCls}>{token}</span>;
   }
-  return <span className={className}>{children}</span>;
+
+  return (
+    <span className="relative inline-flex" style={{ perspective: 400 }}>
+      {/* Invisible spacer = the wider of the two, so the inline slot never
+          changes width as token↔value crossfade (minimizes rewrap). */}
+      <span className={valueCls + " invisible whitespace-nowrap"} aria-hidden="true">
+        {value}
+      </span>
+      <motion.span
+        className={"absolute inset-0 flex items-center justify-center whitespace-nowrap " + tokenCls}
+        animate={{ opacity: resolved ? 0 : 1, rotateX: resolved ? 90 : 0 }}
+        transition={{ duration: 0.35, ease: EASE_OUT }}
+        style={{ transformStyle: "preserve-3d", backfaceVisibility: "hidden" }}
+      >
+        {token}
+      </motion.span>
+      <motion.span
+        className={"absolute inset-0 flex items-center justify-center whitespace-nowrap " + valueCls}
+        animate={{ opacity: resolved ? 1 : 0, rotateX: resolved ? 0 : -90 }}
+        transition={{ duration: 0.35, ease: EASE_SNAP }}
+        style={{ transformStyle: "preserve-3d", backfaceVisibility: "hidden" }}
+      >
+        {value}
+      </motion.span>
+    </span>
+  );
 }
 
 /** The two views the Plantillas panel alternates between. */
 type PlantillasView = "template" | "preview";
 
-/** Crossfade between the two stacked views: a calm opacity dissolve. Reduced
- * motion collapses to instant (the consumer passes initial={false} + 0 dur). */
+/** Crossfade between the two stacked views: a calm opacity dissolve. */
 const viewCrossfade: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { duration: 0.3, ease: EASE_OUT } },
   exit: { opacity: 0, transition: { duration: 0.3, ease: EASE_OUT } },
 };
 
-/** Segmented toggle: two real buttons acting as a radiogroup. The active pill
- * uses accent styling; the inactive pill is muted. Subtle and professional. */
+/** Segmented toggle: two real buttons acting as a radiogroup. */
 function ViewToggle({
   view,
   onSelect,
@@ -532,14 +750,13 @@ function ViewToggle({
   );
 }
 
-/** View A — the sober, editable template source: brand row + body with the
- * {{empresa}}/{{nombre}}/{{servicio}} variable tokens. Reads as the EDITABLE
- * SOURCE. The var chips play their highlight beat once on activation. */
+/** View A — the editable template source: brand row + body with the
+ * {{empresa}}/{{nombre}}/{{servicio}} variables that RESOLVE on `resolved`. */
 function TemplateView({
-  active,
+  resolved,
   reduceMotion,
 }: {
-  active: boolean;
+  resolved: boolean;
   reduceMotion: boolean;
 }) {
   return (
@@ -562,31 +779,40 @@ function TemplateView({
         </span>
       </div>
 
-      {/* Template body with variable chips. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-2 rounded-note border border-border bg-surface px-3 py-2.5">
+      {/* Template body with variable chips that resolve to client data. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-note border border-border bg-surface px-3 py-3">
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-meta uppercase text-text-muted">
             Asunto
           </span>
-          <span className="flex flex-wrap items-baseline gap-1 text-body-sm text-text-primary">
+          <span className="flex flex-wrap items-center gap-1 text-body-sm text-text-primary">
             Propuesta para{" "}
-            <VarChip beat={active} reduceMotion={reduceMotion}>
-              {"{{empresa}}"}
-            </VarChip>
+            <ResolvingVar
+              token="{{empresa}}"
+              value="Estudio Hibö"
+              resolved={resolved}
+              reduceMotion={reduceMotion}
+            />
           </span>
         </div>
-        <div className="flex flex-col gap-1 text-body-sm leading-relaxed text-text-secondary">
-          <span className="flex flex-wrap items-baseline gap-1">
+        <div className="flex flex-col gap-1.5 text-body-sm leading-relaxed text-text-secondary">
+          <span className="flex flex-wrap items-center gap-1">
             Hola{" "}
-            <VarChip beat={active} reduceMotion={reduceMotion}>
-              {"{{nombre}}"}
-            </VarChip>
+            <ResolvingVar
+              token="{{nombre}}"
+              value="Lucía"
+              resolved={resolved}
+              reduceMotion={reduceMotion}
+            />
             , te paso la propuesta de
           </span>
-          <span className="flex flex-wrap items-baseline gap-1">
-            <VarChip beat={active} reduceMotion={reduceMotion}>
-              {"{{servicio}}"}
-            </VarChip>{" "}
+          <span className="flex flex-wrap items-center gap-1">
+            <ResolvingVar
+              token="{{servicio}}"
+              value="rediseño de marca"
+              resolved={resolved}
+              reduceMotion={reduceMotion}
+            />{" "}
             que comentamos.
           </span>
         </div>
@@ -607,16 +833,14 @@ function TemplateView({
   );
 }
 
-/** View B — the PROFESSIONAL RENDERED EMAIL the client actually receives, with
- * REAL resolved values (no {{}}). Branded header band + hairline + subject +
- * greeting + body + faux CTA + signature. This is the "wow": the same template,
- * filled with the client's data, on-brand. */
+/** View B — the rendered EMAIL the client actually receives, with REAL resolved
+ * values (no {{}}). Branded header band + subject + greeting + body + CTA + sign. */
 function PreviewView() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-note border border-border bg-surface">
         {/* Branded header band: monogram + sender + recipient meta. */}
-        <div className="flex items-center gap-2 bg-surface-sunken px-3 py-2.5">
+        <div className="flex items-center gap-2 bg-surface-sunken px-3 py-3">
           <span
             className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-primary font-mono text-meta uppercase text-on-accent"
             aria-hidden="true"
@@ -663,33 +887,52 @@ function PreviewView() {
   );
 }
 
-export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
-  const [view, setView] = useState<PlantillasView>("template");
+type PlantillasPhase = "template" | "resolving" | "preview";
 
-  // AUTO-ALTERNATION: on each activation (motion allowed) start on the template,
-  // then resolve into the polished rendered email once (~2.4s). One transition
-  // per activation — calm, not a loop. Reduced motion ⇒ stay on the template
-  // (toggle still reaches the preview). Both setView calls are scheduled (not a
-  // direct synchronous setState in the effect body — react-hooks/set-state-in-
-  // effect), and the cleanup clears both pending timers.
+export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
+  // `view` is what the toggle shows (also user-overridable). `phase` drives the
+  // auto-narrative: template → resolving (chips resolve) → preview. On manual
+  // toggle we hand control to the user (phase parked). reduced-motion ⇒ template,
+  // unresolved. All setState is in timeout callbacks; timers cleared on unmount.
+  const [view, setView] = useState<PlantillasView>("template");
+  const [phase, setPhase] = useState<PlantillasPhase>("template");
+
   useEffect(() => {
     if (!active || reduceMotion) return;
-    const resetId = setTimeout(() => setView("template"), 0);
-    const previewId = setTimeout(() => setView("preview"), 2400);
+    const reset = setTimeout(() => {
+      setView("template");
+      setPhase("template");
+    }, 0);
+    const resolveId = setTimeout(() => setPhase("resolving"), 1600);
+    const previewId = setTimeout(() => {
+      setPhase("preview");
+      setView("preview");
+    }, 2900);
     return () => {
-      clearTimeout(resetId);
+      clearTimeout(reset);
+      clearTimeout(resolveId);
       clearTimeout(previewId);
     };
   }, [active, reduceMotion]);
 
+  // Variables show as resolved during the resolving beat and once we move on.
+  const resolved = phase === "resolving" || phase === "preview";
+
+  // Manual override: clicking the toggle takes control. Selecting "template"
+  // returns to the editable (unresolved) source; "preview" jumps to the email.
+  const handleSelect = (next: PlantillasView) => {
+    setView(next);
+    setPhase(next === "preview" ? "preview" : "template");
+  };
+
   return (
     <PanelShell label="Plantillas · Email" active={active}>
-      <div className="flex h-full flex-col gap-3">
-        <ViewToggle view={view} onSelect={setView} />
+      <div className="flex h-full flex-col gap-4">
+        <ViewToggle view={view} onSelect={handleSelect} />
 
         {/* Both views are absolute-stacked in this flex-1 body so toggling never
-            reflows the stage (CLS 0). AnimatePresence (no mode="wait") overlaps
-            the crossfade so the stage is never empty. Reduced motion ⇒ instant. */}
+            reflows the stage (CLS 0). AnimatePresence (sync mode) overlaps the
+            crossfade so the stage is never empty. Reduced motion ⇒ instant. */}
         <div className="relative min-h-0 flex-1">
           <AnimatePresence initial={false}>
             <motion.div
@@ -701,7 +944,7 @@ export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
               exit={reduceMotion ? undefined : "exit"}
             >
               {view === "template" ? (
-                <TemplateView active={active} reduceMotion={reduceMotion} />
+                <TemplateView resolved={resolved} reduceMotion={reduceMotion} />
               ) : (
                 <PreviewView />
               )}
@@ -714,53 +957,150 @@ export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
 }
 
 /* ------------------------------------------------------------------------- *
- * Panel 4 — IA que te asiste: a "resumen de la relación" + a "próxima acción
- * sugerida" card + a trust chip "Tu API key, cifrada (AES-256-GCM)". Faithful
- * to docs/product.md (resume relación, sugiere próxima acción, adapta
- * plantillas; coste = BYO encrypted key). NO integraciones inventadas.
- * Static here; Commit 3 fades in the summary + suggestion on activation.
+ * Panel 4 — IA que te asiste: the IA analyzes the relationship and produces a
+ * summary + a suggested next action + a template-tone tip + the BYO-key trust
+ * chip. Faithful to docs/product.md (resume relación, sugiere próxima acción,
+ * adapta plantillas; coste = BYO encrypted key). Narrative on each activation:
+ *   A (0–1s):  "Analizando relación…" working state — AIChip shimmer, cards faint.
+ *   B (1–2.2s): "Resumen de la relación" reveals with a WRITTEN-IN word stagger.
+ *   C (2.2–3s): "Próxima acción sugerida" reveals + MagicWand wrapper pulse.
+ *   D (3–3.6s): template-tone row + trust chip fade in. Rest.
+ * reduced-motion / SSR ⇒ full final state, static. Final layout reserved from the
+ * start (cards always rendered, only opacity/transform animate) so no shift.
  * ------------------------------------------------------------------------- */
+const SUMMARY_WORDS =
+  "Cliente de diseño desde febrero. Propuesta de retainer enviada hace 2 días, aún sin respuesta. Buen trato, paga puntual.".split(
+    " ",
+  ); // mock
+
+type AsistentePhase = "thinking" | "summary" | "action" | "done";
+
+/** Word-by-word "written-in" reveal for the relationship summary (opacity stagger
+ * across word spans, NOT a width animation). Reserved by always rendering the
+ * words; only opacity animates so the paragraph box never reflows. */
+const wordStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.035 } },
+};
+const wordItem: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.18, ease: EASE_OUT } },
+};
+
 export function AsistentePanel({ active, reduceMotion }: PanelProps) {
+  // Phase machine: thinking → summary → action → done. reduced-motion ⇒ "done".
+  // All transitions in timeout callbacks; cleared on unmount / active flip.
+  const [phase, setPhase] = useState<AsistentePhase>(
+    reduceMotion ? "done" : "thinking",
+  );
+
+  useEffect(() => {
+    if (!active || reduceMotion) return;
+    const t0 = setTimeout(() => setPhase("thinking"), 0);
+    const t1 = setTimeout(() => setPhase("summary"), 1000);
+    const t2 = setTimeout(() => setPhase("action"), 2200);
+    const t3 = setTimeout(() => setPhase("done"), 3000);
+    return () => {
+      clearTimeout(t0);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [active, reduceMotion]);
+
+  const thinking = phase === "thinking" && !reduceMotion;
+  const showSummary = reduceMotion || phase === "summary" || phase === "action" || phase === "done";
+  const showAction = reduceMotion || phase === "action" || phase === "done";
+  const showRest = reduceMotion || phase === "done";
+
   return (
     <PanelShell label="Asistente · Estudio Hibö" active={active}>
-      {/* The assist cards stagger-in (opacity + small y) once on activation, as
-          if the IA just produced them; the container is keyed on `active` so it
-          replays each activation. Reduced motion ⇒ final shown state. */}
-      <motion.div
-        className="flex h-full flex-col gap-3"
-        variants={staggerContainer}
-        {...staggerRootProps(active, reduceMotion)}
-      >
-        {/* Resumen de la relación. */}
+      <div className="flex h-full flex-col gap-4">
+        {/* Resumen de la relación. The card is always present (reserved); during
+            "thinking" it reads faint with a working label, then the summary
+            writes in word-by-word and the AIChip settles. */}
         <motion.div
-          variants={staggerItem}
-          className="flex flex-col gap-2 rounded-note border border-border bg-surface px-3 py-2.5"
+          className="flex flex-col gap-2 rounded-note border border-border bg-surface px-3 py-3"
+          initial={reduceMotion ? false : { opacity: 0.55 }}
+          animate={{ opacity: thinking ? 0.55 : 1 }}
+          transition={{ duration: 0.4, ease: EASE_OUT }}
         >
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-meta uppercase text-text-muted">
-              Resumen de la relación
+          <div className="flex items-center justify-between gap-2">
+            <span className="relative block h-4 min-w-0 flex-1">
+              {/* SEQUENTIAL swap (mode="wait"): the exiting label fades fully to
+                  opacity 0 BEFORE the entering one fades in, so the two DIFFERENT
+                  texts are NEVER simultaneously legible on top of each other.
+                  Both stay absolute-stacked in this fixed-height (h-4) slot so the
+                  swap costs zero layout shift (CLS 0). */}
+              <AnimatePresence initial={false} mode="wait">
+                {thinking ? (
+                  <motion.span
+                    key="thinking"
+                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      thinking
+                        ? { duration: 1.2, ease: EASE_INOUT, repeat: Infinity }
+                        : { duration: 0.2, ease: EASE_OUT }
+                    }
+                  >
+                    Analizando relación…
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="summary-label"
+                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                    initial={reduceMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2, ease: EASE_OUT }}
+                  >
+                    Resumen de la relación
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </span>
-            <AIChip pulse={active} reduceMotion={reduceMotion} />
+            <AIChip pulse={active && !thinking} reduceMotion={reduceMotion} />
           </div>
-          <p className="text-body-sm leading-relaxed text-text-secondary">
-            Cliente de diseño desde febrero. Propuesta de retainer enviada hace
-            2 días, aún sin respuesta. Buen trato, paga puntual. {/* mock */}
-          </p>
+          <motion.p
+            className="text-body-sm leading-relaxed text-text-secondary"
+            variants={reduceMotion ? undefined : wordStagger}
+            initial={reduceMotion ? false : "hidden"}
+            animate={reduceMotion ? undefined : showSummary ? "show" : "hidden"}
+          >
+            {SUMMARY_WORDS.map((w, i) => (
+              <motion.span
+                key={`${w}-${i}`}
+                variants={reduceMotion ? undefined : wordItem}
+              >
+                {w}
+                {i < SUMMARY_WORDS.length - 1 ? " " : ""}
+              </motion.span>
+            ))}
+          </motion.p>
         </motion.div>
 
-        {/* Próxima acción sugerida. */}
+        {/* Próxima acción sugerida. Always reserved; reveals (opacity + small y)
+            with a MagicWand wrapper pulse once the action phase lands. */}
         <motion.div
-          variants={staggerItem}
-          className="flex items-start gap-3 rounded-note border border-accent-secondary bg-accent-secondary-soft px-3 py-2.5 shadow-hard-sm"
+          className="flex items-start gap-3 rounded-note border border-accent-secondary bg-accent-secondary-soft px-3 py-3 shadow-hard-sm"
+          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{
+            opacity: showAction ? 1 : reduceMotion ? 1 : 0,
+            y: showAction ? 0 : 8,
+          }}
+          transition={{ duration: 0.34, ease: EASE_OUT }}
         >
-          {active && !reduceMotion ? (
+          {showAction && !reduceMotion ? (
             <motion.span
-              key={`wand-${active}`}
+              key={`wand-${phase}`}
               className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-input border border-accent-secondary bg-surface-raised text-accent-secondary"
               aria-hidden="true"
               initial={{ scale: 0.9 }}
-              animate={{ scale: [0.9, 1.08, 1] }}
-              transition={{ duration: 0.45, ease: EASE_SNAP, delay: 0.2 }}
+              animate={{ scale: [0.9, 1.12, 1] }}
+              transition={{ duration: 0.45, ease: EASE_SNAP }}
             >
               <MagicWand size={16} weight="fill" />
             </motion.span>
@@ -782,28 +1122,42 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
           </span>
         </motion.div>
 
-        {/* Suggested template adaptation (faithful: adapta plantillas). */}
+        {/* Template-tone tip (faithful: adapta plantillas). Reserved; fades in last. */}
         <motion.div
-          variants={staggerItem}
           className="flex items-center justify-between gap-2 rounded-input border border-border bg-surface px-3 py-2"
+          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: showRest ? 1 : reduceMotion ? 1 : 0, y: showRest ? 0 : 8 }}
+          transition={{ duration: 0.34, ease: EASE_OUT }}
         >
           <span className="inline-flex items-center gap-1.5 text-body-sm text-text-secondary">
-            <ArrowRight size={14} weight="bold" className="text-accent-secondary" aria-hidden="true" />
+            <ArrowRight
+              size={14}
+              weight="bold"
+              className="text-accent-secondary"
+              aria-hidden="true"
+            />
             Adapta tu plantilla al tono del cliente
           </span>
         </motion.div>
 
-        {/* Trust chip: BYO encrypted API key (the AI cost model). */}
+        {/* Trust chip: BYO encrypted API key (the AI cost model). Fades in last. */}
         <motion.div
-          variants={staggerItem}
           className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-input border border-border bg-surface-sunken px-2 py-1"
+          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: showRest ? 1 : reduceMotion ? 1 : 0, y: showRest ? 0 : 8 }}
+          transition={{ duration: 0.34, ease: EASE_OUT, delay: showRest ? 0.1 : 0 }}
         >
-          <LockKey size={14} weight="fill" className="text-success" aria-hidden="true" />
+          <LockKey
+            size={14}
+            weight="fill"
+            className="text-success"
+            aria-hidden="true"
+          />
           <span className="font-mono text-meta uppercase text-text-secondary">
             Tu API key, cifrada · AES-256-GCM
           </span>
         </motion.div>
-      </motion.div>
+      </div>
     </PanelShell>
   );
 }
@@ -811,8 +1165,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
 /* ------------------------------------------------------------------------- *
  * FEATURES data model: the 4 faithful features (español de España, sin voseo),
  * each paired with its panel component. The order is the accordion order; index
- * 0 is open/active on load (spec R3.4). Descriptions lead with the benefit
- * (product.md tone: directo, beneficio antes que feature).
+ * 0 is open/active on load (spec R3.4). Descriptions lead with the benefit.
  * ------------------------------------------------------------------------- */
 export type Feature = {
   id: string;
