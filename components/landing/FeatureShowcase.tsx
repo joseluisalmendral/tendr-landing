@@ -117,8 +117,11 @@ export function FeatureShowcase() {
 
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-[2fr_3fr] md:items-start lg:gap-12">
-      {/* LEFT (~40%): WAI-ARIA accordion. Each item = heading > button + region. */}
-      <div className="flex flex-col">
+      {/* LEFT (~40%): WAI-ARIA accordion. Each item = heading > button + region.
+          A small gap between items gives the list the generous, journey-coherent
+          rhythm; the per-item vertical padding (py-6) carries the breathing room
+          while the bottom border still divides them. */}
+      <div className="flex flex-col gap-2">
         {FEATURES.map((feature, index) => {
           const isActive = index === activeIndex;
           const buttonId = `feature-${feature.id}-header`;
@@ -147,7 +150,7 @@ export function FeatureShowcase() {
                   onClick={() => setActiveIndex(index)}
                   onKeyDown={(event) => handleHeaderKeyDown(event, index)}
                   className={
-                    "flex w-full items-center justify-between gap-3 py-4 text-left font-heading text-h3 transition-colors duration-200 " +
+                    "flex w-full items-center justify-between gap-3 py-6 text-left font-heading text-h2 transition-colors duration-200 " +
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
                     (isActive
                       ? "text-accent-secondary"
@@ -186,7 +189,7 @@ export function FeatureShowcase() {
                 <div className="min-h-0 overflow-hidden">
                   <p
                     className={
-                      "pb-4 text-body-sm leading-relaxed text-text-secondary transition-opacity duration-200 " +
+                      "max-w-[46ch] pb-6 text-body-lg leading-relaxed text-text-secondary transition-opacity duration-200 " +
                       (isActive ? "opacity-100" : "opacity-0")
                     }
                   >
@@ -201,7 +204,7 @@ export function FeatureShowcase() {
                       region). */}
                   {!isDesktop && isActive ? (
                     <motion.div
-                      className="relative min-h-[24rem] pb-4"
+                      className="relative flex min-h-[26rem] items-stretch justify-center pb-4"
                       initial={reduceMotion ? false : { opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -226,11 +229,11 @@ export function FeatureShowcase() {
           on-activation micro-demo. Reduced motion ⇒ the per-panel motion props
           collapse to the final state (instant swap), so no crossfade is felt. */}
       {isDesktop ? (
-        <div className="relative min-h-[24rem] md:min-h-[28rem]">
+        <div className="relative mx-auto flex min-h-[26rem] w-full max-w-xl items-center justify-center md:min-h-[30rem]">
           <AnimatePresence initial={false}>
             <motion.div
               key={activeIndex}
-              className="absolute inset-0"
+              className="absolute inset-0 flex items-center justify-center"
               initial={reduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={reduceMotion ? undefined : { opacity: 0 }}
