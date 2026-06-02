@@ -62,6 +62,7 @@
   /* clay annotation accent (= atención, tono Anthropic) */
   --color-accent-secondary: var(--accent-secondary);
   --color-accent-secondary-soft: var(--accent-secondary-soft);
+  --color-on-accent-secondary: var(--on-accent-secondary);
   /* functional states (= estado) */
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
@@ -77,6 +78,11 @@
   --color-shadow-tint: var(--shadow-tint);
   --color-wash-from: var(--wash-from);
   --color-wash-to: var(--wash-to);
+  /* wooden frame del tablero de corcho */
+  --color-cork-wood-dark: var(--cork-wood-dark);
+  --color-cork-wood-mid: var(--cork-wood-mid);
+  --color-cork-wood-edge: var(--cork-wood-edge);
+  --color-cork-frame-shadow: var(--cork-frame-shadow);
 
   /* ---- Type families (design.md §2.2) ----
      Registradas con next/font en app/layout.tsx: Clash Display (local,
@@ -116,8 +122,17 @@
   --text-meta--line-height: 1.3;
   --text-meta--letter-spacing: 0.14em;
 
-  /* ---- Radii (design.md §2.5) · brutalist: 0px salvo CTA ---- */
-  --radius-cta: 0.25rem; /* 4px, EXCLUSIVO del CTA primario */
+  /* ---- Radii (design.md §2.5 · v2.1 "suave moderado", lock de forma taste 4.4)
+     UN solo sistema de esquinas, bloqueado en toda la página. Antes era
+     brutalist 0px (salvo CTA 4px); ahora editorial-amable. Cada token genera su
+     utilidad Tailwind v4 (rounded-card, rounded-control, rounded-input,
+     rounded-note). --radius-cta se REPUNTEA a 10px para que todos los CTA
+     primarios (Hero, Pricing, Header) redondeen sin tocar su markup. ---- */
+  --radius-cta: 0.625rem;     /* 10px · CTA primario (= control) */
+  --radius-control: 0.625rem; /* 10px · botones, toggles, controles */
+  --radius-card: 0.875rem;    /* 14px · cards, paneles, fieldsets */
+  --radius-input: 0.5rem;     /* 8px  · inputs, badges, avatares */
+  --radius-note: 0.75rem;     /* 12px · notas de papel (Features, Testimonios) */
 
   /* ---- Shadows (design.md §2.6) · hard sin blur, tintada al papel ---- */
   --shadow-hard: 4px 4px 0 var(--shadow-tint);
@@ -135,6 +150,7 @@
   --duration-reveal: 480ms;
   --duration-wow: 720ms;
   --duration-beat: 1400ms;
+  --duration-wash: 20s; /* loop ambient del wash del Hero (continuo, lento) */
 }
 
 /* Nota: la escala de espacio (design.md §2.4) coincide 1:1 con la escala
@@ -142,7 +158,7 @@
    redefine para no duplicar tokens. */
 
 :root {
-  --radius: 0rem; /* brutalist editorial: 0px por defecto (taste 4.4) */
+  --radius: 0.875rem; /* v2.1 "suave moderado": 14px base (lock de forma taste 4.4) */
 
   /* ---- Paper surfaces ---- */
   --surface: oklch(0.97 0.015 90);
@@ -163,6 +179,9 @@
   /* ---- Clay annotation accent (Anthropic) ---- */
   --accent-secondary: oklch(0.50 0.16 38);
   --accent-secondary-soft: oklch(0.92 0.04 40);
+  /* texto sobre clay SOLIDO: cream del papel del sistema (AA 5.93:1 sobre clay).
+     No usar --on-accent (tinta oscura): pensado para el amber claro, sobre clay da 2.9:1. */
+  --on-accent-secondary: var(--surface);
 
   /* ---- Functional states ---- */
   --success: oklch(0.48 0.07 185);
@@ -183,6 +202,15 @@
   --shadow-tint: oklch(0.30 0.04 60);
   --wash-from: oklch(0.90 0.06 70);
   --wash-to: oklch(0.93 0.05 40);
+
+  /* ---- Wooden frame del tablero de corcho (testimonios full-bleed) ----
+     Familia madera cálida (hue 55-72), más profunda y con más croma que el tan
+     del corcho (0.74/0.055/70). 100% OKLCH (cero hex). Se usan en
+     .cork-section::before como capas de inset box-shadow (marco elevado). */
+  --cork-wood-dark: oklch(0.42 0.07 58);          /* cuerpo profundo / bisel exterior */
+  --cork-wood-mid: oklch(0.55 0.075 62);          /* cara de madera iluminada */
+  --cork-wood-edge: oklch(0.68 0.06 72);          /* labio superior iluminado */
+  --cork-frame-shadow: oklch(0.30 0.05 55 / 0.45); /* sombra de contacto corcho↔marco */
 
   /* ---- shadcn semantic layer → mapeada al papel ---- */
   --background: var(--surface);
@@ -265,4 +293,459 @@
   html {
     @apply font-sans; /* body = Hanken Grotesk (antes font-mono, corregido) */
   }
+}
+
+/* =========================================================================
+   WOW #1 -- Sticky overlap Hero -> "Como funciona" (design-spec-visual.md
+   seccion 1 y 2; design.md patron #3). El UNICO momento wow de la landing.
+
+   Patron canonico (MANUAL_ANIMACIONES_WEB §7.4.3 sticky overlap, compuesto
+   con §6.4 sticky pin para fijar el Hero y §6.3 fade parallax tipo 3 para el
+   fade + scale-down del Hero). Es UN movimiento encadenado: al scrollear, la
+   seccion "Como funciona" sube y se solapa sobre el Hero como una carta de
+   papel; el Hero queda fijado debajo y hace fade + leve scale-down mientras
+   la seccion lo cubre.
+
+   Tecnica: CSS scroll-driven nativo (animation-timeline). SIN JS por frame,
+   SIN listeners de scroll, SIN motion values. Lenis hace scroll real (anima
+   scrollTop), por lo que scroll()/view() funcionan y Lenis solo suaviza el
+   scrub. Solo se animan transform y opacity (CLS 0); el solapamiento fisico
+   es un margin-top negativo ESTATICO (no animado), no afecta al layout shift.
+
+   Escala de z-index (documentada, sin valores sueltos):
+     --z-wow-hero      = 10  (Hero fijado, capa de fondo del beat)
+     --z-wow-section   = 20  (seccion que sube y tapa el Hero)
+     Header sticky     = 40  (definido en Header.tsx, SIEMPRE por encima)
+
+   Easing: --ease-expo (cubic-bezier(0.19, 1, 0.22, 1)), exclusivo del wow.
+   Duracion conceptual del beat: --duration-wow (720ms) como referencia; en
+   scroll-driven el "tiempo" lo marca el rango de scroll, no una duracion.
+
+   animation-range elegido:
+   - Hero fade+scale: timeline scroll(root), range "0% 100vh". El fade arranca
+     al primer pixel de scroll y se completa tras avanzar ~un viewport, que es
+     justo lo que tarda la seccion en subir y cubrirlo (beat ~720ms a velocidad
+     de scroll natural). Asi el Hero ya esta atenuado cuando la carta lo tapa.
+   - Seccion rise: timeline view() del propio bloque, range "entry 0% entry 80%".
+     La seccion termina de asentarse (translateY -> 0) justo al entrar de lleno
+     en viewport, encadenando con el fade del Hero.
+
+   Gateo de accesibilidad / progressive enhancement:
+   - Todo el bloque vive dentro de @media (prefers-reduced-motion: no-preference)
+     y de @supports (animation-timeline: ...). Si el usuario pide reduced-motion
+     O el navegador no soporta scroll-driven, NO hay pin, NO hay fade, NO hay
+     overlap: el Hero se ve completo y la seccion va debajo en flujo normal
+     (estado final estatico). El reveal whileInView y el draw-in de HowItWorks
+     viven en el contenido interno y NO se tocan: siguen revelandose igual.
+   ========================================================================= */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) and (animation-timeline: view()) {
+    /* Capa que sube: solapa fisicamente al Hero (margin-top negativo estatico,
+       no animado) y va por encima en z. Su bg-surface (cream opaco) tapa el
+       wash del Hero al cubrirlo. */
+    .wow-overlap-section {
+      position: relative;
+      z-index: 20; /* --z-wow-section */
+      margin-top: -12vh;
+      animation: wow-section-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+      animation-timing-function: var(--ease-expo);
+      will-change: transform;
+    }
+
+    /* Pin del Hero: queda fijado debajo mientras la seccion lo cubre. El pin
+       es position:sticky (NUNCA height animada). z por debajo de la seccion. */
+    .wow-hero-pin {
+      position: sticky;
+      top: 0;
+      z-index: 10; /* --z-wow-hero */
+    }
+
+    /* Fade + scale-down del Hero (parallax fade tipo 3) mientras se scrollea
+       el primer viewport. Solo opacity y transform. */
+    .wow-hero-fade {
+      animation: wow-hero-fade linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+      animation-timing-function: var(--ease-expo);
+      transform-origin: center top;
+      will-change: transform, opacity;
+    }
+
+    @keyframes wow-hero-fade {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+      to {
+        opacity: 0.55;
+        transform: scale(0.94);
+      }
+    }
+
+    @keyframes wow-section-rise {
+      from {
+        transform: translateY(8vh);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+/* =========================================================================
+   HERO WASH AMBIENT -- loop continuo ~20s (design-spec-visual.md seccion 1
+   trigger "continuo"; design.md patron #1 / motion catalog seccion 6.10
+   "loop ambient"). Bloque INDEPENDIENTE del WOW #1 de arriba.
+
+   Objetivo: hacer "respirar" muy despacio el wash calido amber->clay del Hero
+   sin coste de repaint. No se anima el gradiente por color-stops (caro): se
+   pinta el gradiente amber->clay (tokens, cero hex) en una CAPA absoluta
+   sobredimensionada detras del contenido y se anima SOLO transform (scale +
+   translate) y opacity, ambos GPU/compositor. La calidez deriva despacio.
+
+   Base estatica: el Hero conserva su bg-[linear-gradient(...)] estatico, por
+   lo que el wash amber->clay SIEMPRE se ve (reduced-motion, navegadores sin
+   soporte, primer frame). Esta capa solo ENRIQUECE, no es la base.
+
+   THE LILA RULE: barrido calido->calido (amber->clay), jamas lila/violeta.
+
+   Gateo de accesibilidad: la animacion solo existe dentro de
+   @media (prefers-reduced-motion: no-preference). En reduced-motion la capa
+   queda en su estado base (sin animation) y se ve el wash estatico.
+
+   Sin CLS: la capa es position:absolute inset-0, pointer-events:none, -z-10
+   dentro del Hero (relative isolate overflow-hidden). No empuja layout y el
+   sobredimensionado (scale) queda recortado por el overflow-hidden del Hero.
+   ========================================================================= */
+.hero-wash-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  background-image: linear-gradient(
+    135deg,
+    var(--color-wash-from),
+    var(--color-wash-to)
+  );
+  /* Sobredimensionado leve: al escalar/trasladar nunca descubre los bordes. */
+  transform: scale(1.15);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-wash-ambient {
+    animation: hero-wash-breathe var(--duration-wash) linear infinite;
+  }
+
+  /* Deriva calida lenta: scale + translate sutiles + opacity respirando.
+     Solo transform/opacity. Ida y vuelta (0% == 100%) para loop sin salto. */
+  @keyframes hero-wash-breathe {
+    0% {
+      transform: scale(1.15) translate3d(0, 0, 0);
+      opacity: 0.85;
+    }
+    50% {
+      transform: scale(1.22) translate3d(2%, -1.5%, 0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.15) translate3d(0, 0, 0);
+      opacity: 0.85;
+    }
+  }
+}
+
+/* =========================================================================
+   SECTION SEAM + REVEAL (v2.1) -- separacion clara entre secciones.
+
+   Problema reportado: al scrollear rapido las secciones se funden (todo
+   bg-surface, sin divisor). Dos enriquecimientos, ambos progressive-enhancement:
+
+   1. Costura de papel (.section-seam): una linea ondulada clay punteada
+      (stitched) a ancho de contenedor que actua de juntura visible entre
+      bloques. Es markup decorativo (aria-hidden) en Section; aqui no hay CSS
+      propio salvo que la hereda del color. Se documenta junto al reveal por
+      cercania conceptual.
+
+   2. Reveal de entrada (.section-reveal): el contenido de cada seccion sube +
+      aparece al entrar en viewport. CSS scroll-driven nativo (animation-timeline
+      view()), SIN JS por frame, solo transform/opacity (CLS 0, GPU). Da el
+      "beat" de cambio de seccion que pedia el scroll rapido.
+
+   Gateo: dentro de prefers-reduced-motion: no-preference + @supports. Sin
+   soporte / reduced-motion el contenido se ve completo y estatico (la costura
+   sigue visible: es markup, no animacion).
+   ========================================================================= */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .section-reveal {
+      animation: section-reveal-in linear both;
+      animation-timeline: view();
+      /* arranca al asomar y termina pronto: el contenido ya esta asentado
+         cuando la seccion ocupa el viewport (no "persigue" el scroll). */
+      animation-range: entry 0% entry 38%;
+      animation-timing-function: var(--ease-out);
+      will-change: transform, opacity;
+    }
+
+    @keyframes section-reveal-in {
+      from {
+        opacity: 0;
+        transform: translateY(32px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+/* =========================================================================
+   TESTIMONIALS NOTE -- ficha de papel clavada en el corcho (design §3, §4).
+
+   La entrada cinemática (entrance variado + "stab" de la chincheta) la conduce
+   AHORA TestimonialsCork.tsx en motion-JS, atada al progreso del pan horizontal
+   (useScroll sobre el spacer → useTransform). El viejo enriquecimiento CSS con
+   view-timeline NOMBRADO (view-timeline-name: --tw-note) se RETIRÓ: disparaba
+   mal dentro de un pan lateral (cada ficha cruzaba la franja del viewport en un
+   momento distinto al de su llegada al centro). Aquí sólo quedan:
+     1. El ESTADO BASE clavado y legible (chincheta visible, tilt de reposo,
+        sombra hard) — es el fallback estático/reduced-motion/mobile, sin JS.
+     2. La estructura de capas que el motion-JS y el hover animan encima.
+
+   --- Unidad opaca movible (fix de desync, design §4) ---
+   El article NO lleva fondo ni borde. La superficie cream + las DOS capas de
+   sombra + la figura + el avatar viven dentro de .tw-note__unit → .tw-note__lean,
+   así que sombras y papel viajan/inclinan como UNA sola unidad (sin desync, sin
+   sangrado de borde). La chincheta queda en .tw-note (el corcho) y el papel
+   oscila por debajo.
+
+   --- Sombra hard->soft sin animar box-shadow ---
+   box-shadow NO es compositable (repaint, no GPU). Para cruzar hard->soft
+   animando SOLO opacity se apilan DOS capas absolutas (.tw-note__shadow--hard
+   con --shadow-hard, .tw-note__shadow--soft con --shadow-soft) y el hover/lift
+   las cruza por opacity. Resultado: sólo transform + opacity (+ un único blur en
+   la variante blur-drop) en toda la coreografía (CLS 0, GPU).
+
+   --- Estado base / progressive enhancement ---
+   El estado CLAVADO y LEGIBLE se define SIN @media/@supports: chincheta visible,
+   tilt +-1.5deg, capa hard visible y soft oculta. Si el usuario pide
+   reduced-motion o está por debajo de md, TestimonialsCork renderiza la grilla
+   estática (3+2+2) y la ficha se ve clavada y legible (no una ficha sin
+   chincheta). El tilt de 1.5deg no estorba la lectura.
+   ========================================================================= */
+
+/* --- Estado base (siempre, incluso reduced-motion / sin soporte) ---
+   La nota se ve CLAVADA y legible sin JS: chincheta visible, tilt de reposo,
+   sombra hard. La entrada cinemática (entrance + pin-stab) la conduce ahora
+   TestimonialsCork en motion-JS sobre el progreso del pan horizontal (el viejo
+   enriquecimiento CSS view-timeline se retiró: disparaba mal en un pan lateral).
+   La nota se compone en UNA sola unidad opaca movible (.tw-note__unit) que
+   envuelve el lean de hover (.tw-note__lean), dueño de las sombras + figure +
+   avatar; la chincheta queda en .tw-note (el corcho) y el papel oscila bajo
+   ella. */
+.tw-note {
+  position: relative;
+}
+
+/* Capas de sombra apiladas DENTRO de la unidad movible (viajan + se inclinan con
+   el papel; sin desync). pointer-events:none: solo pintan sombra. */
+.tw-note__shadow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: var(--radius-note); /* v2.1: sigue el redondeo de la nota */
+  background: var(--color-surface-raised);
+}
+.tw-note__shadow--hard {
+  box-shadow: var(--shadow-hard);
+  opacity: 1; /* base: clavada */
+}
+.tw-note__shadow--soft {
+  box-shadow: var(--shadow-soft);
+  opacity: 0; /* base: oculta; el hover/lift la cruza por opacity */
+}
+
+/* Chincheta: arriba-centro, por encima del cuerpo. Visible en base. Queda en el
+   nivel del article (el corcho) para que el papel oscile por debajo. */
+.tw-note__pin {
+  position: absolute;
+  top: -0.75rem; /* asoma por encima del borde superior de la nota */
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  line-height: 0;
+}
+
+/* Unidad opaca movible: contiene sombras + figure + avatar. El pan-JS escribe
+   aquí su transform/opacity de entrada; el lean de hover va en el hijo. */
+.tw-note__unit {
+  transform-origin: top center;
+}
+
+/* Lean de hover (pivota desde la chincheta). En el camino estático lleva el tilt
+   de reposo para conservar el carácter de papel clavado. */
+.tw-note__lean {
+  transform-origin: top center; /* pivota desde la chincheta */
+}
+.tw-note--regular .tw-note__lean {
+  transform: rotate(-1.5deg);
+}
+.tw-note--featured .tw-note__lean {
+  transform: rotate(1.5deg);
+}
+
+/* Tamaños de papel (ancho máx. del figure). Se usan tanto en el pan como en la
+   grilla estática. */
+.tw-note--sm figure {
+  max-width: 300px;
+}
+.tw-note--md figure {
+  max-width: 360px;
+}
+.tw-note--lg figure {
+  max-width: 420px;
+}
+
+/* =========================================================================
+   CORK SECTION (testimonios full-bleed) -- tablero de corcho a sangre completa
+   con marco de madera visible. La textura speckle vive aquí (antes en el panel
+   interior .cork-board, retirado). El marco es un ::before con capas de inset
+   box-shadow (madera elevada ~34px + sombra de contacto). 100% tokens OKLCH
+   (cero hex). El texto vive en el papel cream, no en el corcho, así que no
+   afecta el contraste AA.
+   Z-scale local: speckle 0 · notes/track 1 · pin 2 · frame ::before 2 ·
+   heading 3. */
+.cork-section {
+  position: relative;
+  width: 100%;
+  /* `overflow-x: clip` (NOT `hidden`): the wide pan track is already clipped by
+     .cork-board's own overflow:hidden, so this only guards stray horizontal
+     bleed. CRITICAL: `hidden` here would create a scroll container and BREAK the
+     `position: sticky` pin of .cork-sticky (the board would scroll away and the
+     rest of the tall spacer would render blank). `clip` clips without
+     establishing a scroll container, so the sticky pin keeps working. */
+  overflow-x: clip;
+}
+
+/* Superficie del corcho (speckle + color base). En el PAN path vive en el
+   wrapper escalable .cork-board (R14: el tablero enmarcado escala SMALL->1->SMALL
+   sobre el cream de la página); en el path estático vive directamente en
+   .cork-section--static. */
+.cork-board,
+.cork-section--static {
+  background-color: oklch(0.74 0.055 70);
+  background-image:
+    radial-gradient(oklch(0.63 0.06 58 / 0.55) 1px, transparent 1.6px),
+    radial-gradient(oklch(0.82 0.05 80 / 0.45) 1px, transparent 1.6px);
+  background-size: 13px 13px, 21px 21px;
+  background-position: 0 0, 7px 11px;
+}
+
+/* R14: el wrapper escalable del tablero. Ocupa el viewport fijado (la sticky
+   tiene 100dvh); el scale lo aplica Motion inline (transform-origin center) ->
+   transform puro, GPU, CLS 0. overflow-hidden recorta el pan dentro del marco. */
+.cork-board {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  /* Un pelo de radio + sombra para que, al estar pequeño, lea como un tablero
+     enmarcado flotando sobre el cream (R14 polish, solo tokens). */
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Marco de madera elevado: labio iluminado + cara + cuerpo profundo + sombra de
+   contacto interior hacia el corcho. pointer-events:none para no bloquear nada.
+   En el pan path el marco vive en .cork-board (escala con el tablero); en el
+   estático, en .cork-section--static. */
+.cork-board::before,
+.cork-section--static::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 10px var(--color-cork-wood-edge),
+    inset 0 0 0 28px var(--color-cork-wood-mid),
+    inset 0 0 0 34px var(--color-cork-wood-dark),
+    inset 0 0 22px 34px var(--color-cork-frame-shadow);
+}
+
+/* Encabezado montado en el corcho (etiqueta), por encima del marco. */
+.cork-heading {
+  position: relative;
+  z-index: 3;
+}
+
+/* --- Pan path (desktop, motion on) --- */
+.cork-pin-spacer {
+  position: relative;
+  /* height se fija inline desde panVw (calc estable -> CLS 0). */
+}
+.cork-sticky {
+  display: flex;
+  flex-direction: column;
+}
+.cork-track {
+  display: flex;
+  height: 100dvh;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  will-change: transform;
+}
+.cork-track__cell {
+  position: relative;
+  flex: 0 0 auto; /* width set inline (vw slot); card figure centres inside */
+  display: flex;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Cartoon clay hand that presses the first note in the intro (v2.2). Centred
+   WITHOUT a transform (left/right + margin auto) so Motion's inline transform
+   (scale/y/rotate for the scroll-driven reveal+press+exit) composes cleanly.
+   z above the frame/heading so it presses on top. pointer-events:none. The SVG
+   transform-origin (50% 88%, the fingertip) is set inline so the extreme
+   close-up zoom fills the screen with clay before resolving into the hand. */
+.cork-hand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6vh; /* fingertip lands on the first note's pin (upper-centre) */
+  margin-inline: auto;
+  z-index: 4;
+  width: clamp(170px, 20vw, 280px);
+  height: clamp(260px, 36vh, 420px);
+  pointer-events: none;
+}
+
+/* --- Static / reduced-motion / mobile grid --- */
+.cork-section--static .cork-heading--static {
+  z-index: 3;
+}
+/* Static grid laid out as explicit rows (3 + 2 + 2, no orphan tile). Each row is
+   its own centered flex line; on mobile notes stack into one column. */
+.cork-grid,
+.cork-grid ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cork-grid__cell {
+  display: flex;
+  justify-content: center;
 }

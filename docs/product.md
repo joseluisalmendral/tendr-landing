@@ -131,6 +131,15 @@ Estas son las 10 preguntas que la audiencia se hace antes de probar Tendr. La se
 10. **¿Cómo se compara con mi CRM casero en Notion o Airtable?**
     Notion y Airtable son flexibles pero te toca diseñar tu propio CRM. Tendr llega con modelo CRM ya hecho y funcionando: clientes, casos, kanban, plantillas e IA.
 
+11. **¿Dónde se alojan mis datos?**
+    En una base de datos gestionada en la nube con Row-Level Security activada desde el primer día (cada usuario solo accede a lo suyo) y claves de API cifradas con envelope encryption AES-256-GCM. Puedes exportar o borrar tus datos cuando quieras. **Nota interna (decisión 2026-06-01):** en esta versión NO se afirma región de alojamiento ni certificación RGPD; ampliar aquí cuando se confirmen y comunicar entonces en la landing.
+
+12. **¿Hay versión self-hosted?**
+    No. Tendr es un servicio gestionado (SaaS) en la nube. No hay versión self-hosted en el MVP.
+
+13. **¿Necesito tarjeta para el plan Free? ¿Puedo cancelar cuando quiera?**
+    El plan Free no requiere tarjeta. Los planes de pago (Pro y Team) se pueden cancelar en cualquier momento, sin permanencia.
+
 ---
 
 ## Cómo lo usa el agente
@@ -143,4 +152,4 @@ Cuando vas a redactar copy de la landing (F5) o variantes (F6), pídele al agent
 
 ---
 
-*Documento vivo del producto Tendr. Última actualización 2026-05-28.*
+*Documento vivo del producto Tendr. Última actualización 2026-06-01.*

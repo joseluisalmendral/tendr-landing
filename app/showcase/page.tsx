@@ -180,12 +180,6 @@ export default function ShowcasePage() {
           subtitle="Tendr ordena tus clientes y te dice a quién seguir hoy. Pensado para freelancers junior que recién arrancan."
           ctaPrimary={{ label: "Empezar gratis", href: "/registro" }}
           ctaSecondary={{ label: "Ver cómo funciona", href: "/demo" }}
-          image={{
-            src: "/hero-pipeline-empty.svg",
-            alt: "Pipeline de clientes vacío listo para llenar",
-            width: 640,
-            height: 480,
-          }}
         />
 
         {/* ---------------------------------------------------------------- */}
