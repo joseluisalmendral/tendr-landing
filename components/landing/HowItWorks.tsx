@@ -196,20 +196,28 @@ function HandDrawnConnector({
       whileInView="visible"
       viewport={{ once: true, amount: 0.6 }}
     >
-      {/* Curved organic body, drawn top → bottom. */}
+      {/* Curved organic body, drawn top → bottom. Single smooth bend; terminal
+          point is exactly (96,70) so the arrowhead tip can coincide with it. */}
       <motion.path
         d="M22 6 C 18 26, 40 30, 58 38 C 80 47, 102 50, 96 70"
         stroke="currentColor"
-        strokeWidth={2.5}
+        strokeWidth={3.5}
         strokeLinecap="round"
         strokeLinejoin="round"
         variants={draw}
       />
-      {/* Two-stroke arrowhead at the tail end (≈96,70), pointing down-right. */}
+      {/* Arrowhead. Tip = the body's terminal point (96,70). The body's end
+          tangent runs from its last control point (102,50) to the endpoint
+          (96,70): vector (-6,20) → reversed angle ≈ -73.3°. Two EQUAL-length
+          barbs (len 13) spring FROM the tip at ±28° around the reversed tangent,
+          so the head is symmetric about the curve's end direction and reads as
+          one continuous stroke with the body (same width + round caps):
+            barb A (-45.3°): (96,70) → (105.1,60.8)
+            barb B (-101.3°): (96,70) → (93.5,57.3) */}
       <motion.path
-        d="M96 70 L 85 66 M96 70 L 99 58"
+        d="M96 70 L 105.1 60.8 M96 70 L 93.5 57.3"
         stroke="currentColor"
-        strokeWidth={2.5}
+        strokeWidth={3.5}
         strokeLinecap="round"
         strokeLinejoin="round"
         variants={draw}

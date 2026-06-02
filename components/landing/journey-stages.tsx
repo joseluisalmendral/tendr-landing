@@ -263,20 +263,44 @@ export function StageFormFaux({ active }: { active: boolean }) {
  * SAME Estudio Hibö client sits as the highlighted card in the "En curso" column.
  * ------------------------------------------------------------------------- */
 
-type MiniCard = { name: string; amount: string; tone: "ink" | "muted" };
+type MiniCard = {
+  name: string;
+  amount: string;
+  tone: "ink" | "muted";
+  /** When true the card is the highlighted protagonist (Estudio Hibö): a
+   * stronger ring + tinted accent surface + clay status dot, all kept INSIDE
+   * the card bounds so it never overflows the narrow kanban column. */
+  highlight?: boolean;
+};
 
-function MiniClientCard({ name, amount, tone }: MiniCard) {
+function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
   return (
-    <div className="flex items-center gap-2 rounded-input border border-border bg-surface px-2 py-1.5">
+    <div
+      className={
+        "flex items-center gap-2 rounded-input border px-2 py-1.5 " +
+        (highlight
+          ? "border-accent-secondary bg-accent-secondary-soft ring-1 ring-accent-secondary shadow-hard-sm"
+          : "border-border bg-surface")
+      }
+    >
       <span
         className={
           "size-2 shrink-0 rounded-full " +
-          (tone === "ink" ? "bg-accent-secondary" : "bg-border-strong")
+          (highlight || tone === "ink"
+            ? "bg-accent-secondary"
+            : "bg-border-strong")
         }
         aria-hidden="true"
       />
       <span className="flex min-w-0 flex-1 flex-col leading-tight">
-        <span className="truncate text-body-sm text-text-primary">{name}</span>
+        <span
+          className={
+            "truncate text-body-sm " +
+            (highlight ? "text-accent-secondary" : "text-text-primary")
+          }
+        >
+          {name}
+        </span>
         <span className="font-mono text-meta uppercase text-text-muted">
           {amount}
         </span>
@@ -364,11 +388,19 @@ export function StagePipelineFaux({ active }: { active: boolean }) {
             <PipelineColumn
               title="En curso"
               count={2}
-              cards={[{ name: "Roble", amount: "€1.100", tone: "muted" }]} // mock
-            >
-              {/* Same Estudio Hibö client, highlighted in the "En curso" column. */}
-              <JourneyCardContent />
-            </PipelineColumn>
+              cards={[
+                { name: "Roble", amount: "€1.100", tone: "muted" }, // mock
+                // Same Estudio Hibö client, highlighted as the protagonist —
+                // rendered as a COMPACT kanban mini-card (same structure/size as
+                // its siblings) so it fits the narrow column with no overflow.
+                {
+                  name: "Estudio Hibö",
+                  amount: "€2.000", // mock
+                  tone: "ink",
+                  highlight: true,
+                },
+              ]}
+            />
           </div>
 
           {/* Activity rail. */}
