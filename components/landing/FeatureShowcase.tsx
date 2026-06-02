@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { AnimationPlaybackControls } from "motion/react";
 import {
   animate,
   AnimatePresence,
@@ -59,10 +58,12 @@ const DESKTOP_QUERY = "(min-width: 768px)"; // Tailwind md breakpoint
 
 /**
  * Seconds the active item's progress rail takes to fill top→bottom before the
- * accordion auto-advances to the next feature (cycling 3→0). 7s ≈ enough to read
- * the description and appreciate the panel's on-activation micro-demo.
+ * accordion auto-advances to the next feature (cycling 3→0). 8s ≈ enough to read
+ * the description and watch each panel's looping product-flow demo breathe. The
+ * cycle never pauses on hover/focus (by product decision): to re-watch a feature
+ * the user clicks its header, which restarts that item's rail.
  */
-const AUTO_ADVANCE_SECONDS = 7;
+const AUTO_ADVANCE_SECONDS = 8;
 
 /**
  * SSR-safe desktop detector. useSyncExternalStore reads matchMedia on the client
@@ -93,11 +94,6 @@ export function FeatureShowcase() {
   // motion value — a CONTINUOUS value, so NOT useState (React Compiler + perf).
   // When it reaches 1, the accordion advances to the next feature (wrap 3→0).
   const progress = useMotionValue(0);
-  // Imperative handle on the running animate() so hover/focus can pause/resume.
-  const controlsRef = useRef<AnimationPlaybackControls | null>(null);
-  // Tracks whether the user is currently hovering/focusing the showcase, so a
-  // mid-cycle index change re-starts already-paused if they never left.
-  const pausedRef = useRef(false);
 
   useEffect(() => {
     if (reduceMotion) {
@@ -112,23 +108,9 @@ export function FeatureShowcase() {
       ease: "linear",
       onComplete: () => setActiveIndex((i) => (i + 1) % FEATURES.length),
     });
-    controlsRef.current = controls;
-    if (pausedRef.current) controls.pause();
 
     return () => controls.stop();
   }, [activeIndex, reduceMotion, progress]);
-
-  // Plain imperative handlers (NOT memoized, NOT in any deps array): they mutate
-  // pausedRef + drive controlsRef. Under reduceMotion controlsRef stays null, so
-  // these are harmless no-ops.
-  const pause = () => {
-    pausedRef.current = true;
-    controlsRef.current?.pause();
-  };
-  const resume = () => {
-    pausedRef.current = false;
-    controlsRef.current?.play();
-  };
 
   // Roving focus management for the APG arrow-key navigation. All header buttons
   // are natively focusable/tabbable (APG allows all-tabbable headers); arrow keys
@@ -172,13 +154,7 @@ export function FeatureShowcase() {
   const ActivePanel = FEATURES[activeIndex].Panel;
 
   return (
-    <div
-      className="grid grid-cols-1 gap-8 md:grid-cols-[2fr_3fr] md:items-start lg:gap-12"
-      onMouseEnter={pause}
-      onMouseLeave={resume}
-      onFocusCapture={pause}
-      onBlurCapture={resume}
-    >
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-[2fr_3fr] md:items-start lg:gap-12">
       {/* LEFT (~40%): WAI-ARIA accordion. Each item = heading > button + region.
           A small gap between items gives the list the generous, journey-coherent
           rhythm; the per-item vertical padding (py-6) carries the breathing room
@@ -276,7 +252,7 @@ export function FeatureShowcase() {
                       region). */}
                   {!isDesktop && isActive ? (
                     <motion.div
-                      className="relative flex min-h-[26rem] items-stretch justify-center pb-4"
+                      className="relative flex min-h-[28rem] items-stretch justify-center pb-4"
                       initial={reduceMotion ? false : { opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -301,7 +277,7 @@ export function FeatureShowcase() {
           on-activation micro-demo. Reduced motion ⇒ the per-panel motion props
           collapse to the final state (instant swap), so no crossfade is felt. */}
       {isDesktop ? (
-        <div className="relative mx-auto flex min-h-[26rem] w-full max-w-xl items-center justify-center md:min-h-[30rem]">
+        <div className="relative mx-auto flex min-h-[28rem] w-full max-w-2xl items-center justify-center md:min-h-[34rem]">
           <AnimatePresence initial={false}>
             <motion.div
               key={activeIndex}
