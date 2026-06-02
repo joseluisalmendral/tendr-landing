@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useSyncExternalStore } from "react";
-import { useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { FEATURES } from "./feature-showcase-panels";
 
@@ -10,8 +10,7 @@ import { FEATURES } from "./feature-showcase-panels";
  * client leaf that orchestrates a 40/60 WAI-ARIA accordion + demo panel
  * (change funciones-feature-showcase, spec R1-R10, design ADR-1/ADR-3/ADR-4/ADR-7).
  *
- * COMMIT 2 SCOPE (this file): the interaction layer on top of the Commit-1
- * skeleton.
+ * LAYOUT + INTERACTION:
  *  - LEFT (~40%): a hand-built WAI-ARIA Accordion (APG pattern). Each item is a
  *    heading wrapping a `<button aria-expanded aria-controls>` (the feature NAME,
  *    always visible) + a `role="region"` description region that EXPANDS only for
@@ -20,21 +19,29 @@ import { FEATURES } from "./feature-showcase-panels";
  *    default 0). Keyboard per APG: Enter/Space activate the focused header,
  *    ArrowUp/Down move focus between headers (wrap), Home/End jump to first/last.
  *  - RIGHT (~60%): a reserved-height stage (CLS 0) rendering ONLY the active
- *    panel. The AnimatePresence crossfade + per-panel micro-demos land in
- *    Commit 3; here the swap is instant.
+ *    panel inside <AnimatePresence mode="wait"> keyed by activeIndex — the panel
+ *    is `absolute inset-0` and crossfades on opacity (in ~0.3s, exit ~0.2s), so
+ *    switching never reflows (CLS 0). The incoming panel plays its own
+ *    on-activation micro-demo (panels file).
  *  - Mobile (<md): single column. The accordion stacks and the active item's
- *    PANEL renders INLINE in a reserved-height box right after its description.
- *    `useIsDesktop()` (useSyncExternalStore, SSR snapshot false — mirrors
- *    FeaturesBoard.useFinePointer) decides desktop-vs-mobile placement with NO
- *    hydration mismatch: SSR + first client paint both render the mobile layout
- *    (activeIndex 0 → panel 0 visible), then enrich to the 40/60 grid after mount.
+ *    PANEL renders INLINE in a reserved-height box right after its description,
+ *    with its own keyed fade on switch. `useIsDesktop()` (useSyncExternalStore,
+ *    SSR snapshot false — mirrors FeaturesBoard.useFinePointer) decides
+ *    desktop-vs-mobile placement with NO hydration mismatch: SSR + first client
+ *    paint both render the mobile layout (activeIndex 0 → panel 0 visible), then
+ *    enrich to the 40/60 grid after mount.
  *  - `activeIndex` is discrete UI state (useState). NO per-frame useState, NO
  *    useCallback/useMemo (React Compiler handles memoization).
  *
- * Reduced motion: the grid-rows expand transition is disabled (instant) — the
- * description still shows for the active item and the accordion stays fully
- * usable (keyboard + state). The full reduced-motion gating of the right-panel
- * micro-demos is Commit 3.
+ * COMMIT 3 MOTION LAYER: the crossfade between panels (AnimatePresence keyed by
+ * activeIndex) + each panel's on-activation micro-demo (in feature-showcase-panels)
+ * + reduced-motion gating. `reduceMotion` is threaded down to the panels so each
+ * renders its final/resolved STATIC state under prefers-reduced-motion.
+ *
+ * Reduced motion: NO crossfade (panels swap instantly — no AnimatePresence
+ * transition since the motion props collapse to the final state), NO micro-demos
+ * (panels render their resting state), and the grid-rows expand transition is
+ * disabled (instant). The accordion stays fully usable (keyboard + state).
  *
  * Tokens only (zero hex), light theme lock (no dark:), Phosphor /dist/ssr in the
  * panels. The Section heading + RSC boundary live in app/page.tsx.
@@ -192,9 +199,14 @@ export function FeatureShowcase() {
                       active item mounts its panel here (it is the only expanded
                       region). */}
                   {!isDesktop && isActive ? (
-                    <div className="relative min-h-[24rem] pb-4">
-                      <FeaturePanel active />
-                    </div>
+                    <motion.div
+                      className="relative min-h-[24rem] pb-4"
+                      initial={reduceMotion ? false : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <FeaturePanel active reduceMotion={reduceMotion} />
+                    </motion.div>
                   ) : null}
                 </div>
               </div>
@@ -204,11 +216,31 @@ export function FeatureShowcase() {
       </div>
 
       {/* RIGHT (~60%): reserved-height stage. Desktop only — on mobile the panel
-          renders inline in the accordion above. Reserved min-h keeps CLS 0 when
-          the active feature switches. Commit 3 wraps this in AnimatePresence. */}
+          renders inline in the accordion above. Reserved min-h + absolute-stacked
+          crossfade keep CLS 0 when the active feature switches. AnimatePresence
+          in the DEFAULT (sync) mode keyed by activeIndex overlaps the panels:
+          the incoming fades in (~0.3s) WHILE the outgoing fades out, both
+          absolute-stacked, so the stage is never empty (mode="wait" left a blank
+          gap between exit and enter). The incoming panel plays its own
+          on-activation micro-demo. Reduced motion ⇒ the per-panel motion props
+          collapse to the final state (instant swap), so no crossfade is felt. */}
       {isDesktop ? (
         <div className="relative min-h-[24rem] md:min-h-[28rem]">
-          <ActivePanel active />
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={activeIndex}
+              className="absolute inset-0"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduceMotion ? undefined : { opacity: 0 }}
+              transition={{
+                duration: reduceMotion ? 0 : 0.3,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              <ActivePanel active reduceMotion={reduceMotion} />
+            </motion.div>
+          </AnimatePresence>
         </div>
       ) : null}
     </div>

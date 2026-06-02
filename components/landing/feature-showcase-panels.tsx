@@ -12,18 +12,32 @@
  * (Salesforce/HubSpot/Slack/Notion), NO SSO, NO self-host, NO multi-idioma.
  * The AI cost model is the user's OWN encrypted BYO API key (AES-256-GCM).
  *
- * VISUAL richness ≠ MOTION richness: this slice (Commit 1) is STATIC. Every panel
- * already renders its final, fully-legible state; the `active` prop is accepted
- * now so Commit 3 can layer the on-activation micro-demos without changing the
- * component contract. All numbers are mock (design-taste §4.9).
+ * VISUAL richness ≠ MOTION richness: every panel already renders its final,
+ * fully-legible RESTING state. The Commit-3 micro-demos animate INTO that exact
+ * resting state on activation — they never change it — so reduced-motion / SSR
+ * (which skip the keyframes) show the identical content. All numbers are mock
+ * (design-taste §4.9).
  *
- * Module-level, hoisted components (vercel rerender-no-inline-components,
- * rendering-hoist-jsx). No "use client": pure presentational, no hooks — mounted
- * by the FeatureShowcase client leaf. Token classes are the contract, the shell
- * primitives are re-implemented compactly here so journey-stages.tsx stays
- * untouched (design ADR-2).
+ * COMMIT 3 MOTION LAYER (this file): each panel takes `active` + `reduceMotion`.
+ * When the panel becomes `active` and motion is allowed, a SHORT (~0.4-0.7s),
+ * once-per-activation, transform/opacity-only beat plays (MEDIUM budget, NO loops,
+ * NO auto-advance). The beat is keyed by `active` so it replays each time the
+ * panel is (re)activated. `reduceMotion` ⇒ panels render the final state with NO
+ * keyframes (initial={false}). Motion ledger (design #491):
+ *   - Clientes: protagonist case settles into "En curso" (small y + scale beat).
+ *   - Documentos: IA chip pulse + extracted items stagger-in (opacity + small y).
+ *   - Plantillas: {{var}} chips highlight-beat then the preview line resolves.
+ *   - Asistente: resumen + suggestion + chip stagger-in (opacity + small y).
+ *
+ * Module-level, hoisted components + variants (vercel rerender-no-inline-components,
+ * rendering-hoist-jsx). Animate wrapper divs, NEVER the Phosphor <svg>
+ * (rendering-animate-svg-wrapper). NO manual useMemo/useCallback (React Compiler).
+ * Token classes are the contract; shell primitives are re-implemented compactly
+ * here so journey-stages.tsx stays untouched (design ADR-2).
  */
 import type { ComponentType, ReactNode } from "react";
+import { motion } from "motion/react";
+import type { Variants } from "motion/react";
 import {
   ArrowRight,
   CheckCircle,
@@ -35,6 +49,47 @@ import {
   MagicWand,
   Sparkle,
 } from "@phosphor-icons/react/dist/ssr";
+
+/* --- Motion timing tokens (mirror globals.css) + shared variants ---------- *
+ * transform/opacity only (GPU). EASE_OUT for reveals, EASE_SNAP for the kanban
+ * settle (matches FeaturesBoard/HeroPipeline). All beats are SHORT and calm. */
+const EASE_OUT = [0.22, 1, 0.36, 1] as const; // --ease-out
+const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const; // --ease-snap
+
+/** Panels share one shape: ({ active, reduceMotion }). */
+type PanelProps = { active: boolean; reduceMotion: boolean };
+
+/** Stagger container: children reveal in sequence once the panel is active.
+ * `hidden`/`show` are toggled via the `animate` prop on the panel root. */
+const staggerContainer: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } },
+};
+
+/** Stagger item: opacity + small upward y settle (reveal). */
+const staggerItem: Variants = {
+  hidden: { opacity: 0, y: 6 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.32, ease: EASE_OUT },
+  },
+};
+
+/**
+ * Resolve the motion props for a panel root running a stagger reveal.
+ * Reduced motion ⇒ no keyframes, content sits in its final "show" state.
+ * `active` keys the variant so the reveal replays on each (re)activation.
+ */
+function staggerRootProps(active: boolean, reduceMotion: boolean) {
+  if (reduceMotion) {
+    return { initial: false as const, animate: "show" as const };
+  }
+  return {
+    initial: "hidden" as const,
+    animate: active ? ("show" as const) : ("hidden" as const),
+  };
+}
 
 /* ------------------------------------------------------------------------- *
  * Shared shell + primitives (local re-implementation of the journey faux-UI
@@ -130,16 +185,34 @@ function MiniClientCard({
 
 type KanbanCard = { name: string; amount: string; highlight?: boolean };
 
+/** Settle beat for the protagonist case "landing" into its column: a small
+ * upward y + scale overshoot that resolves to the resting card. transform-only,
+ * EASE_SNAP (same vocabulary as FeaturesBoard's cerrado card). */
+const kanbanSettle: Variants = {
+  rest: { y: 0, scale: 1, opacity: 1 },
+  drop: {
+    y: [10, 0],
+    scale: [0.96, 1.03, 1],
+    opacity: [0.4, 1, 1],
+    transition: { duration: 0.5, ease: EASE_SNAP },
+  },
+};
+
 /** One kanban column: title + count badge + stacked mini-cards in a dashed
- * dropzone (same look as the journey pipeline). */
+ * dropzone (same look as the journey pipeline). When `demo` is true (and motion
+ * allowed) the highlighted card plays the settle beat once on activation. */
 function PipelineColumn({
   title,
   count,
   cards,
+  demo,
+  reduceMotion,
 }: {
   title: string;
   count: number;
   cards: KanbanCard[];
+  demo?: boolean;
+  reduceMotion?: boolean;
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
@@ -152,18 +225,52 @@ function PipelineColumn({
         </span>
       </div>
       <div className="flex min-h-[9rem] flex-col gap-2 rounded-input border border-dashed border-border p-1.5">
-        {cards.map((c) => (
-          <MiniClientCard key={c.name} {...c} />
-        ))}
+        {cards.map((c) =>
+          c.highlight && demo && !reduceMotion ? (
+            <motion.div
+              key={c.name}
+              variants={kanbanSettle}
+              initial="rest"
+              animate="drop"
+            >
+              <MiniClientCard {...c} />
+            </motion.div>
+          ) : (
+            <MiniClientCard key={c.name} {...c} />
+          ),
+        )}
       </div>
     </div>
   );
 }
 
-/** A small clay "IA" marker chip used to label AI-produced content. */
-function AIChip() {
+/** A small clay "IA" marker chip used to label AI-produced content. When
+ * `pulse` is true (and motion allowed) it plays a single subtle scale/opacity
+ * beat — "the AI just produced this". Animate the wrapper, not the Phosphor svg. */
+function AIChip({
+  pulse,
+  reduceMotion,
+}: {
+  pulse?: boolean;
+  reduceMotion?: boolean;
+}) {
+  const className =
+    "inline-flex items-center gap-1 rounded-input border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary";
+  if (pulse && !reduceMotion) {
+    return (
+      <motion.span
+        className={className}
+        initial={{ scale: 0.9, opacity: 0.6 }}
+        animate={{ scale: [0.9, 1.08, 1], opacity: 1 }}
+        transition={{ duration: 0.45, ease: EASE_SNAP }}
+      >
+        <Sparkle size={12} weight="fill" aria-hidden="true" />
+        IA
+      </motion.span>
+    );
+  }
   return (
-    <span className="inline-flex items-center gap-1 rounded-input border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary">
+    <span className={className}>
       <Sparkle size={12} weight="fill" aria-hidden="true" />
       IA
     </span>
@@ -189,7 +296,7 @@ const KANBAN_EN_CURSO: KanbanCard[] = [
   { name: "Estudio Hibö", amount: "€2.000", highlight: true }, // mock
 ];
 
-export function ClientesPanel({ active }: { active: boolean }) {
+export function ClientesPanel({ active, reduceMotion }: PanelProps) {
   return (
     <PanelShell label="Clientes · Pipeline" active={active}>
       <div className="flex h-full flex-col gap-4">
@@ -199,7 +306,13 @@ export function ClientesPanel({ active }: { active: boolean }) {
         <div className="grid grid-cols-3 gap-2">
           <PipelineColumn title="Contacto" count={2} cards={KANBAN_CONTACTO} />
           <PipelineColumn title="Propuesta" count={2} cards={KANBAN_PROPUESTA} />
-          <PipelineColumn title="En curso" count={2} cards={KANBAN_EN_CURSO} />
+          <PipelineColumn
+            title="En curso"
+            count={2}
+            cards={KANBAN_EN_CURSO}
+            demo={active}
+            reduceMotion={reduceMotion}
+          />
         </div>
         <p className="mt-auto text-body-sm text-text-secondary">
           Arrastra el caso a su estado y sabes de un vistazo qué tienes abierto
@@ -226,7 +339,7 @@ const EXTRACTED_NEXT_STEPS: string[] = [
   "Pedir manual de marca actual", // mock
 ];
 
-export function DocumentosPanel({ active }: { active: boolean }) {
+export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
   return (
     <PanelShell label="Documentos · Estudio Hibö" active={active}>
       <div className="flex h-full flex-col gap-3">
@@ -248,13 +361,20 @@ export function DocumentosPanel({ active }: { active: boolean }) {
           </span>
         </div>
 
-        {/* AI-extracted block. */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-note border border-border bg-surface px-3 py-2.5">
+        {/* AI-extracted block. The extracted items stagger-in (opacity + small
+            y) as if the IA just pulled them; the IA chip pulses once. The block
+            is the stagger container, keyed on `active` so it replays each
+            activation. Reduced motion ⇒ all items in their final shown state. */}
+        <motion.div
+          className="flex min-h-0 flex-1 flex-col gap-3 rounded-note border border-border bg-surface px-3 py-2.5"
+          variants={staggerContainer}
+          {...staggerRootProps(active, reduceMotion)}
+        >
           <div className="flex items-center justify-between">
             <span className="font-mono text-meta uppercase text-text-muted">
               Extraído del documento
             </span>
-            <AIChip />
+            <AIChip pulse={active} reduceMotion={reduceMotion} />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -262,8 +382,9 @@ export function DocumentosPanel({ active }: { active: boolean }) {
               Deals detectados
             </span>
             {EXTRACTED_DEALS.map((deal) => (
-              <div
+              <motion.div
                 key={deal}
+                variants={staggerItem}
                 className="flex items-center gap-2 rounded-input border border-border bg-surface-raised px-2 py-1.5"
               >
                 <span
@@ -273,7 +394,7 @@ export function DocumentosPanel({ active }: { active: boolean }) {
                 <span className="truncate text-body-sm text-text-primary">
                   {deal}
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -283,7 +404,11 @@ export function DocumentosPanel({ active }: { active: boolean }) {
             </span>
             <ul className="flex flex-col gap-1.5">
               {EXTRACTED_NEXT_STEPS.map((step) => (
-                <li key={step} className="flex items-center gap-2">
+                <motion.li
+                  key={step}
+                  variants={staggerItem}
+                  className="flex items-center gap-2"
+                >
                   <CheckCircle
                     size={15}
                     className="shrink-0 text-text-muted"
@@ -292,11 +417,11 @@ export function DocumentosPanel({ active }: { active: boolean }) {
                   <span className="truncate text-body-sm text-text-secondary">
                     {step}
                   </span>
-                </li>
+                </motion.li>
               ))}
             </ul>
           </div>
-        </div>
+        </motion.div>
       </div>
     </PanelShell>
   );
@@ -310,16 +435,36 @@ export function DocumentosPanel({ active }: { active: boolean }) {
  * Static here; Commit 3 crossfades {{variables}} → resolved values.
  * ------------------------------------------------------------------------- */
 
-/** A highlighted template variable token like {{nombre}}. */
-function VarChip({ children }: { children: ReactNode }) {
-  return (
-    <span className="rounded-input border border-accent-secondary bg-accent-secondary-soft px-1.5 py-0.5 font-mono text-meta text-accent-secondary">
-      {children}
-    </span>
-  );
+/** A highlighted template variable token like {{nombre}}. On `beat` (motion
+ * allowed) it plays a single highlight pulse (opacity + small scale) — the var
+ * "filling in" — resolving to the resting chip. Resting look is unchanged. */
+function VarChip({
+  children,
+  beat,
+  reduceMotion,
+}: {
+  children: ReactNode;
+  beat?: boolean;
+  reduceMotion?: boolean;
+}) {
+  const className =
+    "rounded-input border border-accent-secondary bg-accent-secondary-soft px-1.5 py-0.5 font-mono text-meta text-accent-secondary";
+  if (beat && !reduceMotion) {
+    return (
+      <motion.span
+        className={className}
+        initial={{ opacity: 0.5, scale: 0.94 }}
+        animate={{ opacity: [0.5, 1, 1], scale: [0.94, 1.06, 1] }}
+        transition={{ duration: 0.45, ease: EASE_SNAP }}
+      >
+        {children}
+      </motion.span>
+    );
+  }
+  return <span className={className}>{children}</span>;
 }
 
-export function PlantillasPanel({ active }: { active: boolean }) {
+export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
   return (
     <PanelShell label="Plantillas · Propuesta" active={active}>
       <div className="flex h-full flex-col gap-3">
@@ -348,21 +493,38 @@ export function PlantillasPanel({ active }: { active: boolean }) {
               Asunto
             </span>
             <span className="flex flex-wrap items-baseline gap-1 text-body-sm text-text-primary">
-              Propuesta para <VarChip>{"{{empresa}}"}</VarChip>
+              Propuesta para{" "}
+              <VarChip beat={active} reduceMotion={reduceMotion}>
+                {"{{empresa}}"}
+              </VarChip>
             </span>
           </div>
           <div className="flex flex-col gap-1 text-body-sm leading-relaxed text-text-secondary">
             <span className="flex flex-wrap items-baseline gap-1">
-              Hola <VarChip>{"{{nombre}}"}</VarChip>, te paso la propuesta de
+              Hola{" "}
+              <VarChip beat={active} reduceMotion={reduceMotion}>
+                {"{{nombre}}"}
+              </VarChip>
+              , te paso la propuesta de
             </span>
             <span className="flex flex-wrap items-baseline gap-1">
-              <VarChip>{"{{servicio}}"}</VarChip> que comentamos.
+              <VarChip beat={active} reduceMotion={reduceMotion}>
+                {"{{servicio}}"}
+              </VarChip>{" "}
+              que comentamos.
             </span>
           </div>
         </div>
 
-        {/* Preview filled from client data + copy affordance (no campaigns). */}
-        <div className="flex items-center justify-between gap-2">
+        {/* Preview filled from client data + copy affordance (no campaigns).
+            The preview line resolves (opacity + small y) just after the chips
+            beat, as if the vars filled in. Reduced motion ⇒ shown as-is. */}
+        <motion.div
+          className="flex items-center justify-between gap-2"
+          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, ease: EASE_OUT, delay: 0.32 }}
+        >
           <span className="inline-flex items-center gap-1.5 font-mono text-meta uppercase text-text-muted">
             <EnvelopeSimple size={14} aria-hidden="true" />
             Vista previa: Estudio Hibö
@@ -371,7 +533,7 @@ export function PlantillasPanel({ active }: { active: boolean }) {
             <Copy size={14} weight="bold" aria-hidden="true" />
             Copiar
           </span>
-        </div>
+        </motion.div>
       </div>
     </PanelShell>
   );
@@ -384,26 +546,39 @@ export function PlantillasPanel({ active }: { active: boolean }) {
  * plantillas; coste = BYO encrypted key). NO integraciones inventadas.
  * Static here; Commit 3 fades in the summary + suggestion on activation.
  * ------------------------------------------------------------------------- */
-export function AsistentePanel({ active }: { active: boolean }) {
+export function AsistentePanel({ active, reduceMotion }: PanelProps) {
   return (
     <PanelShell label="Asistente · Estudio Hibö" active={active}>
-      <div className="flex h-full flex-col gap-3">
+      {/* The assist cards stagger-in (opacity + small y) once on activation, as
+          if the IA just produced them; the container is keyed on `active` so it
+          replays each activation. Reduced motion ⇒ final shown state. */}
+      <motion.div
+        className="flex h-full flex-col gap-3"
+        variants={staggerContainer}
+        {...staggerRootProps(active, reduceMotion)}
+      >
         {/* Resumen de la relación. */}
-        <div className="flex flex-col gap-2 rounded-note border border-border bg-surface px-3 py-2.5">
+        <motion.div
+          variants={staggerItem}
+          className="flex flex-col gap-2 rounded-note border border-border bg-surface px-3 py-2.5"
+        >
           <div className="flex items-center justify-between">
             <span className="font-mono text-meta uppercase text-text-muted">
               Resumen de la relación
             </span>
-            <AIChip />
+            <AIChip pulse={active} reduceMotion={reduceMotion} />
           </div>
           <p className="text-body-sm leading-relaxed text-text-secondary">
             Cliente de diseño desde febrero. Propuesta de retainer enviada hace
             2 días, aún sin respuesta. Buen trato, paga puntual. {/* mock */}
           </p>
-        </div>
+        </motion.div>
 
         {/* Próxima acción sugerida. */}
-        <div className="flex items-start gap-3 rounded-note border border-accent-secondary bg-accent-secondary-soft px-3 py-2.5 shadow-hard-sm">
+        <motion.div
+          variants={staggerItem}
+          className="flex items-start gap-3 rounded-note border border-accent-secondary bg-accent-secondary-soft px-3 py-2.5 shadow-hard-sm"
+        >
           <span
             className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-input border border-accent-secondary bg-surface-raised text-accent-secondary"
             aria-hidden="true"
@@ -418,24 +593,30 @@ export function AsistentePanel({ active }: { active: boolean }) {
               Escribe a Estudio Hibö para retomar la propuesta de retainer.
             </span>
           </span>
-        </div>
+        </motion.div>
 
         {/* Suggested template adaptation (faithful: adapta plantillas). */}
-        <div className="flex items-center justify-between gap-2 rounded-input border border-border bg-surface px-3 py-2">
+        <motion.div
+          variants={staggerItem}
+          className="flex items-center justify-between gap-2 rounded-input border border-border bg-surface px-3 py-2"
+        >
           <span className="inline-flex items-center gap-1.5 text-body-sm text-text-secondary">
             <ArrowRight size={14} weight="bold" className="text-accent-secondary" aria-hidden="true" />
             Adapta tu plantilla al tono del cliente
           </span>
-        </div>
+        </motion.div>
 
         {/* Trust chip: BYO encrypted API key (the AI cost model). */}
-        <div className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-input border border-border bg-surface-sunken px-2 py-1">
+        <motion.div
+          variants={staggerItem}
+          className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-input border border-border bg-surface-sunken px-2 py-1"
+        >
           <LockKey size={14} weight="fill" className="text-success" aria-hidden="true" />
           <span className="font-mono text-meta uppercase text-text-secondary">
             Tu API key, cifrada · AES-256-GCM
           </span>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </PanelShell>
   );
 }
@@ -450,7 +631,7 @@ export type Feature = {
   id: string;
   name: string;
   description: string;
-  Panel: ComponentType<{ active: boolean }>;
+  Panel: ComponentType<PanelProps>;
 };
 
 export const FEATURES: Feature[] = [
