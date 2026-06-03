@@ -928,8 +928,11 @@ function ActOneOverlay({
       cursorTargetX.set(VBW + 60);
       cursorTargetY.set(VBH + 20);
     } else if (v < I.cursorOut) {
-      cursorTargetX.set(isMobile ? clock.x - 8 : clock.x + 30);
-      cursorTargetY.set(clock.y + 58);
+      // Approach the "Retomar" pill from its lower-right corner so the arrow
+      // tip + click ring land on the button edge, never on top of the glyphs
+      // (acto-1 §3: the cursor is UI, the label stays legible at the climax).
+      cursorTargetX.set(isMobile ? clock.x - 8 : clock.x + 64);
+      cursorTargetY.set(clock.y + 66);
     } else {
       cursorTargetX.set(VBW + 60);
       cursorTargetY.set(VBH + 40);
@@ -949,14 +952,14 @@ function ActOneOverlay({
   return (
     <motion.div className="absolute inset-0" style={{ opacity: r ? 1 : vis }}>
       {/* labels */}
-      <Label xPct={((note.x - 18) / VBW) * 100} yPct={((note.y - 30) / VBH) * 100} clipPath={r ? "none" : noteLabel.clipPath} opacity={r ? 1 : noteLabel.opacity} mono>
+      <Label xPct={((note.x - (isMobile ? 18 : 24)) / VBW) * 100} yPct={((note.y - (isMobile ? 30 : 56)) / VBH) * 100} clipPath={r ? "none" : noteLabel.clipPath} opacity={r ? 1 : noteLabel.opacity} mono>
         9:12 · Ana
       </Label>
-      <Label xPct={((envelope.x + 40) / VBW) * 100} yPct={((envelope.y - 14) / VBH) * 100} clipPath={r ? "none" : envLabel.clipPath} opacity={r ? 1 : envLabel.opacity}>
+      <Label xPct={((envelope.x + (isMobile ? 40 : 72)) / VBW) * 100} yPct={((envelope.y - (isMobile ? 14 : 22)) / VBH) * 100} clipPath={r ? "none" : envLabel.clipPath} opacity={r ? 1 : envLabel.opacity}>
         propuesta
       </Label>
       {!isMobile && (
-        <Label xPct={(SEED.x / VBW) * 100} yPct={((SEED.y + 34) / VBH) * 100} clipPath={r ? "none" : fugazLabel.clipPath} opacity={r ? 0.75 : fugazLabel.opacity} mono dim>
+        <Label xPct={(SEED.x / VBW) * 100} yPct={((SEED.y - 30) / VBH) * 100} clipPath={r ? "none" : fugazLabel.clipPath} opacity={r ? 0.75 : fugazLabel.opacity} mono dim>
           {parity === "A" ? "visto" : "nota"}
         </Label>
       )}
@@ -998,7 +1001,7 @@ function ActOneOverlay({
       <motion.div
         className="absolute"
         style={{
-          left: `${((clock.x + (isMobile ? 0 : 30)) / VBW) * 100}%`,
+          left: `${((clock.x + (isMobile ? 0 : 6)) / VBW) * 100}%`,
           top: `${((clock.y + 56) / VBH) * 100}%`,
           opacity: r ? 1 : retakeOpacity,
           y: r ? 0 : retakeY,
@@ -1014,7 +1017,7 @@ function ActOneOverlay({
         <CursorTu xPct={cursorXpct} yPct={cursorYpct} opacity={cursorOpacity} ringActive={clickRing} />
       )}
       {r && (
-        <div className="absolute" style={{ left: `${((clock.x + (isMobile ? 0 : 36)) / VBW) * 100}%`, top: `${((clock.y + 62) / VBH) * 100}%` }}>
+        <div className="absolute" style={{ left: `${((clock.x + (isMobile ? 0 : 64)) / VBW) * 100}%`, top: `${((clock.y + 66) / VBH) * 100}%` }}>
           <CursorTuStatic />
         </div>
       )}
