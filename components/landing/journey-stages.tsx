@@ -110,13 +110,13 @@ export function JourneyCardContent({
    * prospect → propuesta → en curso → cerrado — NOT an invoice). */
   status?: string;
   /** When true the pill uses the success token (the case reached the closed/
-   * paid state) instead of the clay in-progress token. */
+   * paid state) instead of the support in-progress token. */
   closed?: boolean;
 } = {}) {
   return (
     <div className="flex w-full items-center gap-3 rounded-md border border-border-strong bg-surface px-3 py-2.5 shadow-flat">
       <span
-        className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-accent-secondary-soft font-mono text-body-sm uppercase text-accent-secondary"
+        className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-accent-soft font-mono text-body-sm uppercase text-support"
         aria-hidden="true"
       >
         H
@@ -134,7 +134,7 @@ export function JourneyCardContent({
           "rounded-sm border px-2 py-0.5 font-mono text-meta uppercase " +
           (closed
             ? "border-success bg-success-soft text-success"
-            : "border-accent-secondary bg-accent-secondary-soft text-accent-secondary")
+            : "border-support bg-accent-soft text-support")
         }
       >
         {status}
@@ -233,7 +233,7 @@ export function StageFormFaux({ active }: { active: boolean }) {
           <span className="font-mono text-meta uppercase text-text-tertiary">
             Etiquetas
           </span>
-          <span className="rounded-sm border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary">
+          <span className="rounded-sm border border-support bg-accent-soft px-2 py-0.5 font-mono text-meta uppercase text-support">
             Diseño
           </span>
           <span className="rounded-sm border border-border px-2 py-0.5 font-mono text-meta uppercase text-text-tertiary">
@@ -246,7 +246,7 @@ export function StageFormFaux({ active }: { active: boolean }) {
           <span className="text-meta text-text-tertiary">
             Se guardará en tu cartera
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-accent-primary px-3 py-1.5 text-body-sm text-on-accent shadow-flat">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-accent-primary px-3 py-1.5 text-body-sm text-accent-fg shadow-flat">
             <Plus size={14} weight="bold" aria-hidden="true" />
             Guardar cliente
           </span>
@@ -268,7 +268,7 @@ type MiniCard = {
   amount: string;
   tone: "ink" | "muted";
   /** When true the card is the highlighted protagonist (Estudio Hibö): a
-   * stronger ring + tinted accent surface + clay status dot, all kept INSIDE
+   * stronger ring + tinted accent surface + support status dot, all kept INSIDE
    * the card bounds so it never overflows the narrow kanban column. */
   highlight?: boolean;
 };
@@ -279,7 +279,7 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
       className={
         "flex items-center gap-2 rounded-sm border px-2 py-1.5 " +
         (highlight
-          ? "border-accent-secondary bg-accent-secondary-soft ring-1 ring-accent-secondary shadow-flat"
+          ? "border-support bg-accent-soft ring-1 ring-support shadow-flat"
           : "border-border bg-surface")
       }
     >
@@ -287,7 +287,7 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
         className={
           "size-2 shrink-0 rounded-full " +
           (highlight || tone === "ink"
-            ? "bg-accent-secondary"
+            ? "bg-support"
             : "bg-border-strong")
         }
         aria-hidden="true"
@@ -296,12 +296,20 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
         <span
           className={
             "truncate text-body-sm " +
-            (highlight ? "text-accent-secondary" : "text-text-primary")
+            (highlight ? "text-support" : "text-text-primary")
           }
         >
           {name}
         </span>
-        <span className="font-mono text-meta uppercase text-text-tertiary">
+        {/* On the highlighted (tinted) card, tertiary meta fails AA at 12px over
+            the magenta-tinted accent-soft surface (4.45:1); use the darker
+            secondary ink there (6.4:1). Plain cards keep tertiary on bg-surface. */}
+        <span
+          className={
+            "font-mono text-meta uppercase " +
+            (highlight ? "text-text-secondary" : "text-text-tertiary")
+          }
+        >
           {amount}
         </span>
       </span>
@@ -349,7 +357,7 @@ function ActivityEvent({ text, when }: { text: string; when: string }) {
   return (
     <li className="relative pl-4">
       <span
-        className="absolute left-0 top-1.5 size-1.5 rounded-full bg-accent-secondary"
+        className="absolute left-0 top-1.5 size-1.5 rounded-full bg-support"
         aria-hidden="true"
       />
       <span className="block text-body-sm leading-tight text-text-secondary">
@@ -463,7 +471,7 @@ const CASE_TIMELINE: CaseEvent[] = [
 ];
 
 /* A single timeline entry. The closed/paid step gets a success dot to mark the
- * terminal state; the rest use the clay activity dot (same as the seguimiento
+ * terminal state; the rest use the support activity dot (same as the seguimiento
  * rail). Markdown-note / activity style, NOT a financial line item. */
 function CaseTimelineEvent({ text, when, done }: CaseEvent) {
   return (
@@ -471,7 +479,7 @@ function CaseTimelineEvent({ text, when, done }: CaseEvent) {
       <span
         className={
           "absolute left-0 top-1.5 size-1.5 rounded-full " +
-          (done ? "bg-success" : "bg-accent-secondary")
+          (done ? "bg-success" : "bg-support")
         }
         aria-hidden="true"
       />

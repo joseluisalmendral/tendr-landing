@@ -21,12 +21,16 @@
  * Core principle: VISUAL richness ≠ MOTION richness. The backdrops are dense and
  * realistic but STATIC (they live in journey-stages.tsx). The only motion is:
  *   1. A subtle per-backdrop in-view ENTRANCE — each stage block reveals once
- *      with opacity 0→1 + a small y rise (transform/opacity, EASE_OUT, ~0.5s)
- *      via `whileInView` (once). Reduced-motion → no reveal (static). Mobile →
- *      degrades gracefully (whileInView is SSR-safe, no hydration mismatch).
- *   2. Hand once — the shared CorkHand places/nudges the now-populated alta
- *      client card a single time on in-view, then leaves (transform/opacity,
- *      HeroPipeline imperative pattern). Gated OFF under reduced-motion / mobile.
+ *      with opacity 0→1 + a small y rise (transform/opacity, v2 emphasis easing,
+ *      ~0.5s) via `whileInView` (once). Reduced-motion → no reveal (static).
+ *      Mobile → degrades gracefully (whileInView is SSR-safe, no hydration
+ *      mismatch).
+ *   2. Two hand-drawn connector arrows draw in once as the user reaches each
+ *      seam (1→2, 2→3), in the v2 support/handdrawn ink language. These are the
+ *      ONLY hand-drawn accents in the section (ADR-6 restraint: 1-2 per section).
+ *      The v1 cork "placing hand" gag was retired here in the v2 migration — it
+ *      was a cork-board flourish that did not fit the clean direction and coupled
+ *      this section to CorkHand (removed in B5).
  *
  * Client leaf: renders inside the server Section that owns the <h2> "Cómo
  * funciona" heading, so we do NOT repeat it here. The export name stays
@@ -34,21 +38,16 @@
  * byte-unchanged.
  *
  * Fallbacks (mandatory):
- * - prefers-reduced-motion: no reveal (blocks render in their final state), no
- *   hand. All three stages + their cards are present and legible.
- * - mobile (<md): static stacked layout, SSR-safe via useSyncExternalStore
- *   (server snapshot false → mobile is the deterministic first paint, no
- *   hydration mismatch). No hand. The reveal still applies (it degrades fine).
+ * - prefers-reduced-motion: no reveal (blocks render in their final state), the
+ *   connectors render already-drawn. All three stages + their cards are present
+ *   and legible.
+ * - mobile (<md): static stacked layout via CSS breakpoints (the grid collapses
+ *   to a single column; the alternating columns + connectors are md+ only). The
+ *   reveal still applies (it degrades fine). No JS media query is needed now that
+ *   the desktop-only cork hand was retired.
  */
-import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
-import {
-  motion,
-  useAnimationControls,
-  useReducedMotion,
-  type Variants,
-} from "motion/react";
+import { motion, useReducedMotion, type Variants } from "motion/react";
 
-import { CorkHand } from "@/components/landing/CorkHand";
 import {
   JOURNEY_STAGES,
   StageFormFaux,
@@ -56,31 +55,9 @@ import {
   StageReportFaux,
 } from "@/components/landing/journey-stages";
 
-// --ease-out for the reveal + the hand.
-const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+// v2 emphasis easing (--easing-emphasis) for the reveal + connector draw-in.
+const EASE_EMPHASIS = [0.2, 0.8, 0.2, 1] as const;
 const REVEAL_DURATION = 0.5;
-const MD_QUERY = "(min-width: 768px)";
-
-/** SSR-safe media-query subscription (verbatim from TestimonialsCork:130-139).
- * Server snapshot is `false`, so mobile/static is the deterministic first
- * paint → no hydration mismatch. Duplicated inline to avoid touching cork;
- * promotion to a shared hook is out of scope for this change. */
-function useMediaQuery(query: string): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mql = window.matchMedia(query);
-      mql.addEventListener("change", onChange);
-      return () => mql.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(query).matches,
-    () => false,
-  );
-}
-
-// Run before paint on the client, fall back to useEffect during SSR (HeroPipeline
-// pattern) so the hand never flashes its final state for one frame.
-const useIsoLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 /* ------------------------------------------------------------------------- *
  * Per-backdrop in-view entrance. Reveals once when the stage block scrolls into
@@ -93,49 +70,18 @@ const revealVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: REVEAL_DURATION, ease: EASE_OUT },
+    transition: { duration: REVEAL_DURATION, ease: EASE_EMPHASIS },
   },
 };
 
 /* ------------------------------------------------------------------------- *
- * Hand-once choreography (ADR-8). CorkHand wrapped in a motion.div (animate the
- * WRAPPER, not the SVG — vercel rendering-animate-svg-wrapper), absolutely
- * positioned bottom-right of the alta backdrop, pointer-events-none, aria-hidden.
- * Plays ONCE on mount via imperative controls (HeroPipeline pattern): enter from
- * bottom-right → small nudge toward the populated client card → lift + fade out.
- * Only mounted when isDesktop && !reduceMotion, so it never runs under
- * reduced-motion or on mobile, and it animates over a card that is actually there.
- * ------------------------------------------------------------------------- */
-const handVariants: Variants = {
-  hidden: { opacity: 0, x: 48, y: 56, rotate: 8 },
-  enter: {
-    opacity: 1,
-    x: 12,
-    y: 12,
-    rotate: -2,
-    transition: { duration: 0.5, ease: EASE_OUT },
-  },
-  nudge: {
-    y: 0,
-    transition: { duration: 0.22, ease: EASE_OUT },
-  },
-  leave: {
-    opacity: 0,
-    x: 40,
-    y: 60,
-    rotate: 8,
-    transition: { duration: 0.4, ease: EASE_OUT },
-  },
-};
-
-/* ------------------------------------------------------------------------- *
- * HandDrawnConnector: a curved CLAY ink arrow that UNIFIES the three stages,
+ * HandDrawnConnector: a curved SUPPORT ink arrow that UNIFIES the three stages,
  * leading the eye from one block to the next (1→2, 2→3). Same hand-drawn ink
- * language as the cork hand and the FeaturesBoard at-risk circle / Pricing
- * annotation: an organic, slightly wobbly `motion.path` body plus a two-stroke
- * arrowhead, drawn via `pathLength` (the one allowed non-transform animation,
- * exactly as the at-risk ring and the pricing box). Stroke is the clay token
- * (var(--color-accent-secondary)).
+ * language as the FeaturesBoard at-risk circle / Pricing annotation: a clean,
+ * geometric `motion.path` body plus a two-stroke arrowhead, drawn via
+ * `pathLength` (the one allowed non-transform animation, exactly as the at-risk
+ * ring and the pricing box). Stroke is the v2 handdrawn token
+ * (var(--color-handdrawn) === support magenta-wine).
  *
  * - Draw-in once on `whileInView` (the arrows belong to the scroll narrative,
  *   so they reveal as the user reaches each seam — not all at mount).
@@ -164,7 +110,7 @@ function connectorDraw(reduceMotion: boolean): Variants {
       pathLength: 1,
       opacity: 1,
       transition: {
-        pathLength: { duration: reduceMotion ? 0 : 0.7, ease: EASE_OUT },
+        pathLength: { duration: reduceMotion ? 0 : 0.7, ease: EASE_EMPHASIS },
         opacity: { duration: reduceMotion ? 0 : 0.2 },
       },
     },
@@ -186,7 +132,7 @@ function HandDrawnConnector({
     <motion.svg
       aria-hidden="true"
       className={
-        "pointer-events-none mx-auto hidden h-16 w-40 text-accent-secondary md:block md:h-20 " +
+        "pointer-events-none mx-auto hidden h-16 w-40 text-handdrawn md:block md:h-20 " +
         (flip ? "-scale-x-100" : "")
       }
       viewBox="0 0 120 80"
@@ -203,7 +149,7 @@ function HandDrawnConnector({
       <motion.path
         d="M36 12 C 78 22, 70 46, 70 64"
         stroke="currentColor"
-        strokeWidth={3.8}
+        strokeWidth={3.2}
         strokeLinecap="round"
         strokeLinejoin="round"
         variants={draw}
@@ -216,7 +162,7 @@ function HandDrawnConnector({
       <motion.path
         d="M70 64 L 62 51.3 M70 64 L 78 51.3"
         stroke="currentColor"
-        strokeWidth={3.8}
+        strokeWidth={3.2}
         strokeLinecap="round"
         strokeLinejoin="round"
         variants={draw}
@@ -225,50 +171,11 @@ function HandDrawnConnector({
   );
 }
 
-function PlacingHand() {
-  const controls = useAnimationControls();
-
-  useIsoLayoutEffect(() => {
-    // Single play-once sequence; the parent only mounts this on
-    // desktop && !reduced-motion, so no extra gate is needed here.
-    let cancelled = false;
-    async function play() {
-      controls.set("hidden");
-      await controls.start("enter");
-      if (cancelled) return;
-      await controls.start("nudge");
-      if (cancelled) return;
-      await controls.start("leave");
-    }
-    void play();
-    return () => {
-      cancelled = true;
-    };
-    // `controls` is stable.
-  }, [controls]);
-
-  return (
-    <motion.div
-      aria-hidden="true"
-      initial="hidden"
-      animate={controls}
-      variants={handVariants}
-      className="pointer-events-none absolute -bottom-2 right-2 z-20 h-28 w-28"
-    >
-      <CorkHand />
-    </motion.div>
-  );
-}
-
 /* Each backdrop is self-contained (renders its own Estudio Hibö card). */
 const STAGE_COMPONENTS = [StageFormFaux, StagePipelineFaux, StageReportFaux] as const;
 
 export function HowItWorks() {
   const reduceMotion = useReducedMotion();
-  const isDesktop = useMediaQuery(MD_QUERY);
-
-  // The hand only places the alta card on desktop with motion allowed.
-  const handOn = isDesktop && !reduceMotion;
 
   const lastIndex = JOURNEY_STAGES.length - 1;
 
@@ -300,7 +207,7 @@ export function HowItWorks() {
               >
                 <span
                   aria-hidden="true"
-                  className="font-mono text-meta uppercase text-accent-secondary"
+                  className="font-mono text-meta uppercase text-support"
                 >
                   {s.n}
                 </span>
@@ -312,24 +219,21 @@ export function HowItWorks() {
                 </p>
               </div>
 
-              {/* Backdrop column. relative so the hand can be absolutely placed
-                  inside the alta backdrop only. */}
+              {/* Backdrop column. */}
               <div
                 className={
                   index % 2 === 1
-                    ? "relative md:order-1 md:col-span-7"
-                    : "relative md:col-span-7"
+                    ? "md:order-1 md:col-span-7"
+                    : "md:col-span-7"
                 }
               >
                 {/* Each backdrop is always active (full opacity) now that there
                     is no stage focus to dim toward. */}
                 <Backdrop active />
-                {/* Hand once, alta only, desktop + motion only. */}
-                {handOn && index === 0 ? <PlacingHand /> : null}
               </div>
             </div>
 
-            {/* Clay connector leading to the next stage (1→2, 2→3). Kept inside
+            {/* Support-ink connector leading to the next stage (1→2, 2→3). Kept inside
                 the <li> (valid list markup, decorative aria-hidden), placed
                 below the grid so it sits in the seam between this block and the
                 next. Its reserved fixed-height box means it never reflows the

@@ -68,6 +68,7 @@
   --color-highlight-fg: var(--highlight-fg);
   /* functional states (= estado) */
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   /* borders / focus */
@@ -182,7 +183,13 @@
   --highlight-fg: #7a6a10;
 
   /* ---- Functional states (ocre cálido, no amber-wash) ---- */
-  --success: #3e7d52;
+  /* design.md §2.1 lista #3e7d52; se oscurece levemente a #356e48 para cumplir
+     AA (4.5:1) en texto meta de 12px sobre --success-soft (a #3e7d52 daba 4.2).
+     D3 (accesibilidad) manda sobre el hex exacto de A9; el cambio es imperceptible. */
+  --success: #356e48;
+  /* tinte suave del éxito, derivado (mismo patrón que --accent-soft): superficie
+     para pills/estampillas de estado "cobrado/cerrado" sin introducir un hex nuevo. */
+  --success-soft: color-mix(in oklab, var(--success) 12%, var(--surface-raised));
   --danger: #b3402e;
   --warning: #b5832e;
 
@@ -306,14 +313,14 @@
      --z-wow-section   = 20  (seccion que sube y tapa el Hero)
      Header sticky     = 40  (definido en Header.tsx, SIEMPRE por encima)
 
-   Easing: --ease-expo (cubic-bezier(0.19, 1, 0.22, 1)), exclusivo del wow.
-   Duracion conceptual del beat: --duration-wow (720ms) como referencia; en
-   scroll-driven el "tiempo" lo marca el rango de scroll, no una duracion.
+   Easing: --easing-expo (v2: cubic-bezier(0.16, 1, 0.3, 1)), exclusivo del wow.
+   En scroll-driven el "tiempo" lo marca el rango de scroll, no una duracion: el
+   beat se siente ~400ms (--duration-slow) a velocidad de scroll natural.
 
    animation-range elegido:
    - Hero fade+scale: timeline scroll(root), range "0% 100vh". El fade arranca
      al primer pixel de scroll y se completa tras avanzar ~un viewport, que es
-     justo lo que tarda la seccion en subir y cubrirlo (beat ~720ms a velocidad
+     justo lo que tarda la seccion en subir y cubrirlo (beat ~400ms a velocidad
      de scroll natural). Asi el Hero ya esta atenuado cuando la carta lo tapa.
    - Seccion rise: timeline view() del propio bloque, range "entry 0% entry 80%".
      La seccion termina de asentarse (translateY -> 0) justo al entrar de lleno
