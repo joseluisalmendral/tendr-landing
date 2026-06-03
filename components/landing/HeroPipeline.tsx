@@ -68,8 +68,8 @@ const PIPELINE_CARDS: PipelineCard[] = [
 
 const MD_QUERY = "(min-width: 768px)";
 
-const EASE_EXPO = [0.19, 1, 0.22, 1] as const; // --ease-expo (settle, wow beat)
-const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const; // --ease-bounce (rotate snap only)
+const EASE_EXPO = [0.16, 1, 0.3, 1] as const; // --easing-expo (settle, wow beat, v2)
+const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const; // --ease-snap (rotate snap only)
 
 /**
  * Ambient micro-loop params per card (catalog "loop ambient", §6.10). DESYNC is

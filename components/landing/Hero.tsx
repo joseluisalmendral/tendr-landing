@@ -20,16 +20,20 @@ import type { HeroProps } from "@/components/landing/types";
  *
  *  1. on-load choreographed reveal of the text column (h1 -> subhead -> CTA
  *     group) via Motion variants + staggerChildren. "Blur In" feel done with
- *     opacity + small y (transform/opacity, GPU). Easing --ease-out, duration
- *     --duration-reveal (0.48s). Above-the-fold, so it is short and cheap: no
- *     long accumulated delays, the h1 is legible almost immediately.
- *  2. continuous ambient wash loop (~20s): a dedicated CSS layer
- *     (.hero-wash-ambient in globals.css) animating only transform/opacity.
+ *     opacity + small y (transform/opacity, GPU). Easing --easing-emphasis,
+ *     duration --duration-slow (0.4s). Above-the-fold, so it is short and cheap:
+ *     no long accumulated delays, the h1 is legible almost immediately.
+ *  2. the highlighter Mark (v2 brand device): the brand-anchor word in the
+ *     headline ("clientes") carries the --color-highlight (#FFF8BB) text-bg
+ *     subrayador with ink text on top (15.82:1). The yellow swipe draws in left
+ *     -> right once, AFTER its word has un-blurred, so the eye lands on the
+ *     value word. This is the quiet device that replaces the retired amber wash:
+ *     the page GAINS the subrayador (now part of the brand system) instead of an
+ *     ambient gradient. transform-only (scaleX), GPU, CLS 0.
  *
  * Reduced motion: useReducedMotion() collapses the reveal to its static final
- * state (opacity 1, y 0, no blur) with zero animation; the wash layer freezes
- * to its static base via its own prefers-reduced-motion guard. The static
- * amber->clay wash on the <section> is always visible regardless.
+ * state (opacity 1, y 0, no blur) with zero animation; the Mark renders at its
+ * full painted state (no draw-in) so the value word is highlighted from frame 1.
  *
  * LCP: the right column is now <HeroPipeline /> (faux-UI, DOM/SVG, no network
  * asset), so the LCP candidate is the text column (measured: the subhead
@@ -46,8 +50,16 @@ export function Hero({
 
   // Split the headline into words so each one reveals on its own (kinetic
   // "blur-in" word cascade). This is the page's wow ENTRANCE: the title writes
-  // itself in word by word with the --ease-expo curve reserved for the wow beat.
+  // itself in word by word with the --easing-expo curve reserved for the wow beat.
   const words = title.split(" ");
+
+  // The highlighter Mark lands on the single brand-anchor word: "clientes" (the
+  // CRM is about the client portfolio). Sparing by design — exactly ONE word.
+  // Matched case-insensitively, punctuation-stripped, so the device follows the
+  // word even if the prop copy is reworded around it.
+  const HIGHLIGHT_WORD = "clientes";
+  const isHighlightWord = (word: string) =>
+    word.toLowerCase().replace(/[^\p{L}]/gu, "") === HIGHLIGHT_WORD;
 
   // Container drives the stagger between the text-column children: the headline
   // block first, then subhead, then the CTA group, with a small head start so
@@ -89,8 +101,26 @@ export function Hero({
           y: 0,
           filter: "blur(0px)",
           transition: {
-            duration: 0.72, // --duration-wow
+            duration: 0.72,
             ease: [0.16, 1, 0.3, 1], // --easing-expo (momento wow, v2)
+          },
+        },
+      };
+
+  // The highlighter Mark swipe: scaleX 0 -> 1 from the left, drawn AFTER the
+  // word cascade so it reads as a deliberate "this is the word" gesture, not
+  // part of the blur-in noise. transform-only (GPU). Under reduced motion it is
+  // painted full from the start (no draw-in).
+  const markVariants: Variants = reduceMotion
+    ? { hidden: { scaleX: 1 }, visible: { scaleX: 1 } }
+    : {
+        hidden: { scaleX: 0 },
+        visible: {
+          scaleX: 1,
+          transition: {
+            duration: 0.4, // --duration-slow
+            delay: 0.55,
+            ease: [0.16, 1, 0.3, 1], // --easing-expo
           },
         },
       };
@@ -103,8 +133,8 @@ export function Hero({
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.48, // --duration-reveal
-        ease: [0.22, 1, 0.36, 1], // --ease-out
+        duration: 0.4, // --duration-slow
+        ease: [0.2, 0.8, 0.2, 1], // --easing-emphasis (v2)
       },
     },
   };
@@ -113,17 +143,12 @@ export function Hero({
     <section
       className={cn(
         "relative isolate min-h-[100dvh] overflow-hidden",
-        // Ambient wash background: amber -> clay, token-driven (zero hex). This
-        // STATIC base is always visible (reduced motion / no scroll-driven
-        // support / first frame); the .hero-wash-ambient layer only enriches.
-        "bg-[linear-gradient(135deg,var(--color-wash-from),var(--color-wash-to))]",
+        // v2: flat warm near-white surface. The retired amber->clay wash is
+        // replaced by typography + asymmetry + the faux-UI pipeline + the
+        // highlighter Mark device on the headline (ADR-4 / brand system).
+        "bg-surface",
       )}
     >
-      {/* Ambient wash loop (~20s, GPU transform/opacity only). Absolute layer
-          behind content; clipped by the section's overflow-hidden. Animation
-          and reduced-motion gate live in globals.css (.hero-wash-ambient). */}
-      <div aria-hidden="true" className="hero-wash-ambient" />
-
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 px-6 pt-24 pb-16 lg:grid-cols-12 lg:gap-8">
         {/* Text column: left, asymmetric (does not span the full grid).
             On-load choreographed reveal: container staggers the children. */}
@@ -138,17 +163,43 @@ export function Hero({
             aria-label={title}
             className="max-w-[18ch] text-balance font-display text-display-xl text-text-primary"
           >
-            {words.map((word, i) => (
-              <motion.span
-                key={`${word}-${i}`}
-                variants={wordVariants}
-                aria-hidden="true"
-                className="inline-block whitespace-pre will-change-[transform,filter]"
-              >
-                {word}
-                {i < words.length - 1 ? " " : ""}
-              </motion.span>
-            ))}
+            {words.map((word, i) => {
+              const trailingSpace = i < words.length - 1 ? " " : "";
+              if (isHighlightWord(word)) {
+                // The brand-anchor word: ink text sitting on a highlighter
+                // swipe. The Mark layer is behind the text (negative z, origin
+                // left) so the yellow draws in under the letters; text stays ink
+                // at all times (15.82:1). Padding gives the marker a hand-swiped
+                // overshoot beyond the glyph edges.
+                return (
+                  <motion.span
+                    key={`${word}-${i}`}
+                    variants={wordVariants}
+                    aria-hidden="true"
+                    className="relative inline-block whitespace-pre px-1 will-change-[transform,filter]"
+                  >
+                    <motion.span
+                      aria-hidden="true"
+                      variants={markVariants}
+                      className="absolute inset-x-0 bottom-[0.08em] top-[0.18em] -z-10 origin-left rounded-[2px] bg-highlight"
+                    />
+                    {word}
+                    {trailingSpace}
+                  </motion.span>
+                );
+              }
+              return (
+                <motion.span
+                  key={`${word}-${i}`}
+                  variants={wordVariants}
+                  aria-hidden="true"
+                  className="inline-block whitespace-pre will-change-[transform,filter]"
+                >
+                  {word}
+                  {trailingSpace}
+                </motion.span>
+              );
+            })}
           </motion.h1>
 
           <motion.p
@@ -164,7 +215,11 @@ export function Hero({
           >
             <Button
               asChild
-              className="rounded-md bg-accent-primary border border-border-strong text-[length:var(--text-body)] text-on-accent h-auto px-6 py-3 transition-all hover:bg-accent-primary-hover active:translate-y-px"
+              // Primary CTA = ink fill (#101010) + white text (19:1), radius-md,
+              // no border/shadow (ink fill IS the affordance). Hover darkens via
+              // opacity (v2 dropped the accent-primary-hover token). :active
+              // push-down for tactile feedback; focus-ring offset utility.
+              className="focus-ring rounded-md bg-accent-primary text-[length:var(--text-body)] text-accent-fg h-auto px-6 py-3 transition-[opacity,transform] duration-fast hover:opacity-90 active:translate-y-px"
             >
               <Link href={ctaPrimary.href}>{ctaPrimary.label}</Link>
             </Button>
@@ -172,7 +227,9 @@ export function Hero({
             <Button
               asChild
               variant="outline"
-              className="rounded-md border-border-strong bg-transparent text-[length:var(--text-body)] text-text-primary shadow-none h-auto px-6 py-3"
+              // Outline CTA = transparent + border-interactive (#87837B, ≥3:1)
+              // + ink text, radius-md. Subtle sunken hover, tactile :active.
+              className="focus-ring rounded-md border-border-interactive bg-transparent text-[length:var(--text-body)] text-text-primary shadow-none h-auto px-6 py-3 transition-[background-color,transform] duration-fast hover:bg-surface-sunken active:translate-y-px"
             >
               <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
             </Button>

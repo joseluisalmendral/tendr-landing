@@ -81,14 +81,16 @@ describe("Hero", () => {
     expect(stages).toHaveLength(4);
   });
 
-  it("primary CTA carries the rounded-cta and accent token classes", () => {
+  it("primary CTA carries the v2 ink-fill token classes (radius-md, ink bg, white text, no hard shadow)", () => {
     render(<Hero {...props} />);
 
     const primary = screen.getByRole("link", { name: props.ctaPrimary.label });
-    expect(primary.className).toContain("rounded-cta");
+    expect(primary.className).toContain("rounded-md");
     expect(primary.className).toContain("bg-accent-primary");
-    expect(primary.className).toContain("text-on-accent");
-    expect(primary.className).toContain("shadow-hard");
+    expect(primary.className).toContain("text-accent-fg");
+    expect(primary.className).toContain("focus-ring");
+    // v2 retired the offset hard shadow: ink fill is the affordance.
+    expect(primary.className).not.toContain("shadow-hard");
   });
 
   it("has no axe violations", async () => {

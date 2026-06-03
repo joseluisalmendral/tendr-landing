@@ -45,7 +45,11 @@ export function Header() {
 
         <Button
           asChild
-          className="rounded-md bg-accent-primary border border-border-strong text-body-sm text-on-accent h-auto px-4 py-2 transition-all hover:bg-accent-primary-hover active:translate-y-px"
+          // Primary CTA = ink fill (#101010) + white text (19:1), radius-md, no
+          // border/shadow (ink fill is the affordance). Hover darkens via opacity
+          // since v2 dropped the accent-primary-hover token. :active push-down for
+          // tactile feedback. focus-ring utility = 2px surface + 4px ink offset.
+          className="focus-ring rounded-md bg-accent-primary text-body-sm text-accent-fg h-auto px-4 py-2 transition-[opacity,transform] duration-fast hover:opacity-90 active:translate-y-px"
         >
           <Link href="#precios">Empezar gratis</Link>
         </Button>
