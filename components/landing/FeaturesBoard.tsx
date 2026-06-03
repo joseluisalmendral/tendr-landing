@@ -31,20 +31,21 @@ import { cn } from "@/lib/utils";
  *    dragElastic rubber-band, dragTransition settle, whileDrag lift + tilt.
  *    Rotation + spotlight are derived from motion values (no useState for
  *    continuous values, off the React render cycle).
- *  - Hover-peek + clay spotlight (desktop only): the faux-UI micro-demo replays
- *    and a radial clay glow follows the cursor (--duration-micro).
+ *  - Hover-peek + warm spotlight (desktop only): the faux-UI micro-demo replays
+ *    and a radial ochre-soft glow follows the cursor (--duration-fast).
  *  - Mobile / coarse pointer: NO free-drag (scroll conflict). The micro-demo
  *    replays once on enter (in-view-replay). No hover-peek.
  *  - Reduced motion: drag off, notes static and already placed, no spotlight.
  *    Every faux-UI is fully legible static; motion is pure enhancement.
  *
- * 100% design tokens, radius 0, transform/opacity only (+ SVG pathLength for the
- * hand-drawn "at risk" circle). Phosphor icons from /dist/ssr.
+ * 100% design tokens (v2 + Folk Twins support family), transform/opacity only
+ * (+ SVG pathLength for the wisp hand-drawn "at risk" circle = firma). Phosphor
+ * icons from /dist/ssr.
  */
 
 // --- Motion timing tokens (mirrors globals.css) ---------------------------
-const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const; // --ease-snap
-const DURATION_MICRO = 0.12; // --duration-micro
+const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const; // --ease-snap (v2, kept for overshoot)
+const DURATION_FAST = 0.15; // --duration-fast (v2)
 const ENTER_SPRING = { type: "spring", stiffness: 100, damping: 14 } as const;
 const SETTLE_TRANSITION = { bounceStiffness: 240, bounceDamping: 18 } as const;
 
@@ -130,7 +131,7 @@ function KanbanFauxUI({ active }: { active: boolean }) {
 function AtRiskFauxUI({ active }: { active: boolean }) {
   return (
     <div className="flex flex-col gap-4">
-      <span className="inline-flex w-fit items-center gap-1.5 font-mono text-meta uppercase text-accent-secondary">
+      <span className="inline-flex w-fit items-center gap-1.5 font-mono text-meta uppercase text-support-cobalt-fg">
         <WarningCircleIcon size={14} weight="bold" aria-hidden />
         La IA lo marca
       </span>
@@ -146,7 +147,7 @@ function AtRiskFauxUI({ active }: { active: boolean }) {
           <motion.path
             d="M18 50 C 18 18, 70 12, 104 14 C 158 17, 188 30, 184 54 C 180 80, 120 86, 74 84 C 30 82, 16 70, 22 46"
             fill="none"
-            stroke="var(--color-accent-secondary)"
+            stroke="var(--color-handdrawn)"
             strokeWidth={2}
             strokeLinecap="round"
             initial={false}
@@ -181,7 +182,7 @@ function ReminderFauxUI({ active }: { active: boolean }) {
         <BellRingingIcon
           size={20}
           weight="fill"
-          className="mt-0.5 shrink-0 text-accent-secondary"
+          className="mt-0.5 shrink-0 text-support-cobalt"
           aria-hidden
         />
         <div>
@@ -218,8 +219,8 @@ type NoteConfig = {
   id: string;
   span: string;
   restTilt: number; // resting rotation in degrees (paper-pinned look)
-  /** Feature name (clay micro-label) + one-line "what it solves" so the note is
-   *  understood at a glance, not just a pretty faux-UI fragment. */
+  /** Feature name (wisp firma micro-label) + one-line "what it solves" so the
+   *  note is understood at a glance, not just a pretty faux-UI fragment. */
   name: string;
   blurb: string;
   render: (active: boolean) => React.ReactNode;
@@ -289,7 +290,7 @@ function Note({
   // Spotlight position (clay radial glow following the cursor).
   const sx = useMotionValue(50);
   const sy = useMotionValue(50);
-  const spotlight = useMotionTemplate`radial-gradient(220px circle at ${sx}% ${sy}%, var(--color-accent-secondary-soft), transparent 70%)`;
+  const spotlight = useMotionTemplate`radial-gradient(220px circle at ${sx}% ${sy}%, var(--color-support-ochre-soft), transparent 70%)`;
 
   // Discrete "demo playing" flag: in-view-replay (mobile) or hover (desktop).
   // This is a discrete UI state, not a continuous value, so useState is correct.
@@ -348,7 +349,7 @@ function Note({
           className="pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity group-hover:opacity-100"
           style={{
             backgroundImage: spotlight,
-            transitionDuration: `${DURATION_MICRO * 1000}ms`,
+            transitionDuration: `${DURATION_FAST * 1000}ms`,
           }}
         />
       ) : null}
@@ -358,7 +359,7 @@ function Note({
           at a glance (not hover-only, so mobile + reduced-motion read it too).
           mt-auto anchors it to the bottom of the note. */}
       <div className="mt-auto flex flex-col gap-1.5 border-t border-border pt-4">
-        <span className="font-mono text-meta uppercase text-accent-secondary">
+        <span className="font-mono text-meta uppercase text-support">
           {config.name}
         </span>
         <p className="text-body-sm text-text-secondary">{config.blurb}</p>

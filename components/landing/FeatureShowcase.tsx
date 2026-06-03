@@ -171,7 +171,7 @@ export function FeatureShowcase() {
               key={feature.id}
               className={
                 "relative border-b pl-5 transition-colors duration-200 " +
-                (isActive ? "border-accent-secondary" : "border-border")
+                (isActive ? "border-support-ochre" : "border-border")
               }
             >
               {/* Vertical progress rail (left edge). TRACK: a faint full-height
@@ -188,7 +188,7 @@ export function FeatureShowcase() {
               {isActive ? (
                 <motion.span
                   aria-hidden="true"
-                  className="absolute left-0 top-0 bottom-0 w-[2px] origin-top rounded-full bg-accent-secondary"
+                  className="absolute left-0 top-0 bottom-0 w-[2px] origin-top rounded-full bg-support-ochre"
                   style={{ scaleY: progress }}
                 />
               ) : null}
@@ -208,9 +208,9 @@ export function FeatureShowcase() {
                   onKeyDown={(event) => handleHeaderKeyDown(event, index)}
                   className={
                     "flex w-full items-center py-6 text-left font-heading text-h2 transition-colors duration-200 " +
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
                     (isActive
-                      ? "text-accent-secondary"
+                      ? "text-support-ochre-fg"
                       : "text-text-primary hover:text-text-secondary")
                   }
                 >
@@ -230,7 +230,7 @@ export function FeatureShowcase() {
                   "grid " +
                   (reduceMotion
                     ? ""
-                    : "transition-[grid-template-rows] duration-[250ms] ease-inout")
+                    : "transition-[grid-template-rows] duration-[250ms] ease-[var(--easing-standard)]")
                 }
                 style={{ gridTemplateRows: isActive ? "1fr" : "0fr" }}
               >

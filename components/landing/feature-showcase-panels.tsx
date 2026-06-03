@@ -53,9 +53,9 @@ import {
 /* --- Motion timing tokens (mirror globals.css) + shared variants ---------- *
  * transform/opacity only (GPU). EASE_OUT for reveals, EASE_SNAP for settles/pops
  * (matches FeaturesBoard/HeroPipeline). All beats are SHORT and calm. */
-const EASE_OUT = [0.22, 1, 0.36, 1] as const; // --ease-out
-const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const; // --ease-snap
-const EASE_INOUT = [0.4, 0, 0.2, 1] as const; // --ease-inout (travel)
+const EASE_OUT = [0.2, 0.8, 0.2, 1] as const; // --easing-emphasis (v2 reveals)
+const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const; // --ease-snap (v2, settles/pops)
+const EASE_INOUT = [0.4, 0, 0.2, 1] as const; // --easing-standard (v2 travel)
 
 /** Panels share one shape: ({ active, reduceMotion }). */
 type PanelProps = { active: boolean; reduceMotion: boolean };
@@ -121,7 +121,8 @@ function PanelShell({
 }
 
 /** Compact kanban mini-card: status dot + client name + amount + a kebab. The
- * `highlight` variant marks the protagonist case with a clay ring/surface. */
+ * `highlight` variant marks the protagonist case (it reached its pipeline home)
+ * with the ochre "progreso" ring/surface (Folk Twins). */
 function MiniClientCard({
   name,
   amount,
@@ -136,14 +137,14 @@ function MiniClientCard({
       className={
         "flex items-center gap-2 rounded-sm border px-2 py-1.5 " +
         (highlight
-          ? "border-accent-secondary bg-accent-secondary-soft shadow-flat ring-1 ring-accent-secondary"
+          ? "border-support-ochre bg-support-ochre-soft shadow-flat ring-1 ring-support-ochre"
           : "border-border bg-surface")
       }
     >
       <span
         className={
           "size-2 shrink-0 rounded-full " +
-          (highlight ? "bg-accent-secondary" : "bg-border-strong")
+          (highlight ? "bg-support-ochre" : "bg-border-strong")
         }
         aria-hidden="true"
       />
@@ -151,7 +152,7 @@ function MiniClientCard({
         <span
           className={
             "truncate text-body-sm " +
-            (highlight ? "text-accent-secondary" : "text-text-primary")
+            (highlight ? "text-support-ochre-fg" : "text-text-primary")
           }
         >
           {name}
@@ -177,8 +178,8 @@ type KanbanCard = { name: string; amount: string; highlight?: boolean };
  * "Estudio Hibö" TRAVELS Contacto → Propuesta → En curso and loops, via a shared
  * layoutId card that re-parents between dropzones (Motion animates its position).
  * The destination dropzone briefly reads as a drop target, the card settles, and
- * becomes the clay-highlight variant once it reaches "En curso" (its home).
- * reduced-motion / SSR ⇒ the card sits HIGHLIGHTED in "En curso", no travel.
+ * becomes the ochre "progreso" highlight variant once it reaches "En curso"
+ * (its home). reduced-motion / SSR ⇒ the card sits HIGHLIGHTED in "En curso".
  * ------------------------------------------------------------------------- */
 const KANBAN_CONTACTO: KanbanCard[] = [
   { name: "Marea", amount: "€900" }, // mock
@@ -263,7 +264,7 @@ function PipelineColumn({
             color), so it stays GPU-friendly and token-pure. */}
         <motion.span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-sm border border-dashed border-accent-secondary ring-1 ring-accent-secondary"
+          className="pointer-events-none absolute inset-0 rounded-sm border border-dashed border-support-ochre ring-1 ring-support-ochre"
           initial={false}
           animate={{ opacity: isTarget ? 1 : 0 }}
           transition={{ duration: 0.45, ease: EASE_OUT }}
@@ -408,7 +409,7 @@ type DocPhase = "analyzing" | "extracted";
  * produced this"). Animate the wrapper, never the Phosphor svg. */
 function AIChip({ pulse, reduceMotion }: { pulse?: boolean; reduceMotion?: boolean }) {
   const className =
-    "inline-flex items-center gap-1 rounded-sm border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary";
+    "inline-flex items-center gap-1 rounded-sm border border-support-cobalt bg-support-cobalt-soft px-2 py-0.5 font-mono text-meta uppercase text-support-cobalt-fg";
   if (pulse && !reduceMotion) {
     return (
       <motion.span
@@ -440,7 +441,7 @@ function WorkingBar() {
       aria-hidden="true"
     >
       <motion.span
-        className="absolute inset-y-0 left-0 w-1/3 origin-left rounded-full bg-accent-secondary"
+        className="absolute inset-y-0 left-0 w-1/3 origin-left rounded-full bg-support-cobalt"
         initial={{ x: "-100%" }}
         animate={{ x: ["-100%", "300%"] }}
         transition={{ duration: 1.1, ease: EASE_INOUT, repeat: Infinity }}
@@ -478,7 +479,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
           {active && !reduceMotion ? (
             <motion.span
               key={`scan-${active}`}
-              className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-accent-secondary opacity-40"
+              className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-support-cobalt opacity-40"
               aria-hidden="true"
               initial={{ y: 0 }}
               animate={{ y: [0, 60] }}
@@ -579,7 +580,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
                   className="flex items-center gap-2 rounded-sm border border-border bg-surface-raised px-2 py-1.5"
                 >
                   <span
-                    className="size-2 shrink-0 rounded-full bg-accent-secondary"
+                    className="size-2 shrink-0 rounded-full bg-support-ochre"
                     aria-hidden="true"
                   />
                   <span className="truncate text-body-sm text-text-primary">
@@ -664,7 +665,7 @@ function ResolvingVar({
   reduceMotion: boolean;
 }) {
   const tokenCls =
-    "rounded-sm border border-accent-secondary bg-accent-secondary-soft px-1.5 py-0.5 font-mono text-meta text-accent-secondary";
+    "rounded-sm border border-support-cobalt bg-support-cobalt-soft px-1.5 py-0.5 font-mono text-meta text-support-cobalt-fg";
   const valueCls =
     "rounded-sm border border-border bg-surface-sunken px-1.5 py-0.5 text-body-sm text-text-primary";
 
@@ -720,7 +721,7 @@ function ViewToggle({
 }) {
   const base =
     "flex-1 rounded-sm px-2.5 py-1 font-mono text-meta uppercase transition-colors";
-  const activeCls = "bg-accent-primary text-on-accent shadow-flat";
+  const activeCls = "bg-accent-primary text-accent-fg shadow-flat";
   const idleCls = "text-text-tertiary hover:text-text-secondary";
   return (
     <div
@@ -764,7 +765,7 @@ function TemplateView({
       {/* Brand row = "Tu marca": sender identity / signature. */}
       <div className="flex items-center gap-2 rounded-sm border border-border bg-surface px-3 py-2">
         <span
-          className="flex size-7 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-accent-primary font-mono text-meta uppercase text-on-accent"
+          className="flex size-7 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-accent-primary font-mono text-meta uppercase text-accent-fg"
           aria-hidden="true"
         >
           T
@@ -842,7 +843,7 @@ function PreviewView() {
         {/* Branded header band: monogram + sender + recipient meta. */}
         <div className="flex items-center gap-2 bg-surface-sunken px-3 py-3">
           <span
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-primary font-mono text-meta uppercase text-on-accent"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-primary font-mono text-meta uppercase text-accent-fg"
             aria-hidden="true"
           >
             T
@@ -873,7 +874,7 @@ function PreviewView() {
             Dentro tienes el alcance, los plazos y el presupuesto.
           </p>
           <span
-            className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent-primary px-3 py-1.5 text-body-sm text-on-accent shadow-flat"
+            className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent-primary px-3 py-1.5 text-body-sm text-accent-fg shadow-flat"
             aria-hidden="true"
           >
             Ver propuesta
@@ -1085,7 +1086,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
         {/* Próxima acción sugerida. Always reserved; reveals (opacity + small y)
             with a MagicWand wrapper pulse once the action phase lands. */}
         <motion.div
-          className="flex items-start gap-3 rounded-md border border-accent-secondary bg-accent-secondary-soft px-3 py-3 shadow-flat"
+          className="flex items-start gap-3 rounded-md border border-support-cobalt bg-support-cobalt-soft px-3 py-3 shadow-flat"
           initial={reduceMotion ? false : { opacity: 0, y: 8 }}
           animate={{
             opacity: showAction ? 1 : reduceMotion ? 1 : 0,
@@ -1096,7 +1097,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
           {showAction && !reduceMotion ? (
             <motion.span
               key={`wand-${phase}`}
-              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm border border-accent-secondary bg-surface-raised text-accent-secondary"
+              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm border border-support-cobalt bg-surface-raised text-support-cobalt"
               aria-hidden="true"
               initial={{ scale: 0.9 }}
               animate={{ scale: [0.9, 1.12, 1] }}
@@ -1106,14 +1107,14 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
             </motion.span>
           ) : (
             <span
-              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm border border-accent-secondary bg-surface-raised text-accent-secondary"
+              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm border border-support-cobalt bg-surface-raised text-support-cobalt"
               aria-hidden="true"
             >
               <MagicWand size={16} weight="fill" />
             </span>
           )}
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="font-mono text-meta uppercase text-accent-secondary">
+            <span className="font-mono text-meta uppercase text-support-cobalt-fg">
               Próxima acción sugerida
             </span>
             <span className="text-body-sm text-text-primary">
@@ -1133,7 +1134,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
             <ArrowRight
               size={14}
               weight="bold"
-              className="text-accent-secondary"
+              className="text-support-cobalt"
               aria-hidden="true"
             />
             Adapta tu plantilla al tono del cliente
