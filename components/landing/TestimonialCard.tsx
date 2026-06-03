@@ -19,7 +19,12 @@ import type {
 
 /**
  * TestimonialCard: a single attributed testimonial rendered as a paper note
- * pinned to a CORK BOARD with a pushpin (design-spec-visual.md §5, v2.1).
+ * held to a CLEAN BOARD ("El tablero de Tendr") by a strip of WASHI TAPE / celo
+ * (ADR-3, v2). The tape replaces the v1 pushpin as the holding device — it reads
+ * analog-warm and consistent with the brand's paper/notebook metaphor, where a
+ * metal magnet would fight the warm-paper surface. The tape is NEUTRAL warm
+ * (border-strong / surface-sunken blend, never a brand hue) and alternates two
+ * subtle tints across the run so the board does not look mechanical.
  *
  * Client Component. Two independent motion concerns compose here:
  *
@@ -43,8 +48,8 @@ import type {
  * Paper-as-ONE-opaque-unit (design §4): the article carries NO background and NO
  * border; the visible cream surface lives on `<figure>` and BOTH shadow spans
  * live INSIDE the moving unit, so shadows travel + lean WITH the paper (no
- * desync, no cork bleed behind a moving edge). The pushpin stays on the ARTICLE
- * (the cork) so the paper swings under it. The avatar `<Image>` is wrapped in a
+ * desync, no board bleed behind a moving edge). The tape stays on the ARTICLE
+ * (the board) so the paper swings under it. The avatar `<Image>` is wrapped in a
  * `tw-note__avatar` span (bg + rounded-sm + overflow-hidden) so the
  * transparent dicebear edge is clipped against an opaque surface.
  *
@@ -103,8 +108,8 @@ export function TestimonialCard({
 
   // The pan path supplies a panProgress MotionValue (it owns the scroll-driven
   // pan + zoom). Its PRESENCE signals the card should play its time-based
-  // entrance — UNLESS it is the `placed` opening note, which the cartoon hand
-  // presses on screen, so it must render opaque + pinned from the start.
+  // entrance. `placed` (legacy of the retired cork-hand intro) forces the note to
+  // render opaque + held with no entrance; no note sets it in the v2 board.
   const pan = Boolean(panProgress) && !reduceMotion && !placed;
 
   // --- Hover lean (pointer) -------------------------------------------------
@@ -145,18 +150,23 @@ export function TestimonialCard({
     },
   };
 
-  // Pushpin "stab": drives in just AFTER the paper lands (delay), so the note is
-  // never shown without its pin.
+  // Tape "press": the strip settles onto the paper just AFTER it lands (delay),
+  // so the note is never shown unheld. A small scale-down + fade reads as a piece
+  // of tape being smoothed down (no overshoot — tape does not bounce like a pin).
   const pinVariants: Variants = {
-    hidden: { opacity: 0, y: -14, rotate: -12, scale: 0.9 },
+    hidden: { opacity: 0, y: -8, scale: 1.12 },
     visible: {
       opacity: 1,
       y: 0,
-      rotate: 0,
       scale: 1,
-      transition: { duration: 0.42, ease: EASE_SNAP, delay: 0.28 },
+      transition: { duration: 0.36, ease: EASE_OUT, delay: 0.26 },
     },
   };
+
+  // Tape tint alternates across the run (decorative run alternation): two neutral
+  // warm tones, NEVER a brand hue. Even notes lean toward the sunken surface,
+  // odd notes toward a slightly warmer hairline mix — both semi-translucent.
+  const tapeWarm = (index ?? 0) % 2 === 0;
 
   const avatarAlt = `Avatar de ${name}, ${role} en ${company}`;
   const sequenceLabel =
@@ -192,35 +202,27 @@ export function TestimonialCard({
       whileInView={pan ? "visible" : undefined}
       viewport={{ once: true, amount: 0.35 }}
     >
-      {/* Pushpin: STAYS on the cork (article level), so the paper swings under it.
-          In the pan path it stabs in (variant, delayed). Decorative -> aria-hidden. */}
+      {/* Tape (celo): STAYS on the board (article level), so the paper swings
+          under it. Small semi-translucent washi strip, slightly rotated. The
+          .tw-note__pin class NAME is preserved (e2e hook + JS). In the pan path it
+          presses on (variant, delayed). Decorative -> aria-hidden. Neutral warm
+          tint, alternating across the run; the strip itself carries a faint inner
+          hairline edge for the layered-paper read. */}
       <motion.span
         aria-hidden
         className="tw-note__pin"
         variants={pan ? pinVariants : undefined}
-        style={pan ? { willChange: "transform, opacity" } : undefined}
+        style={{
+          rotate: tapeWarm ? -4 : 5,
+          ...(pan ? { willChange: "transform, opacity" } : null),
+        }}
       >
-        <svg
-          width="28"
-          height="34"
-          viewBox="0 0 28 34"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Needle */}
-          <line
-            x1="14"
-            y1="16"
-            x2="14"
-            y2="33"
-            stroke="var(--color-shadow-tint)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-          {/* Pin head (clay), with a small highlight for a tactile read */}
-          <circle cx="14" cy="11" r="11" fill="var(--color-accent-secondary)" />
-          <circle cx="10" cy="7" r="3.5" fill="var(--color-on-accent-secondary)" opacity="0.45" />
-        </svg>
+        <span
+          className={cn(
+            "block h-5 w-20 rounded-sm border border-border-hairline",
+            tapeWarm ? "bg-surface-sunken/75" : "bg-surface-raised/70",
+          )}
+        />
       </motion.span>
 
       {/* THE single opaque paper unit: entrance pose (pan path) wraps the hover

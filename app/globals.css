@@ -570,7 +570,7 @@
 }
 
 /* =========================================================================
-   TESTIMONIALS NOTE -- ficha de papel clavada en el corcho (design §3, §4).
+   TESTIMONIALS NOTE -- ficha de papel sujeta con celo al tablero (ADR-3, design §3, §4).
 
    La entrada cinemática (entrance variado + "stab" de la chincheta) la conduce
    AHORA TestimonialsCork.tsx en motion-JS, atada al progreso del pan horizontal
@@ -639,15 +639,19 @@
   opacity: 0; /* base: oculta; el hover/lift la cruza por opacity */
 }
 
-/* Chincheta: arriba-centro, por encima del cuerpo. Visible en base. Queda en el
-   nivel del article (el corcho) para que el papel oscile por debajo. */
+/* Sujeción de la nota: tira de CELO (washi tape). v2 reinvención del tablero —
+   sustituye la chincheta. La CLASE .tw-note__pin se CONSERVA (hook e2e + JS) pero
+   ahora pinta una tira de celo semi-translúcida en la esquina superior. Queda en
+   el nivel del article (el "tablero") para que el papel oscile por debajo de la
+   tira. Tono NEUTRAL cálido (no marca): superficie sunken translúcida + hairline.
+   z por encima del cuerpo. */
 .tw-note__pin {
   position: absolute;
-  top: -0.75rem; /* asoma por encima del borde superior de la nota */
+  top: -0.6rem; /* asoma por encima del borde superior de la nota */
   left: 50%;
   z-index: 2;
   transform: translateX(-50%);
-  transform-origin: center bottom;
+  transform-origin: center top;
   line-height: 0;
 }
 
@@ -682,60 +686,66 @@
 }
 
 /* =========================================================================
-   CORK SECTION (testimonios full-bleed) -- tablero de corcho a sangre completa
-   con marco de madera visible. La textura speckle vive aquí (antes en el panel
-   interior .cork-board, retirado). El marco es un ::before con capas de inset
-   box-shadow (madera elevada ~34px + sombra de contacto). 100% tokens OKLCH
-   (cero hex). El texto vive en el papel cream, no en el corcho, así que no
-   afecta el contraste AA.
-   Z-scale local: speckle 0 · notes/track 1 · pin 2 · frame ::before 2 ·
+   BOARD SECTION (testimonios full-bleed) -- "El tablero de Tendr" (design ADR-3).
+   Reinvención v2 del corcho: una PIZARRA / TABLERO MODERNO limpio. Panel hundido
+   (--surface-sunken) a sangre completa, marco hairline (--border-strong), radio
+   xl, y guías verticales muy tenues (dashed --border-hairline) que insinúan las
+   columnas kanban del propio producto (Tendr es un mini-CRM kanban). Las notas de
+   papel siguen vivas, sujetas con una tira de CELO (.tw-note__pin). Cero corcho,
+   sin madera, sin textura. 100% tokens (cero hex). El texto vive en el papel
+   raised, no en el tablero, así que no afecta el contraste AA.
+   Z-scale local: column guides 0 · notes/track 1 · tape 2 · frame ::before 2 ·
    heading 3. */
-.cork-section {
+.board-section {
   position: relative;
   width: 100%;
   /* `overflow-x: clip` (NOT `hidden`): the wide pan track is already clipped by
-     .cork-board's own overflow:hidden, so this only guards stray horizontal
+     .board-panel's own overflow:hidden, so this only guards stray horizontal
      bleed. CRITICAL: `hidden` here would create a scroll container and BREAK the
-     `position: sticky` pin of .cork-sticky (the board would scroll away and the
+     `position: sticky` pin of .board-sticky (the panel would scroll away and the
      rest of the tall spacer would render blank). `clip` clips without
      establishing a scroll container, so the sticky pin keeps working. */
   overflow-x: clip;
 }
 
-/* Superficie del corcho (speckle + color base). En el PAN path vive en el
-   wrapper escalable .cork-board (R14: el tablero enmarcado escala SMALL->1->SMALL
-   sobre el cream de la página); en el path estático vive directamente en
-   .cork-section--static. */
-.cork-board,
-.cork-section--static {
-  background-color: oklch(0.74 0.055 70);
+/* Superficie del tablero limpio: panel hundido + guías de columna kanban tenues.
+   En el PAN path vive en el wrapper escalable .board-panel (el tablero enmarcado
+   escala SMALL->1->SMALL sobre el cream de la página); en el path estático vive
+   directamente en .board-section--static. Las guías son 4 verticales dashed muy
+   sutiles (border-hairline) a ~20/40/60/80% — el eco kanban sin robar foco. */
+.board-panel,
+.board-section--static {
+  background-color: var(--color-surface-sunken);
   background-image:
-    radial-gradient(oklch(0.63 0.06 58 / 0.55) 1px, transparent 1.6px),
-    radial-gradient(oklch(0.82 0.05 80 / 0.45) 1px, transparent 1.6px);
-  background-size: 13px 13px, 21px 21px;
-  background-position: 0 0, 7px 11px;
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent calc(20% - 1px),
+      var(--color-border-hairline) calc(20% - 1px),
+      var(--color-border-hairline) 20%,
+      transparent 20%,
+      transparent 40%
+    );
+  background-size: 100% 16px;
+  background-repeat: repeat-y;
 }
 
-/* R14: el wrapper escalable del tablero. Ocupa el viewport fijado (la sticky
-   tiene 100dvh); el scale lo aplica Motion inline (transform-origin center) ->
+/* El wrapper escalable del tablero. Ocupa el viewport fijado (la sticky tiene
+   100dvh); el scale lo aplica Motion inline (transform-origin center) ->
    transform puro, GPU, CLS 0. overflow-hidden recorta el pan dentro del marco. */
-.cork-board {
+.board-panel {
   position: relative;
   width: 100%;
   height: 100dvh;
   overflow: hidden;
-  /* B0: radio re-apuntado a --radius-lg (antes --radius-card). La reinvención
-     cork->tablero limpio (panel sunken + frame hairline) la hace B5. */
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-flat);
 }
 
-/* B0 (pendiente B5): el marco de madera con tokens --cork-* se retiró (tokens
-   killed). Hasta B5 (reinvención del tablero) queda un frame hairline neutro
-   para no referenciar tokens muertos ni romper el build. El look "madera" v1
-   desaparece — esperado/unpolished hasta B5. pointer-events:none. */
-.cork-board::before,
-.cork-section--static::before {
+/* Marco hairline del tablero limpio (sustituye el marco de madera v1).
+   pointer-events:none. */
+.board-panel::before,
+.board-section--static::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -745,22 +755,22 @@
   box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
 
-/* Encabezado montado en el corcho (etiqueta), por encima del marco. */
-.cork-heading {
+/* Encabezado montado en el tablero (etiqueta), por encima del marco. */
+.board-heading {
   position: relative;
   z-index: 3;
 }
 
 /* --- Pan path (desktop, motion on) --- */
-.cork-pin-spacer {
+.board-pin-spacer {
   position: relative;
   /* height se fija inline desde panVw (calc estable -> CLS 0). */
 }
-.cork-sticky {
+.board-sticky {
   display: flex;
   flex-direction: column;
 }
-.cork-track {
+.board-track {
   display: flex;
   height: 100dvh;
   align-items: center;
@@ -769,7 +779,7 @@
   padding: 0;
   will-change: transform;
 }
-.cork-track__cell {
+.board-track__cell {
   position: relative;
   flex: 0 0 auto; /* width set inline (vw slot); card figure centres inside */
   display: flex;
@@ -777,37 +787,19 @@
   z-index: 1;
 }
 
-/* Cartoon clay hand that presses the first note in the intro (v2.2). Centred
-   WITHOUT a transform (left/right + margin auto) so Motion's inline transform
-   (scale/y/rotate for the scroll-driven reveal+press+exit) composes cleanly.
-   z above the frame/heading so it presses on top. pointer-events:none. The SVG
-   transform-origin (50% 88%, the fingertip) is set inline so the extreme
-   close-up zoom fills the screen with clay before resolving into the hand. */
-.cork-hand {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 6vh; /* fingertip lands on the first note's pin (upper-centre) */
-  margin-inline: auto;
-  z-index: 4;
-  width: clamp(170px, 20vw, 280px);
-  height: clamp(260px, 36vh, 420px);
-  pointer-events: none;
-}
-
 /* --- Static / reduced-motion / mobile grid --- */
-.cork-section--static .cork-heading--static {
+.board-section--static .board-heading--static {
   z-index: 3;
 }
 /* Static grid laid out as explicit rows (3 + 2 + 2, no orphan tile). Each row is
    its own centered flex line; on mobile notes stack into one column. */
-.cork-grid,
-.cork-grid ul {
+.board-grid,
+.board-grid ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.cork-grid__cell {
+.board-grid__cell {
   display: flex;
   justify-content: center;
 }

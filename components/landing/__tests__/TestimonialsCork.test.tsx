@@ -29,7 +29,7 @@ function stubMatchMedia(matches: boolean) {
 }
 
 /**
- * Smoke test for the StaticCorkGrid fallback path (R9/R10/R2). We force the
+ * Smoke test for the StaticBoardGrid fallback path (R9/R10/R2). We force the
  * static branch by stubbing matchMedia to always-false (mobile / no md), so the
  * island early-returns the static grid: all 7 notes visible, exactly one
  * <h2 id="testimonios-title">, no scroll trap. We do NOT assert pan/scroll
@@ -59,24 +59,24 @@ describe("TestimonialsCork (static fallback path)", () => {
     expect(headings).toHaveLength(1);
   });
 
-  it("keeps the anchor id on the cork section and does not pin it", () => {
+  it("keeps the anchor id on the board section and does not pin it", () => {
     const { container } = render(
       <TestimonialsCork testimonials={TESTIMONIALS} />,
     );
     const section = container.querySelector("section#testimonios");
     expect(section).not.toBeNull();
-    // Static path uses the cork-section--static modifier (no sticky pin).
-    expect(section?.className).toContain("cork-section--static");
+    // Static path uses the board-section--static modifier (no sticky pin).
+    expect(section?.className).toContain("board-section--static");
   });
 
   it("lays the 7 notes out in literal 3 + 2 + 2 rows (no orphan)", () => {
     const { container } = render(
       <TestimonialsCork testimonials={TESTIMONIALS} />,
     );
-    const rows = container.querySelectorAll(".cork-grid__row");
+    const rows = container.querySelectorAll(".board-grid__row");
     expect(rows).toHaveLength(3);
     const counts = Array.from(rows).map(
-      (row) => row.querySelectorAll(".cork-grid__cell").length,
+      (row) => row.querySelectorAll(".board-grid__cell").length,
     );
     expect(counts).toEqual([3, 2, 2]);
   });
@@ -102,7 +102,7 @@ describe("TestimonialsCork (desktop pan path, R11 keyboard reachability)", () =>
     const { container } = render(
       <TestimonialsCork testimonials={TESTIMONIALS} />,
     );
-    const cells = container.querySelectorAll(".cork-track__cell");
+    const cells = container.querySelectorAll(".board-track__cell");
     expect(cells).toHaveLength(7);
     cells.forEach((cell, i) => {
       expect(cell.getAttribute("tabindex")).toBe("0");
@@ -116,7 +116,7 @@ describe("TestimonialsCork (desktop pan path, R11 keyboard reachability)", () =>
     const { container } = render(
       <TestimonialsCork testimonials={TESTIMONIALS} />,
     );
-    const spacer = container.querySelector<HTMLDivElement>(".cork-pin-spacer");
+    const spacer = container.querySelector<HTMLDivElement>(".board-pin-spacer");
     // jsdom reports 0 for layout boxes; give the spacer a non-zero travel so the
     // handler computes a target instead of bailing on `travel <= 0`.
     Object.defineProperty(spacer, "offsetHeight", {
@@ -128,7 +128,7 @@ describe("TestimonialsCork (desktop pan path, R11 keyboard reachability)", () =>
       value: 800,
     });
 
-    const lastCell = container.querySelectorAll(".cork-track__cell")[6];
+    const lastCell = container.querySelectorAll(".board-track__cell")[6];
     fireEvent.focus(lastCell);
     expect(lenisScrollTo).toHaveBeenCalledTimes(1);
     const [target] = lenisScrollTo.mock.calls[0];
@@ -136,19 +136,19 @@ describe("TestimonialsCork (desktop pan path, R11 keyboard reachability)", () =>
     expect(target).toBeGreaterThan(0);
   });
 
-  // v2.2: the pan runs only during the middle phase [tHand, tPanEnd] of the
-  // spacer (hand-pin intro before, zoom-out after). The focus handler maps a
+  // v2 (ADR-3, hand intro retired): the pan runs during [tIn, tPanEnd] of the
+  // spacer (clean zoom-in before, zoom-out after). The focus handler maps a
   // note's geometry-derived panPosition INTO that sub-range. By construction the
-  // FIRST note is centred at the START of the pan (panPosition 0 → progress
-  // tHand) and the LAST note at the END (panPosition 1 → progress tPanEnd). So
-  // the first target lands in the early-middle of the spacer (past the hand
-  // intro, well below the end) and the last lands in the late-middle (before the
-  // closing zoom-out tail). We assert ordering + phase-correct bounds.
-  it("maps focus targets into the [tHand, tPanEnd] pan sub-range", () => {
+  // FIRST note is centred at the START of the pan (panPosition 0 → progress tIn)
+  // and the LAST note at the END (panPosition 1 → progress tPanEnd). So the first
+  // target lands in the early part of the spacer (past the zoom-in, well below
+  // the end) and the last lands in the late part (before the closing zoom-out
+  // tail). We assert ordering + phase-correct bounds.
+  it("maps focus targets into the [tIn, tPanEnd] pan sub-range", () => {
     const { container } = render(
       <TestimonialsCork testimonials={TESTIMONIALS} />,
     );
-    const spacer = container.querySelector<HTMLDivElement>(".cork-pin-spacer");
+    const spacer = container.querySelector<HTMLDivElement>(".board-pin-spacer");
     const TRAVEL = 4000;
     Object.defineProperty(spacer, "offsetHeight", {
       configurable: true,
@@ -159,10 +159,10 @@ describe("TestimonialsCork (desktop pan path, R11 keyboard reachability)", () =>
       value: 800,
     });
 
-    const cells = container.querySelectorAll(".cork-track__cell");
+    const cells = container.querySelectorAll(".board-track__cell");
 
-    // First note → progress = tHand (start of pan): strictly > 0 (past nothing)
-    // but within the first half (the hand intro budget is the opening chunk).
+    // First note → progress = tIn (start of pan): strictly > 0 (past nothing)
+    // but within the first half (the zoom-in budget is the opening chunk).
     fireEvent.focus(cells[0]);
     const firstTarget = lenisScrollTo.mock.calls[0][0] as number;
     expect(firstTarget).toBeGreaterThan(0);

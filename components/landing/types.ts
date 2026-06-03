@@ -91,7 +91,7 @@ export type PricingCardProps = {
 };
 
 /**
- * Entrance variant for a cork note in the cinematic lateral pan. Each note gets
+ * Entrance variant for a board note in the cinematic lateral pan. Each note gets
  * one assigned variant so entrances stay visibly varied across the board.
  * transform/opacity only (+ a single blur on "blur-drop").
  */
@@ -102,7 +102,7 @@ export type EntranceVariant =
   | "slide-right"
   | "blur-drop";
 
-/** Paper-note size on the cork board. Maps to a figure max-width (sm/md/lg). */
+/** Paper-note size on the board. Maps to a figure max-width (sm/md/lg). */
 export type NoteSize = "sm" | "md" | "lg";
 
 /** TestimonialCard: a single attributed quote. */
@@ -119,12 +119,12 @@ export type TestimonialCardProps = {
    */
   avatar: { src: string; width: number; height: number };
   /**
-   * Marks the asymmetric "featured" note: larger, name in display font, clay
-   * underline. Exactly one testimonial should set this.
+   * Marks the asymmetric "featured" note: larger, name in display font. Exactly
+   * one testimonial should set this.
    */
   featured?: boolean;
 
-  // ---- Cork-pan data fields (optional, backward-compatible) ----
+  // ---- Board-pan data fields (optional, backward-compatible) ----
   /** Assigned entrance variant. Default "slide-up". */
   entrance?: EntranceVariant;
   /** Paper size on the board. Default "md". */
@@ -142,9 +142,9 @@ export type TestimonialCardProps = {
    */
   panProgress?: MotionValue<number>;
   /**
-   * The FIRST note is "placed by the cartoon hand" in the intro: it renders
-   * opaque + pinned immediately (NO whileInView entrance) so the hand can press
-   * it on screen. Only the opening note sets this.
+   * Legacy of the retired v1 cork-hand intro: forces the note to render opaque +
+   * held immediately (NO whileInView entrance). No note sets this in the v2 clean
+   * board (ADR-3); kept for backward-compatibility of the card contract.
    */
   placed?: boolean;
   /** Index within the note list (used to derive the entrance sub-range). */

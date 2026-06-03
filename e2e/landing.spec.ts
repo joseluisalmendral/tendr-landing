@@ -22,7 +22,7 @@ async function settleScrollTo(page: Page, target: number) {
   await page.waitForTimeout(260);
 }
 
-/** Read the choreography state of the first testimonial note. */
+/** Read the held/tilted state of the first testimonial note. */
 function readFirstNote(page: Page) {
   return page.evaluate(() => {
     const deg = (tf: string | undefined) => {
@@ -37,25 +37,31 @@ function readFirstNote(page: Page) {
       const el = note.querySelector(sel);
       return el ? getComputedStyle(el) : null;
     };
-    const pin = css(".tw-note__pin");
-    const tilt = css(".tw-note__tilt");
-    const hard = css(".tw-note__shadow--hard");
-    const soft = css(".tw-note__shadow--soft");
+    // The holder is a strip of washi tape (v2 board reinvention, ADR-3); the
+    // .tw-note__pin class name is preserved as the structural hook.
+    const tape = css(".tw-note__pin");
+    // The resting tilt is applied to the moving unit (pan path: motion writes the
+    // rest rotation here; static path: it lives on the lean layer). Read both and
+    // take whichever carries the angle so the assertion is path-agnostic.
+    const unit = css(".tw-note__unit");
+    const lean = css(".tw-note__lean");
+    const unitDeg = deg(unit?.transform);
+    const leanDeg = deg(lean?.transform);
+    const held = css(".tw-note__shadow--hard"); // exclusive note shadow, base on
     return {
-      pinOpacity: pin ? Number(pin.opacity) : null,
-      tiltDeg: deg(tilt?.transform),
-      hardOpacity: hard ? Number(hard.opacity) : null,
-      softOpacity: soft ? Number(soft.opacity) : null,
+      tapeOpacity: tape ? Number(tape.opacity) : null,
+      tiltDeg: Math.abs(unitDeg) >= Math.abs(leanDeg) ? unitDeg : leanDeg,
+      heldShadowOpacity: held ? Number(held.opacity) : null,
     };
   });
 }
 
-test.describe("§5 testimonials pushpin (scroll-driven)", () => {
-  test("note is pinned below center and unpinned after crossing it", async ({ page }) => {
+test.describe("§5 testimonials board — tape-held tilted notes (scroll-driven)", () => {
+  test("note is tilted and held by tape while on the board", async ({ page }) => {
     await page.goto("/");
     await page.waitForTimeout(500);
 
-    // Absolute top of the highest note (the section's first pinned card).
+    // Absolute top of the highest note (the section's first card on the board).
     const noteTop = await page.evaluate(() => {
       const tops = [...document.querySelectorAll(".tw-note")].map(
         (n) => Math.round(n.getBoundingClientRect().top + window.scrollY),
@@ -63,20 +69,17 @@ test.describe("§5 testimonials pushpin (scroll-driven)", () => {
       return Math.min(...tops);
     });
 
-    // 1) Note entering from the bottom of the viewport => still pinned.
+    // Bring the note into the viewport so its entrance has played and it rests on
+    // the board: held by tape, tilted, carrying its exclusive note shadow.
     await settleScrollTo(page, noteTop - 800);
-    const pinned = await readFirstNote(page);
-    expect(pinned, "note state readable").not.toBeNull();
-    expect(pinned!.pinOpacity, "pushpin visible while pinned").toBeGreaterThan(0.7);
-    expect(Math.abs(pinned!.tiltDeg), "note tilted while pinned").toBeGreaterThan(1);
-    expect(pinned!.hardOpacity, "hard shadow while pinned").toBeGreaterThan(0.7);
-
-    // 2) Note risen above center => pushpin lifted, note straightened, soft shadow.
-    await settleScrollTo(page, noteTop + 40);
-    const unpinned = await readFirstNote(page);
-    expect(unpinned!.pinOpacity, "pushpin lifted after crossing").toBeLessThan(0.3);
-    expect(Math.abs(unpinned!.tiltDeg), "note straightened after crossing").toBeLessThan(0.6);
-    expect(unpinned!.softOpacity, "soft shadow after crossing").toBeGreaterThan(0.7);
+    const note = await readFirstNote(page);
+    expect(note, "note state readable").not.toBeNull();
+    expect(note!.tapeOpacity, "tape visible while held").toBeGreaterThan(0.7);
+    expect(Math.abs(note!.tiltDeg), "note tilted while held").toBeGreaterThan(1);
+    expect(
+      note!.heldShadowOpacity,
+      "exclusive note shadow present while held",
+    ).toBeGreaterThan(0.7);
   });
 });
 

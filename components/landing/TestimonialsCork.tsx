@@ -10,31 +10,32 @@ import {
   useTransform,
 } from "motion/react";
 
-import { CorkHand } from "@/components/landing/CorkHand";
 import { TestimonialCard } from "@/components/landing/TestimonialCard";
 import type { NoteSize, TestimonialCardProps } from "@/components/landing/types";
 
 /**
- * TestimonialsCork: the cinematic full-bleed cork board (design §1.1, §2, §3, §6).
+ * TestimonialsCork: "El tablero de Tendr" — the cinematic full-bleed clean board
+ * of living notes (ADR-3). v2 reinvention of the v1 cork board: a modern sunken
+ * whiteboard panel (hairline frame + faint kanban column guides) that echoes the
+ * product's own kanban pipeline. Paper notes stay alive, held by a strip of celo
+ * (washi tape) instead of a pushpin.
  *
  * Single client island that owns ALL scroll/pan logic + the desktop/motion gate.
  * ONE useScroll subscription drives the whole sequence (no N-per-note
  * subscriptions — Vercel rerender-use-ref-transient-values).
  *
  * Pan path (desktop, motion on) — scroll-progress driven storytelling with a
- * sticky pin (illustration catalog §4.5 + motion catalog §6.4). A sized spacer
- * (.cork-pin-spacer, stable inline calc → CLS 0) provides the scroll distance;
+ * sticky pin (motion catalog §6.4). A sized spacer (.board-pin-spacer, stable
+ * inline calc → CLS 0) provides the scroll distance;
  * useScroll({ target: spacer, offset:["start start","end end"] }) → scrollYProgress.
  *
- * FOUR phases over the spacer:
- *   P0 HAND REVEAL + PRESS + EXIT  [0, tHand]
- *     A cartoon clay hand starts in extreme close-up (scale ~6 → the screen is
- *     just a clay COLOR), and as you scroll it zooms out (--ease-expo) to resolve
- *     into a hand pressing a pushpin onto the FIRST note (which is `placed`:
- *     rendered opaque + pinned). The hand dips (press) then lifts + fades out of
- *     frame, leaving the first note pinned and centred. This replaces the old
- *     empty board zoom-in.
- *   P1 PAN  [tHand, tPanEnd]
+ * THREE phases over the spacer (the v1 cartoon-hand intro was retired with the
+ * cork board — ADR-3 calls for a clean open):
+ *   P0 ZOOM-IN  [0, tIn]
+ *     The framed board scales SMALL → 1 (grows to fill the screen) over --ease-expo.
+ *     The first note is already present and held; it just reveals via its normal
+ *     whileInView entrance as the board resolves. No hand carries it in.
+ *   P1 PAN  [tIn, tPanEnd]
  *     The board pans laterally (x: 0 → -panVw) and notes #2..n appear
  *     (whileInView, time-based — see TestimonialCard). The first note is centred
  *     at x=0; the last note is centred at x=-panVw.
@@ -42,15 +43,15 @@ import type { NoteSize, TestimonialCardProps } from "@/components/landing/types"
  *     The board scales 1 → SMALL while the pan HOLDS at -panVw, so it ends framed
  *     on the LAST note (never an empty board).
  *
- * scale → outer .cork-board (transform-origin center, GPU, CLS 0). x → inner
+ * scale → outer .board-panel (transform-origin center, GPU, CLS 0). x → inner
  * track. Both from the SAME scrollYProgress, never useState per frame.
  * ReactLenis(root) smooths the REAL document scrollTop (not a transform), so
  * useScroll reads it correctly (Providers.tsx).
  *
- * Reduced-motion / mobile (< md): StaticCorkGrid — no sticky, no useScroll, no
- * hand, no entrances; all notes visible in a legible 3+2+2 grid; scroll not
- * trapped. SSR-safe gate (resolves false first → static renders, upgrades on
- * mount; no hydration flash).
+ * Reduced-motion / mobile (< md): StaticBoardGrid — no sticky, no useScroll, no
+ * entrances; all notes visible in a legible 3+2+2 grid; scroll not trapped.
+ * SSR-safe gate (resolves false first → static renders, upgrades on mount; no
+ * hydration flash).
  */
 
 const HEADING = "Lo que dicen quienes ya lo usan";
@@ -58,7 +59,7 @@ const HEADING_ID = "testimonios-title";
 
 // Cell SLOT width per paper size, in vw. This is the single source of truth for
 // the track geometry (centring + panVw) — each cell is sized to exactly this vw
-// (see the inline width on the cell + .cork-track__cell centring), so the model
+// (see the inline width on the cell + .board-track__cell centring), so the model
 // matches the rendered track at ANY viewport width (the card figure sits centred
 // inside its slot). Tuned to the figure max-widths (~300/360/420px ≈ these vw at
 // a typical desktop) so the slots are snug.
@@ -70,17 +71,13 @@ const CELL_VW: Record<NoteSize, number> = {
 const GAP_VW = 5; // horizontal gap between cells
 
 // Scroll budgets (vh). Opening = board zoom-in (it grows to fill the screen);
-// then the white hand sweeps down to pin the first note; then the lateral pan;
-// then a closing zoom-out framed on the last note. HUMAN-TUNING (not
-// headless-verifiable): these + SMALL set the feel.
-const ZOOM_IN_VH = 45; // board grows small → full
-const HAND_VH = 75; // hand sweeps in from top, presses, exits downward
+// then the lateral pan; then a closing zoom-out framed on the last note.
+// HUMAN-TUNING (not headless-verifiable): these + SMALL set the feel.
+const ZOOM_IN_VH = 55; // board grows small → full (absorbs the retired hand budget)
 const ZOOM_OUT_VH = 50; // closing zoom-out
 const SMALL = 0.74; // resting scale of the framed board during zoom-in / zoom-out
 
-const EASE_EXPO = cubicBezier(0.16, 1, 0.3, 1); // wow board zoom-in
-const EASE_SNAP = cubicBezier(0.34, 1.56, 0.64, 1); // press overshoot
-const EASE_OUT = cubicBezier(0.22, 1, 0.36, 1);
+const EASE_EXPO = cubicBezier(0.16, 1, 0.3, 1); // wow board zoom-in (v2 expo)
 
 /**
  * Track geometry: lead padding so the FIRST note is centred at x=0, and panVw so
@@ -91,7 +88,7 @@ const EASE_OUT = cubicBezier(0.22, 1, 0.36, 1);
 function computeGeometry(notes: TestimonialCardProps[]) {
   const cell = (n: TestimonialCardProps) => CELL_VW[n.size ?? "md"];
   const leadVw = 50 - cell(notes[0]) / 2; // note 0 centred at viewport centre
-  const trailVw = 50 - cell(notes[notes.length - 1]) / 2; // cork right of last note
+  const trailVw = 50 - cell(notes[notes.length - 1]) / 2; // board right of last note
 
   const centers: number[] = [];
   let cursor = leadVw;
@@ -107,21 +104,19 @@ function computeGeometry(notes: TestimonialCardProps[]) {
 
 /** Phase fractions over the spacer (treats 1vw ≈ 1vh; exact split shifts a touch
  *  with aspect ratio — acceptable feel detail, flagged for human tuning).
- *  Phases: zoom-in [0,tIn] · hand pin [tIn,tHand] · pan [tHand,tPanEnd] ·
- *  zoom-out [tPanEnd,1]. */
+ *  Phases: zoom-in [0,tIn] · pan [tIn,tPanEnd] · zoom-out [tPanEnd,1]. */
 function computePhases(panVw: number) {
-  const total = ZOOM_IN_VH + HAND_VH + panVw + ZOOM_OUT_VH;
+  const total = ZOOM_IN_VH + panVw + ZOOM_OUT_VH;
   const tIn = ZOOM_IN_VH / total;
-  const tHand = (ZOOM_IN_VH + HAND_VH) / total;
   const tPanEnd = 1 - ZOOM_OUT_VH / total;
-  const pinHeight = `calc(100dvh + ${ZOOM_IN_VH}vh + ${HAND_VH}vh + ${panVw}vw + ${ZOOM_OUT_VH}vh)`;
-  return { pinHeight, tIn, tHand, tPanEnd };
+  const pinHeight = `calc(100dvh + ${ZOOM_IN_VH}vh + ${panVw}vw + ${ZOOM_OUT_VH}vh)`;
+  return { pinHeight, tIn, tPanEnd };
 }
 
-/** A note's pan-progress arrival point, remapped into the pan phase [tHand,tPanEnd]. */
-function remapToPan(panPosition: number, tHand: number, tPanEnd: number): number {
+/** A note's pan-progress arrival point, remapped into the pan phase [tIn,tPanEnd]. */
+function remapToPan(panPosition: number, tIn: number, tPanEnd: number): number {
   const p = Math.min(1, Math.max(0, panPosition));
-  return tHand + p * (tPanEnd - tHand);
+  return tIn + p * (tPanEnd - tIn);
 }
 
 const MD_QUERY = "(min-width: 768px)";
@@ -151,13 +146,13 @@ export function TestimonialsCork({
   // The pan path is its OWN component so useScroll (needs a hydrated target ref)
   // only mounts when the pan actually renders.
   if (!pan) {
-    return <StaticCorkGrid testimonials={testimonials} />;
+    return <StaticBoardGrid testimonials={testimonials} />;
   }
-  return <CorkPan testimonials={testimonials} />;
+  return <BoardPan testimonials={testimonials} />;
 }
 
-/** Desktop pan branch: hand-pin intro + sticky pin + horizontal track. */
-function CorkPan({
+/** Desktop pan branch: clean zoom-in open + sticky pin + horizontal track. */
+function BoardPan({
   testimonials,
 }: {
   testimonials: TestimonialCardProps[];
@@ -175,10 +170,10 @@ function CorkPan({
   });
 
   const { leadVw, trailVw, panVw, panPositions } = computeGeometry(testimonials);
-  const { pinHeight, tIn, tHand, tPanEnd } = computePhases(panVw);
+  const { pinHeight, tIn, tPanEnd } = computePhases(panVw);
 
   // Board zoom: SMALL → 1 (grows to fill the screen) over the zoom-in phase,
-  // held at 1 through the hand + pan, then 1 → SMALL on the closing zoom-out.
+  // held at 1 through the pan, then 1 → SMALL on the closing zoom-out.
   const scale = useTransform(
     scrollYProgress,
     [0, tIn, tPanEnd, 1],
@@ -187,54 +182,12 @@ function CorkPan({
   );
   // Horizontal pan: held at 0 until the pan phase, runs, then held at -panVw
   // during the zoom-out (so it ends framed on the last note).
-  const x = useTransform(scrollYProgress, [tHand, tPanEnd], ["0vw", `-${panVw}vw`], {
-    clamp: true,
-  });
-
-  // Hand pin beats inside [tIn, tHand]: the white hand sweeps DOWN from above,
-  // reaches the first note, presses the pushpin (small dip), then continues DOWN
-  // and out of frame (disappears below). transform/opacity only.
-  const hSpan = tHand - tIn;
-  const hArrive = tIn + hSpan * 0.4; // reached the press point
-  const hPress = tIn + hSpan * 0.5; // contact
-  const hExit0 = tIn + hSpan * 0.64; // starts withdrawing downward
-  const hExit1 = tHand;
-
-  const handY = useTransform(
-    scrollYProgress,
-    [tIn, hArrive, hPress, hExit0, hExit1],
-    ["-82vh", "0vh", "1.6vh", "0vh", "122vh"],
-    { clamp: true, ease: EASE_OUT },
-  );
-
-  // The hand CARRIES the first note in: the card descends WITH the hand (same
-  // curve, [tIn, hArrive]) into its empty slot, then the hand presses + leaves.
-  // So the first note is NOT pre-placed — the empty cork is the "hueco" and the
-  // hand brings the (already-pinned) card and drops it there.
-  const cardCarryY = useTransform(scrollYProgress, [tIn, hArrive], ["-82vh", "0vh"], {
-    clamp: true,
-    ease: EASE_OUT,
-  });
-  const cardCarryOpacity = useTransform(
-    scrollYProgress,
-    [tIn, tIn + (hArrive - tIn) * 0.18],
-    [0, 1],
-    { clamp: true },
-  );
-  const handScale = useTransform(scrollYProgress, [tIn, hArrive], [1.12, 1], {
-    clamp: true,
-    ease: EASE_SNAP, // tiny pop as it lands
-  });
-  const handRotate = useTransform(scrollYProgress, [hExit0, hExit1], [0, 7], {
-    clamp: true,
-    ease: EASE_OUT,
-  });
-  const handOpacity = useTransform(scrollYProgress, [hExit0, hExit1], [1, 0], {
+  const x = useTransform(scrollYProgress, [tIn, tPanEnd], ["0vw", `-${panVw}vw`], {
     clamp: true,
   });
 
   // R11 (WCAG 2.4.3 / 2.4.7): focusing an off-screen note snaps the pan to it.
-  // Maps the note's panPosition into the pan phase [tHand, tPanEnd] of the spacer,
+  // Maps the note's panPosition into the pan phase [tIn, tPanEnd] of the spacer,
   // then scrolls there (live geometry; correct regardless of dvh→px). Smooth by
   // default; instant when reduced motion is active (a11y contract). Plain
   // function: with the React Compiler enabled, manual useCallback is redundant
@@ -246,7 +199,7 @@ function CorkPan({
     const spacerTop = rect.top + window.scrollY;
     const travel = spacer.offsetHeight - window.innerHeight;
     if (travel <= 0) return;
-    const progress = remapToPan(panPosition, tHand, tPanEnd);
+    const progress = remapToPan(panPosition, tIn, tPanEnd);
     const target = spacerTop + progress * travel;
     if (lenis) {
       lenis.scrollTo(target, { immediate: Boolean(reduceMotion) });
@@ -259,33 +212,33 @@ function CorkPan({
     <section
       data-cork
       id="testimonios"
-      className="cork-section relative w-full scroll-mt-16"
+      className="board-section relative w-full scroll-mt-16"
       aria-labelledby={HEADING_ID}
     >
-      <div ref={outerRef} className="cork-pin-spacer" style={{ height: pinHeight }}>
-        <div className="cork-sticky sticky top-0 h-[100dvh] overflow-hidden">
+      <div ref={outerRef} className="board-pin-spacer" style={{ height: pinHeight }}>
+        <div className="board-sticky sticky top-0 h-[100dvh] overflow-hidden">
           <motion.div
-            className="cork-board"
+            className="board-panel"
             style={{ scale, transformOrigin: "center center", willChange: "transform" }}
           >
-            {/* Cork-mounted heading label (real h2, first in reading order). */}
+            {/* Board-mounted heading label (real h2, first in reading order). */}
             <h2
               id={HEADING_ID}
-              className="cork-heading absolute left-1/2 top-[5.5rem] max-w-[min(90%,42rem)] -translate-x-1/2 rounded-lg border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-flat md:top-24"
+              className="board-heading absolute left-1/2 top-[5.5rem] max-w-[min(90%,42rem)] -translate-x-1/2 rounded-lg border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-flat md:top-24"
             >
               {HEADING}
             </h2>
 
             {/* Horizontal track. Lead/trail padding centre the first note at x=0
-                and leave cork to the right of the last note at the end. */}
+                and leave board to the right of the last note at the end. */}
             <motion.ol
-              className="cork-track"
+              className="board-track"
               style={{ x, paddingLeft: `${leadVw}vw`, paddingRight: `${trailVw}vw`, gap: `${GAP_VW}vw` }}
             >
               {testimonials.map((t, i) => (
                 <li
                   key={t.name}
-                  className="cork-track__cell"
+                  className="board-track__cell"
                   // Slot width in vw = the geometry source of truth (the card
                   // figure centres inside it). Keeps panVw / centring exact at
                   // any viewport width.
@@ -294,53 +247,18 @@ function CorkPan({
                   aria-label={`Testimonio ${i + 1} de ${testimonials.length}`}
                   onFocusCapture={() => handleCellFocus(panPositions[i])}
                 >
-                  {i === 0 ? (
-                    // First note: carried in by the hand. It rides the same
-                    // descent curve as the hand into the empty slot; `placed`
-                    // makes it render opaque + pinned (it arrives already pinned),
-                    // so the hand "drops it pinned" and leaves.
-                    <motion.div
-                      style={{ y: cardCarryY, opacity: cardCarryOpacity, willChange: "transform, opacity" }}
-                    >
-                      <TestimonialCard
-                        {...t}
-                        placed
-                        panProgress={scrollYProgress}
-                        index={i}
-                        total={testimonials.length}
-                      />
-                    </motion.div>
-                  ) : (
-                    // The rest enter on view (whileInView) as they pan in.
-                    <TestimonialCard
-                      {...t}
-                      panProgress={scrollYProgress}
-                      index={i}
-                      total={testimonials.length}
-                    />
-                  )}
+                  {/* All notes (incl. the first) reveal via their normal
+                      whileInView entrance as the board pans/zooms in. No hand
+                      carries the opening note anymore (ADR-3 clean open). */}
+                  <TestimonialCard
+                    {...t}
+                    panProgress={scrollYProgress}
+                    index={i}
+                    total={testimonials.length}
+                  />
                 </li>
               ))}
             </motion.ol>
-
-            {/* The cartoon white hand that pins the first note. Sits above the
-                board content (z-4), outside the panning track. Scroll-driven:
-                sweeps DOWN from above, presses the pushpin, exits downward.
-                Decorative. */}
-            <motion.div
-              aria-hidden="true"
-              className="cork-hand"
-              style={{
-                scale: handScale,
-                y: handY,
-                rotate: handRotate,
-                opacity: handOpacity,
-                transformOrigin: "50% 50%",
-                willChange: "transform, opacity",
-              }}
-            >
-              <CorkHand />
-            </motion.div>
           </motion.div>
         </div>
       </div>
@@ -348,7 +266,7 @@ function CorkPan({
   );
 }
 
-// Static-grid row plan (design §6, W2): user-chosen 3 + 2 + 2, NO orphan tile.
+// Static-grid row plan (W2): user-chosen 3 + 2 + 2, NO orphan tile.
 const STATIC_ROW_PLAN = [3, 2, 2] as const;
 
 function chunkByPlan<T>(items: T[], plan: readonly number[]): T[][] {
@@ -365,11 +283,12 @@ function chunkByPlan<T>(items: T[], plan: readonly number[]): T[][] {
 }
 
 /**
- * Static fallback (design §6, R9/R10): full-bleed cork + wood frame, all notes in
- * a legible 3 + 2 + 2 grid, no sticky, no scroll trap, no hand. Used for
- * reduced-motion, below md, and on SSR / first paint.
+ * Static fallback (R9/R10): full-bleed clean board panel (sunken surface +
+ * hairline frame + faint kanban guides), all notes in a legible 3 + 2 + 2 grid,
+ * no sticky, no scroll trap. Used for reduced-motion, below md, and on SSR /
+ * first paint.
  */
-function StaticCorkGrid({
+function StaticBoardGrid({
   testimonials,
 }: {
   testimonials: TestimonialCardProps[];
@@ -379,24 +298,25 @@ function StaticCorkGrid({
     <section
       data-cork
       id="testimonios"
-      className="cork-section cork-section--static w-full scroll-mt-16"
+      className="board-section board-section--static w-full scroll-mt-16"
       aria-labelledby={HEADING_ID}
     >
       <div className="mx-auto max-w-[1200px] px-6 py-16 md:py-24">
         <h2
           id={HEADING_ID}
-          className="cork-heading--static mx-auto mb-12 w-fit max-w-full rounded-lg border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-flat"
+          className="board-heading--static mx-auto mb-12 w-fit max-w-full rounded-lg border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-flat"
         >
           {HEADING}
         </h2>
-        <ol className="cork-grid flex flex-col gap-12 md:gap-10">
+        <ol className="board-grid flex flex-col gap-12 md:gap-10">
           {rows.map((row, rowIndex) => (
-            <li key={`row-${rowIndex}`} className="cork-grid__row">
+            <li key={`row-${rowIndex}`} className="board-grid__row">
               <ul className="flex flex-col items-center gap-12 md:flex-row md:flex-wrap md:items-stretch md:justify-center md:gap-10">
-                {row.map((t) => (
-                  <li key={t.name} className="cork-grid__cell">
-                    {/* No panProgress → the card renders pinned-static. */}
-                    <TestimonialCard {...t} />
+                {row.map((t, cellIndex) => (
+                  <li key={t.name} className="board-grid__cell">
+                    {/* No panProgress → the card renders held-static. index drives
+                        the tape-tint alternation across the grid. */}
+                    <TestimonialCard {...t} index={rowIndex * 10 + cellIndex} />
                   </li>
                 ))}
               </ul>
