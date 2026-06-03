@@ -948,8 +948,13 @@ export function PlantillasPanel({ active, reduceMotion }: PanelProps) {
 
         {/* Both views are absolute-stacked in this flex-1 body so toggling never
             reflows the stage (CLS 0). AnimatePresence (sync mode) overlaps the
-            crossfade so the stage is never empty. Reduced motion ⇒ instant. */}
-        <div className="relative min-h-0 flex-1">
+            crossfade so the stage is never empty. Reduced motion ⇒ instant.
+            `min-h-[22rem]`: the views are absolute (zero intrinsic height), so on
+            mobile — where the inline wrapper sizes from CONTENT, not a tall stage —
+            the body would otherwise collapse and the panel would render blank. The
+            min-height gives it a definite box on mobile while staying inert on
+            desktop (flex-1 already exceeds it inside the tall reserved stage). */}
+        <div className="relative min-h-[22rem] flex-1">
           <AnimatePresence initial={false}>
             <motion.div
               key={view}
