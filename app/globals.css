@@ -63,15 +63,16 @@
   --color-support-fg: var(--support-fg);
   --color-accent-soft: var(--accent-soft);
   --color-handdrawn: var(--handdrawn);
-  /* Folk Twins (B2-fix-1): familia de apoyo con rotación de rol. cobalt = "lo
-     máquina" (IA/automatización), ochre = "progreso" (numerales/conectores/dots).
-     Monogramas/chips rotan wisp->cobalt->ochre por index%3. */
+  /* Folk Twins (B2-fix-1; B3-fix-1 teal): familia de apoyo con rotación de rol.
+     cobalt = "lo máquina" (IA/automatización), teal = "progreso"
+     (rails/dots/stage-chips/drop-targets/spotlight/numerales).
+     Monogramas/chips rotan wisp->cobalt->teal por index%3. */
   --color-support-cobalt: var(--support-cobalt);
   --color-support-cobalt-fg: var(--support-cobalt-fg);
   --color-support-cobalt-soft: var(--support-cobalt-soft);
-  --color-support-ochre: var(--support-ochre);
-  --color-support-ochre-fg: var(--support-ochre-fg);
-  --color-support-ochre-soft: var(--support-ochre-soft);
+  --color-support-teal: var(--support-teal);
+  --color-support-teal-fg: var(--support-teal-fg);
+  --color-support-teal-soft: var(--support-teal-soft);
   /* highlight (sólo text-bg, p.ej. pill "Recomendado") */
   --color-highlight: var(--highlight);
   --color-highlight-fg: var(--highlight-fg);
@@ -187,18 +188,23 @@
   --accent-soft: color-mix(in oklab, var(--support) 12%, var(--surface-raised));
   --handdrawn: var(--support);
 
-  /* ---- Folk Twins: familia de apoyo (B2-fix-1) ----
+  /* ---- Folk Twins: familia de apoyo (B2-fix-1; B3-fix-1 teal) ----
      wisp (support, arriba) = firma; cobalt = "lo máquina" (IA/automatización);
-     ochre = "progreso" (numerales 01/02/03, conectores del viaje, dots).
+     teal = "progreso" (rails, dots de status/timeline, stage chips, drop
+     targets, spotlight, numerales 01/02/03, conectores del viaje).
+     Linaje: teal era el runner-up del workshop de color; absorbe el rol de
+     progreso que antes llevaba ochre (retirado por proximidad a --warning).
      Cada matiz tiene grado de texto (-fg, más oscuro para AA en texto pequeño)
      y tinte suave (-soft, mismo patrón color-mix 12% que --accent-soft).
-     REGLA DURA: ochre NUNCA en caution/error (valor cercano a --warning). */
+     REGLA DURA: teal NUNCA carga semántica success/OK (success green #356E48
+     sigue siendo el único verde de estado; teal es matiz ~175-190, más azul y
+     más oscuro — mantener la frontera). */
   --support-cobalt: #2456a8;       /* stroke 7.0:1 vs surface */
   --support-cobalt-fg: #1f4c94;    /* grado de texto (label "IA") */
   --support-cobalt-soft: color-mix(in oklab, var(--support-cobalt) 12%, var(--surface-raised));
-  --support-ochre: #9a7b1a;        /* stroke 4.0:1 vs surface */
-  --support-ochre-fg: #7a6a10;     /* grado de texto (= familia --highlight-fg) */
-  --support-ochre-soft: color-mix(in oklab, var(--support-ochre) 12%, var(--surface-raised));
+  --support-teal: #1b7163;         /* stroke 5.79:1 vs #FEFEFC / 5.85:1 vs #FFFFFF */
+  --support-teal-fg: #15604f;      /* grado de texto · 7.38:1 sobre near-white */
+  --support-teal-soft: color-mix(in oklab, var(--support-teal) 12%, var(--surface-raised));
 
   /* ---- Highlight (sólo text-bg, p.ej. pill "Recomendado") ---- */
   --highlight: #fff8bb;

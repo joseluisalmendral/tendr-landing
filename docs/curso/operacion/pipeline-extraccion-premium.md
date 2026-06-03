@@ -819,12 +819,12 @@ Estas librerías encajan con el lenguaje visual premium 2026. El alumno NO las u
 
 | Librería | Stack | Fuerte en | Cuándo usar | URL |
 |---|---|---|---|---|
-| **Aceternity UI** | shadcn + Framer Motion | 200+ componentes con motion: glare cards, canvas cards, parallax blocks, text reveal, bento grids | Hero, features con wow, secciones diferenciadoras | `ui.aceternity.com` |
+| **Aceternity UI** | shadcn + Motion (motion.dev, ex Framer Motion) | 200+ componentes con motion: glare cards, canvas cards, parallax blocks, text reveal, bento grids | Hero, features con wow, secciones diferenciadoras | `ui.aceternity.com` |
 | **Skiper UI** | shadcn + Motion | Smooth-scroll, interactive cards, micro-interactions, formularios distintivos, 3D premium | Componentes que ni Magic ni Aceternity cubren bien | `skiper-ui.com` |
-| **Magic UI** | React + Tailwind + Framer Motion | Landings animadas, bento, gradient cards, pricing animados | Pricing, testimonials, secciones marketing | `magicui.design` |
+| **Magic UI** | React + Tailwind + Motion (motion.dev, ex Framer Motion) | Landings animadas, bento, gradient cards, pricing animados | Pricing, testimonials, secciones marketing | `magicui.design` |
 | **Motion Primitives** | Motion (motion.dev) | Animation primitives sobre Motion, building blocks | Construir patterns propios sin reinventar | `motion-primitives.com` |
 | **Animata** | Tailwind + React | Effects copy-paste open-source, sin instalar lib | Rellenar huecos puntuales | `animata.design` |
-| **React Bits** | React | Componentes animados ligeros, sin Framer Motion forzado | Cuando quieres animación pero menos overhead | `reactbits.dev` |
+| **React Bits** | React | Componentes animados ligeros, sin Motion forzado | Cuando quieres animación pero menos overhead | `reactbits.dev` |
 | **Origin UI** | shadcn | Primitives admin avanzadas, formularios complejos | Principalmente L17 | `originui.com` |
 | **shadcn/ui** | Radix + Tailwind | Base accesible y customizable | Cimientos siempre | `ui.shadcn.com` |
 

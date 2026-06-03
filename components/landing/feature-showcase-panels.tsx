@@ -122,7 +122,7 @@ function PanelShell({
 
 /** Compact kanban mini-card: status dot + client name + amount + a kebab. The
  * `highlight` variant marks the protagonist case (it reached its pipeline home)
- * with the ochre "progreso" ring/surface (Folk Twins). */
+ * with the teal "progreso" ring/surface (Folk Twins). */
 function MiniClientCard({
   name,
   amount,
@@ -137,14 +137,14 @@ function MiniClientCard({
       className={
         "flex items-center gap-2 rounded-sm border px-2 py-1.5 " +
         (highlight
-          ? "border-support-ochre bg-support-ochre-soft shadow-flat ring-1 ring-support-ochre"
+          ? "border-support-teal bg-support-teal-soft shadow-flat ring-1 ring-support-teal"
           : "border-border bg-surface")
       }
     >
       <span
         className={
           "size-2 shrink-0 rounded-full " +
-          (highlight ? "bg-support-ochre" : "bg-border-strong")
+          (highlight ? "bg-support-teal" : "bg-border-strong")
         }
         aria-hidden="true"
       />
@@ -152,7 +152,7 @@ function MiniClientCard({
         <span
           className={
             "truncate text-body-sm " +
-            (highlight ? "text-support-ochre-fg" : "text-text-primary")
+            (highlight ? "text-support-teal-fg" : "text-text-primary")
           }
         >
           {name}
@@ -178,7 +178,7 @@ type KanbanCard = { name: string; amount: string; highlight?: boolean };
  * "Estudio Hibö" TRAVELS Contacto → Propuesta → En curso and loops, via a shared
  * layoutId card that re-parents between dropzones (Motion animates its position).
  * The destination dropzone briefly reads as a drop target, the card settles, and
- * becomes the ochre "progreso" highlight variant once it reaches "En curso"
+ * becomes the teal "progreso" highlight variant once it reaches "En curso"
  * (its home). reduced-motion / SSR ⇒ the card sits HIGHLIGHTED in "En curso".
  * ------------------------------------------------------------------------- */
 const KANBAN_CONTACTO: KanbanCard[] = [
@@ -264,7 +264,7 @@ function PipelineColumn({
             color), so it stays GPU-friendly and token-pure. */}
         <motion.span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-sm border border-dashed border-support-ochre ring-1 ring-support-ochre"
+          className="pointer-events-none absolute inset-0 rounded-sm border border-dashed border-support-teal ring-1 ring-support-teal"
           initial={false}
           animate={{ opacity: isTarget ? 1 : 0 }}
           transition={{ duration: 0.45, ease: EASE_OUT }}
@@ -580,7 +580,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
                   className="flex items-center gap-2 rounded-sm border border-border bg-surface-raised px-2 py-1.5"
                 >
                   <span
-                    className="size-2 shrink-0 rounded-full bg-support-ochre"
+                    className="size-2 shrink-0 rounded-full bg-support-teal"
                     aria-hidden="true"
                   />
                   <span className="truncate text-body-sm text-text-primary">

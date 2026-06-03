@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
  *    Rotation + spotlight are derived from motion values (no useState for
  *    continuous values, off the React render cycle).
  *  - Hover-peek + warm spotlight (desktop only): the faux-UI micro-demo replays
- *    and a radial ochre-soft glow follows the cursor (--duration-fast).
+ *    and a radial teal-soft glow follows the cursor (--duration-fast).
  *  - Mobile / coarse pointer: NO free-drag (scroll conflict). The micro-demo
  *    replays once on enter (in-view-replay). No hover-peek.
  *  - Reduced motion: drag off, notes static and already placed, no spotlight.
@@ -290,7 +290,7 @@ function Note({
   // Spotlight position (clay radial glow following the cursor).
   const sx = useMotionValue(50);
   const sy = useMotionValue(50);
-  const spotlight = useMotionTemplate`radial-gradient(220px circle at ${sx}% ${sy}%, var(--color-support-ochre-soft), transparent 70%)`;
+  const spotlight = useMotionTemplate`radial-gradient(220px circle at ${sx}% ${sy}%, var(--color-support-teal-soft), transparent 70%)`;
 
   // Discrete "demo playing" flag: in-view-replay (mobile) or hover (desktop).
   // This is a discrete UI state, not a continuous value, so useState is correct.

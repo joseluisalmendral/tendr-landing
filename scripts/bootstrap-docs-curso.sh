@@ -123,6 +123,9 @@ cp "$CURRICULUM/guias/modulo-5/_compartido/tecnico/preguntas-compartidas.md"    
 cp "$CURRICULUM/guias/modulo-5/leccion-16/fases/F1-stack-y-scaffolding/recursos/plantillas/product.md"     docs/curso/plantillas/
 cp "$CURRICULUM/guias/modulo-5/leccion-16/fases/F3-design-md-destilacion/recursos/plantillas/design-md.md" docs/curso/plantillas/
 cp "$CURRICULUM/guias/modulo-5/leccion-16/fases/F3-design-md-destilacion/recursos/plantillas/design-spec-visual.md" docs/curso/plantillas/
+
+# Sistema visual v2 (cambio de imagen de F6) — referencia para el re-skin
+cp "$CURRICULUM/guias/modulo-5/leccion-16/_rediseno-v2/design-md-tendr.md" docs/curso/design-md-v2.md
 cp "$CURRICULUM/guias/modulo-5/leccion-16/fases/F5-landing-v1-geo/recursos/plantillas/llms-txt.md"         docs/curso/plantillas/
 cp "$CURRICULUM/guias/modulo-5/leccion-16/fases/F5-landing-v1-geo/recursos/plantillas/robots-txt.md"       docs/curso/plantillas/
 cp "$CURRICULUM/guias/modulo-5/leccion-16/fases/F9-deploy-vercel/recursos/plantillas/tos-disclaimer.md"    docs/curso/plantillas/

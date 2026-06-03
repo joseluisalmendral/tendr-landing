@@ -110,7 +110,7 @@ export function JourneyCardContent({
    * prospect → propuesta → en curso → cerrado — NOT an invoice). */
   status?: string;
   /** When true the pill uses the success token (the case reached the closed/
-   * paid state) instead of the ochre "progreso" in-progress token. */
+   * paid state) instead of the teal "progreso" in-progress token. */
   closed?: boolean;
 } = {}) {
   return (
@@ -130,13 +130,13 @@ export function JourneyCardContent({
         </span>
       </span>
       {/* Status pill = "progreso" (Folk Twins): el estado en curso (Activo) usa
-          ochre; el cierre (Cobrado) sigue siendo success. */}
+          teal; el cierre (Cobrado) sigue siendo success. */}
       <span
         className={
           "rounded-sm border px-2 py-0.5 font-mono text-meta uppercase " +
           (closed
             ? "border-success bg-success-soft text-success"
-            : "border-support-ochre bg-support-ochre-soft text-support-ochre-fg")
+            : "border-support-teal bg-support-teal-soft text-support-teal-fg")
         }
       >
         {status}
@@ -280,11 +280,11 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
     <div
       // Folk Twins: la card destacada es el cliente EN CURSO que se sigue por el
       // tablero → contexto de "progreso", así que su énfasis (borde/ring/tinte/
-      // nombre) y su dot de estado usan ochre, no wisp.
+      // nombre) y su dot de estado usan teal, no wisp.
       className={
         "flex items-center gap-2 rounded-sm border px-2 py-1.5 " +
         (highlight
-          ? "border-support-ochre bg-support-ochre-soft ring-1 ring-support-ochre shadow-flat"
+          ? "border-support-teal bg-support-teal-soft ring-1 ring-support-teal shadow-flat"
           : "border-border bg-surface")
       }
     >
@@ -292,7 +292,7 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
         className={
           "size-2 shrink-0 rounded-full " +
           (highlight || tone === "ink"
-            ? "bg-support-ochre"
+            ? "bg-support-teal"
             : "bg-border-strong")
         }
         aria-hidden="true"
@@ -301,13 +301,13 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
         <span
           className={
             "truncate text-body-sm " +
-            (highlight ? "text-support-ochre-fg" : "text-text-primary")
+            (highlight ? "text-support-teal-fg" : "text-text-primary")
           }
         >
           {name}
         </span>
         {/* On the highlighted (tinted) card, tertiary meta fails AA at 12px over
-            the ochre-tinted support-ochre-soft surface; use the darker secondary
+            the teal-tinted support-teal-soft surface; use the darker secondary
             ink there. Plain cards keep tertiary on bg-surface. */}
         <span
           className={
@@ -358,12 +358,26 @@ function PipelineColumn({
   );
 }
 
-function ActivityEvent({ text, when }: { text: string; when: string }) {
+/* Sequence alternation (B3-fix-1). Timeline/activity dot RUNS are repeated
+ * decorative siblings, so they alternate teal→wisp→cobalt by index so the same
+ * hue never repeats adjacently. Progreso stays the block role; the alternation
+ * only rotates which support matiz paints each dot in the run. */
+const DOT_HUE_CLASSES = [
+  "bg-support-teal",
+  "bg-support",
+  "bg-support-cobalt",
+] as const;
+function dotHueClass(index: number) {
+  return DOT_HUE_CLASSES[((index % DOT_HUE_CLASSES.length) + DOT_HUE_CLASSES.length) % DOT_HUE_CLASSES.length];
+}
+
+function ActivityEvent({ text, when, index }: { text: string; when: string; index: number }) {
   return (
     <li className="relative pl-4">
-      {/* Timeline dot = "progreso" (Folk Twins): ochre. */}
+      {/* Timeline dot = "progreso" (Folk Twins). B3-fix-1: run de hermanos →
+          alterna teal→wisp→cobalt por índice (sin matiz adyacente repetido). */}
       <span
-        className="absolute left-0 top-1.5 size-1.5 rounded-full bg-support-ochre"
+        className={"absolute left-0 top-1.5 size-1.5 rounded-full " + dotHueClass(index)}
         aria-hidden="true"
       />
       <span className="block text-body-sm leading-tight text-text-secondary">
@@ -423,9 +437,9 @@ export function StagePipelineFaux({ active }: { active: boolean }) {
               Actividad
             </span>
             <ol className="mt-2 flex flex-col gap-2.5">
-              <ActivityEvent text="Propuesta enviada" when="mar · hace 2 d" />
-              <ActivityEvent text="Reunión de seguimiento" when="jue · hace 4 d" />
-              <ActivityEvent text="Email respondido" when="vie · hace 5 d" />
+              <ActivityEvent text="Propuesta enviada" when="mar · hace 2 d" index={0} />
+              <ActivityEvent text="Reunión de seguimiento" when="jue · hace 4 d" index={1} />
+              <ActivityEvent text="Email respondido" when="vie · hace 5 d" index={2} />
             </ol>
           </div>
         </div>
@@ -477,17 +491,19 @@ const CASE_TIMELINE: CaseEvent[] = [
 ];
 
 /* A single timeline entry. The closed/paid step gets a success dot to mark the
- * terminal state; the rest use the ochre "progreso" dot (same as the seguimiento
+ * terminal state; the rest use the teal "progreso" dot (same as the seguimiento
  * rail). Markdown-note / activity style, NOT a financial line item. */
-function CaseTimelineEvent({ text, when, done }: CaseEvent) {
+function CaseTimelineEvent({ text, when, done, index }: CaseEvent & { index: number }) {
   return (
     <li className="relative pl-4">
       {/* Timeline dot = "progreso" (Folk Twins): el paso terminal cobrado usa
-          success; los pasos intermedios usan ochre (no wisp). */}
+          success (único verde de estado; teal NUNCA carga success). B3-fix-1:
+          los pasos intermedios (run de hermanos) alternan teal→wisp por índice
+          (sin matiz adyacente repetido). */}
       <span
         className={
           "absolute left-0 top-1.5 size-1.5 rounded-full " +
-          (done ? "bg-success" : "bg-support-ochre")
+          (done ? "bg-success" : dotHueClass(index))
         }
         aria-hidden="true"
       />
@@ -538,8 +554,8 @@ export function StageReportFaux({ active }: { active: boolean }) {
             Historial del caso
           </span>
           <ol className="flex flex-col gap-2.5">
-            {CASE_TIMELINE.map((e) => (
-              <CaseTimelineEvent key={e.text} {...e} />
+            {CASE_TIMELINE.map((e, i) => (
+              <CaseTimelineEvent key={e.text} {...e} index={i} />
             ))}
           </ol>
         </div>

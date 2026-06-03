@@ -135,7 +135,7 @@ Estas son las 10 preguntas que la audiencia se hace antes de probar Tendr. La se
 
 ## Cómo lo usa el agente
 
-Cuando vas a redactar copy de la landing (F5) o variantes (F6), pídele al agente que lea este doc primero:
+Cuando vas a redactar copy de la landing (F5) o variantes (F6.5), pídele al agente que lea este doc primero:
 
 - "Lee `docs/product.md` antes de escribir el Hero. Aplica el JTBD y el diferencial."
 - "Para la FAQ, parte de las 10 preguntas semilla de `docs/product.md`. Ajusta el wording al tono pero no cambies la respuesta sustantiva."

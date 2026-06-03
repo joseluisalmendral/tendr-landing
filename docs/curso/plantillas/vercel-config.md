@@ -25,17 +25,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
 
       - name: Enable corepack + pnpm
         run: |
           corepack enable
-          corepack prepare pnpm@latest --activate
 
       - name: Cache pnpm store
         uses: actions/cache@v4

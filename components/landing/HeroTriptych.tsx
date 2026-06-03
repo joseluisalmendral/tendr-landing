@@ -321,9 +321,13 @@ function ActIndicator({ active }: { active: 1 | 2 | 3 }) {
         return (
           <span key={n} className="inline-flex items-center gap-1.5">
             {/* Indicador de acto 01·02·03 = "progreso" (Folk Twins): el dot
-                activo usa ochre, no wisp. */}
+                activo usa teal. B3-fix-1: NO se alterna aquí. Sólo hay UN dot
+                visible a la vez (los otros dos van a opacity:0), así que no
+                existe un run de hermanos adyacentes del mismo matiz; el dot
+                activo conserva el rol de bloque (progreso=teal). Lectura más
+                calmada que numerar 01/02/03 en tres matices distintos. */}
             <span
-              className="block size-1 rounded-full bg-support-ochre transition-opacity duration-200"
+              className="block size-1 rounded-full bg-support-teal transition-opacity duration-200"
               style={{ opacity: on ? 1 : 0 }}
             />
             <span
@@ -341,14 +345,14 @@ function ActIndicator({ active }: { active: 1 | 2 | 3 }) {
 
 /**
  * Folk Twins monogram rotation (B2-fix-1): client monograms/chips rotate the
- * support family by index%3 → wisp (firma) · cobalt (máquina) · ochre (progreso).
+ * support family by index%3 → wisp (firma) · cobalt (máquina) · teal (progreso).
  * Returns the chip ring stroke color for a given chip index. The ambient chips
  * stay neutral (border-strong) — only addressable client monograms rotate.
  */
 const MONOGRAM_HUES = [
   "var(--color-support)",
   "var(--color-support-cobalt)",
-  "var(--color-support-ochre)",
+  "var(--color-support-teal)",
 ] as const;
 function monogramHue(index: number) {
   return MONOGRAM_HUES[((index % 3) + 3) % 3];
@@ -1257,7 +1261,7 @@ function ConstellationChip({
   // position the group at the moving (x,y)
   return (
     <motion.g style={{ x, y, scale, opacity, rotate, filter }}>
-      {/* Folk Twins: el aro del monograma rota wisp->cobalt->ochre por index%3. */}
+      {/* Folk Twins: el aro del monograma rota wisp->cobalt->teal por index%3. */}
       <ChipRing r={18} letter={chip.letter} stroke={1.5} fill="var(--color-text-secondary)" fontSize={17} ringStroke={monogramHue(index)} />
     </motion.g>
   );

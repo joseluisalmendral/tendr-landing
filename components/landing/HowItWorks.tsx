@@ -81,7 +81,7 @@ const revealVariants: Variants = {
  * geometric `motion.path` body plus a two-stroke arrowhead, drawn via
  * `pathLength` (the one allowed non-transform animation, exactly as the at-risk
  * ring and the pricing box). Folk Twins (B2-fix-1): the connector is "progreso",
- * so its stroke is the ochre token (var(--color-support-ochre)), NOT the wisp
+ * so its stroke is the teal token (var(--color-support-teal)), NOT the wisp
  * handdrawn token — connectors carry journey progress, not a firma annotation.
  *
  * - Draw-in once on `whileInView` (the arrows belong to the scroll narrative,
@@ -120,23 +120,33 @@ function connectorDraw(reduceMotion: boolean): Variants {
 
 /** `flip` = true mirrors the curve horizontally so consecutive connectors lean
  * opposite ways (1→2 sweeps right-to-left under the right-aligned backdrop,
- * 2→3 left-to-right), echoing the zig-zag of the alternating stage columns. */
+ * 2→3 left-to-right), echoing the zig-zag of the alternating stage columns.
+ * `hueClass` carries the sequence-alternation color (B3-fix-1): the 2 sibling
+ * connectors alternate teal→wisp by seam index so the same hue never repeats
+ * adjacently. Wisp here is the firma matiz reused for the second connector; it
+ * does not crowd a hand-drawn neighbor because the connectors ARE the only
+ * hand-drawn marks in this section. */
 function HandDrawnConnector({
   reduceMotion,
   flip,
+  hueClass,
 }: {
   reduceMotion: boolean;
   flip: boolean;
+  hueClass: string;
 }) {
   const draw = connectorDraw(reduceMotion);
   return (
     <motion.svg
       aria-hidden="true"
       // Folk Twins (B2-fix-1): los conectores del viaje son "progreso", no firma.
-      // La regla aprobada manda sobre el repunte a handdrawn de B2: ochre, no wisp.
-      // (Las anotaciones hand-drawn de OTRAS secciones siguen siendo wisp.)
+      // B3-fix-1: rol de bloque = progreso (teal), pero por ser un RUN de 2
+      // hermanos decorativos idénticos alternan teal→wisp por índice de costura
+      // (sin repetir matiz adyacente). El hue concreto llega vía hueClass.
       className={
-        "pointer-events-none mx-auto hidden h-16 w-40 text-support-ochre md:block md:h-20 " +
+        "pointer-events-none mx-auto hidden h-16 w-40 md:block md:h-20 " +
+        hueClass +
+        " " +
         (flip ? "-scale-x-100" : "")
       }
       viewBox="0 0 120 80"
@@ -178,6 +188,18 @@ function HandDrawnConnector({
 /* Each backdrop is self-contained (renders its own Estudio Hibö card). */
 const STAGE_COMPONENTS = [StageFormFaux, StagePipelineFaux, StageReportFaux] as const;
 
+/* Sequence alternation (B3-fix-1). The 01/02/03 numerals are a RUN of 3 identical
+ * decorative siblings, so they alternate teal→wisp→cobalt by index (text grade)
+ * so the same hue never repeats adjacently. Progreso stays the block role; the
+ * alternation only rotates which support matiz paints each numeral in the run. */
+const NUMERAL_HUE_CLASSES = [
+  "text-support-teal-fg",
+  "text-support-fg",
+  "text-support-cobalt-fg",
+] as const;
+/* The 2 journey connectors alternate teal→wisp (text-color drives currentColor). */
+const CONNECTOR_HUE_CLASSES = ["text-support-teal", "text-support"] as const;
+
 export function HowItWorks() {
   const reduceMotion = useReducedMotion();
 
@@ -209,10 +231,15 @@ export function HowItWorks() {
                     : "flex flex-col gap-3 md:col-span-5"
                 }
               >
-                {/* Numeral 01/02/03 = "progreso" (Folk Twins): ochre, no wisp. */}
+                {/* Numeral 01/02/03 = "progreso" (Folk Twins). B3-fix-1: run de 3
+                    hermanos → alterna teal→wisp→cobalt por índice (sin matiz
+                    adyacente repetido). */}
                 <span
                   aria-hidden="true"
-                  className="font-mono text-meta uppercase text-support-ochre-fg"
+                  className={
+                    "font-mono text-meta uppercase " +
+                    NUMERAL_HUE_CLASSES[index % NUMERAL_HUE_CLASSES.length]
+                  }
                 >
                   {s.n}
                 </span>
@@ -238,17 +265,19 @@ export function HowItWorks() {
               </div>
             </div>
 
-            {/* Ochre "progreso" connector leading to the next stage (1→2, 2→3). Kept inside
+            {/* "Progreso" connector leading to the next stage (1→2, 2→3). Kept inside
                 the <li> (valid list markup, decorative aria-hidden), placed
                 below the grid so it sits in the seam between this block and the
                 next. Its reserved fixed-height box means it never reflows the
                 stages (CLS 0). Alternate the curve direction per seam to echo
-                the zig-zag of the alternating columns. Omitted after the last
+                the zig-zag of the alternating columns. B3-fix-1: the 2 connectors
+                also alternate hue teal→wisp by seam index. Omitted after the last
                 stage (nothing to connect to). */}
             {index !== lastIndex ? (
               <HandDrawnConnector
                 reduceMotion={!!reduceMotion}
                 flip={index % 2 === 1}
+                hueClass={CONNECTOR_HUE_CLASSES[index % CONNECTOR_HUE_CLASSES.length]}
               />
             ) : null}
           </motion.li>

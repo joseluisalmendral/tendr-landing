@@ -47,9 +47,9 @@ Notación: hex + oklch de referencia. AA mínimo contra el fondo en cualquier co
 | `--color-support-cobalt` | `#2456A8` | `0.45 0.15 260` aprox. | **"Lo máquina" (cobalt):** todo lo IA/automatización no-textual — chip/pill ✦+texto IA, acentos de la burbuja IA, anillo de click del cursor. Stroke AA 7.0:1 vs surface. **No usar como texto plano sin grado de texto** |
 | `--color-support-cobalt-fg` | `#1F4C94` | `0.41 0.15 260` aprox. | Grado de **texto** del cobalt (label "IA" del pill, texto sobre tint 12%). Más oscuro que el stroke para pasar AA en texto pequeño |
 | `--color-support-cobalt-soft` | `color-mix(in oklab, var(--color-support-cobalt) 12%, var(--color-surface-raised))` | — | Tinte suave del cobalt para fondos IA (mismo patrón que `accent-soft`). **Fórmula, no hex fijo** |
-| `--color-support-ochre` | `#9A7B1A` | `0.58 0.11 95` aprox. | **"Progreso" (ochre):** numerales de viaje 01/02/03, conectores del viaje, dots de status/timeline. Stroke AA 4.0:1 vs surface. **REGLA DURA: nunca en contextos caution/error** (valor cercano a `--color-warning` #B5832E) |
-| `--color-support-ochre-fg` | `#7A6A10` | `0.50 0.11 100` aprox. | Grado de **texto** del ochre (numerales, dots con texto). = familia `--color-highlight-fg` |
-| `--color-support-ochre-soft` | `color-mix(in oklab, var(--color-support-ochre) 12%, var(--color-surface-raised))` | — | Tinte suave del ochre para fondos de progreso (mismo patrón que `accent-soft`). **Fórmula, no hex fijo** |
+| `--color-support-teal` | `#1B7163` | `0.50 0.07 185` aprox. | **"Progreso" (teal):** rails, dots de status/timeline, stage chips, drop targets, spotlight, numerales de viaje 01/02/03, conectores del viaje, dot indicador. Stroke AA 5.79:1 vs `#FEFEFC` / 5.85:1 vs `#FFFFFF`. **REGLA DURA: nunca carga semántica success/OK** (success green `#356E48` es el único verde de estado) |
+| `--color-support-teal-fg` | `#15604F` | `0.44 0.07 175` aprox. | Grado de **texto** del teal (numerales, dots con texto). 7.38:1 sobre near-white |
+| `--color-support-teal-soft` | `color-mix(in oklab, var(--color-support-teal) 12%, var(--color-surface-raised))` | — | Tinte suave del teal para fondos de progreso (mismo patrón que `accent-soft`). **Fórmula, no hex fijo** |
 | `--color-highlight` | `#FFF8BB` | `0.97 0.06 100` aprox. | **EXCLUSIVAMENTE fondo de texto:** subrayador `Mark` (ink encima 15.82:1) y pills tipo "Recomendado". **REGLA DURA: nunca como elemento no-textual** (dot/borde/stripe) — sobre near-white da 1.08:1, invisible |
 | `--color-highlight-fg` | `#7A6A10` | `0.50 0.11 100` aprox. | Texto sobre tint de highlight (pill "Recomendado", 5.32:1) |
 | `--color-accent-soft` | `color-mix(in oklab, var(--color-support) 12%, var(--color-surface-raised))` | — | Lavado suave del support para fondos decorativos (badges, washes). **Fórmula, no hex fijo** |
@@ -69,11 +69,13 @@ Notación: hex + oklch de referencia. AA mínimo contra el fondo en cualquier co
 
 - **wisp (`--color-support` #B23A86) = firma.** SOLO anotaciones hand-drawn (flecha/círculo/órbita/rescate) y checks. El token `--color-handdrawn` sigue apuntando aquí, sin cambios.
 - **cobalt (`--color-support-cobalt` #2456A8) = "lo máquina".** Todo lo IA/automatización: chip/pill ✦+texto IA, acentos de la burbuja IA, anillo de click del cursor. Stroke 7.0:1; texto vía `--color-support-cobalt-fg` #1F4C94; tinte `--color-support-cobalt-soft`.
-- **ochre (`--color-support-ochre` #9A7B1A) = "progreso".** Numerales 01/02/03, conectores del viaje, dots de status/timeline. Stroke 4.0:1; texto vía `--color-support-ochre-fg` #7A6A10 (= familia `highlight-fg`); tinte `--color-support-ochre-soft`.
+- **teal (`--color-support-teal` #1B7163) = "progreso".** Rails, dots de status/timeline, stage chips, drop targets, spotlight tints, numerales 01/02/03, conectores del viaje, dot indicador. Stroke 5.79:1 vs `#FEFEFC` / 5.85:1 vs `#FFFFFF`; texto vía `--color-support-teal-fg` #15604F (7.38:1 sobre near-white); tinte `--color-support-teal-soft`. **Linaje:** teal era el runner-up del workshop de color; en B3-fix-1 absorbe el rol de progreso que antes llevaba ochre (retirado por proximidad a `--color-warning`).
 
-**Regla de rotación (monogramas/chips).** Los monogramas y chips de cliente (tríptico del hero, viaje, y donde aparezcan) rotan los tres matices por índice: `index % 3` → wisp, cobalt, ochre. Un mismo cliente puede llevar matiz distinto según su posición, pero el rol de cada matiz (firma/máquina/progreso) manda sobre la rotación cuando el elemento ES uno de esos roles.
+**Regla de rotación (monogramas/chips + secuencias).** Los monogramas y chips de cliente (tríptico del hero, viaje, y donde aparezcan) rotan los tres matices por índice: `index % 3` → wisp, cobalt, teal. Un mismo cliente puede llevar matiz distinto según su posición, pero el rol de cada matiz (firma/máquina/progreso) manda sobre la rotación cuando el elemento ES uno de esos roles.
 
-**REGLA DURA (negativa).** **ochre NUNCA en contextos caution/error.** Su valor es cercano al `--color-warning` (#B5832E) y mezclarlos rompe la lectura semántica de "atención/peligro". El subrayador buttermilk (`--color-highlight`) sigue igual, sin tocar.
+  **Cláusula de alternancia en secuencias (B3-fix-1).** Cuando hay un **run de 2+ hermanos decorativos idénticos** (los 2 conectores del viaje, los numerales 01/02/03, los runs de dots de timeline/actividad, el indicador de acto si aplica, los monogramas — que ya rotan), alternan **teal→wisp→cobalt por índice** para que el mismo matiz no se repita en posiciones adyacentes. Los roles a NIVEL DE BLOQUE se mantienen (un rail sigue siendo progreso=teal); la alternancia aplica SÓLO a runs secuenciales de 2+ hermanos decorativos idénticos. Excepción documentada: el indicador de acto 01·02·03 del hero NO alterna porque sólo hay un dot visible a la vez (los otros van a `opacity:0`), así que no existe run adyacente; el dot activo conserva progreso=teal.
+
+**REGLA DURA (negativa).** **teal NUNCA carga semántica success/OK.** El verde de estado es exclusivamente success green `#356E48`; teal es un matiz ~175-190 (más azul y más oscuro). Mantener la frontera para no romper la lectura semántica de "completado/cobrado". El subrayador buttermilk (`--color-highlight`) sigue igual, sin tocar.
 
 ### 2.2 Tipografía
 
@@ -263,13 +265,13 @@ Patrones de **referencia que se re-implementan en Motion**, nunca dependencias i
   --color-accent-fg:         #FFFFFF; /* 19.02:1 */
   --color-support:           #B23A86; /* wisp = firma: hand-drawn, checks */
   --color-support-fg:        #B23A86; /* texto de badge sobre tint 12% (4.97:1) */
-  /* Folk Twins — familia de apoyo (B2-fix-1): wisp(firma) → cobalt(máquina) → ochre(progreso) */
+  /* Folk Twins — familia de apoyo (B2-fix-1; B3-fix-1 teal): wisp(firma) → cobalt(máquina) → teal(progreso) */
   --color-support-cobalt:    #2456A8; /* "lo máquina": IA/automatización (stroke 7.0:1) */
   --color-support-cobalt-fg: #1F4C94; /* grado de texto del cobalt (label IA) */
   --color-support-cobalt-soft: color-mix(in oklab, var(--color-support-cobalt) 12%, var(--color-surface-raised));
-  --color-support-ochre:     #9A7B1A; /* "progreso": numerales/conectores/dots (stroke 4.0:1) · NUNCA en caution/error */
-  --color-support-ochre-fg:  #7A6A10; /* grado de texto del ochre (= highlight-fg) */
-  --color-support-ochre-soft: color-mix(in oklab, var(--color-support-ochre) 12%, var(--color-surface-raised));
+  --color-support-teal:      #1B7163; /* "progreso": rails/dots/chips/numerales/conectores (stroke 5.79:1) · NUNCA success/OK */
+  --color-support-teal-fg:   #15604F; /* grado de texto del teal (7.38:1 sobre near-white) */
+  --color-support-teal-soft: color-mix(in oklab, var(--color-support-teal) 12%, var(--color-surface-raised));
   --color-highlight:         #FFF8BB; /* SOLO fondo de texto (Mark, pills) */
   --color-highlight-fg:      #7A6A10; /* texto sobre tint de highlight (5.32:1) */
   --color-accent-soft:       color-mix(in oklab, var(--color-support) 12%, var(--color-surface-raised));
@@ -307,9 +309,9 @@ Patrones de **referencia que se re-implementan en Motion**, nunca dependencias i
   --color-support-cobalt: #2456A8;
   --color-support-cobalt-fg: #1F4C94;
   --color-support-cobalt-soft: color-mix(in oklab, var(--color-support-cobalt) 12%, var(--color-surface-raised));
-  --color-support-ochre: #9A7B1A;
-  --color-support-ochre-fg: #7A6A10;
-  --color-support-ochre-soft: color-mix(in oklab, var(--color-support-ochre) 12%, var(--color-surface-raised));
+  --color-support-teal: #1B7163;
+  --color-support-teal-fg: #15604F;
+  --color-support-teal-soft: color-mix(in oklab, var(--color-support-teal) 12%, var(--color-surface-raised));
   --color-highlight: #FFF8BB;
   --color-highlight-fg: #7A6A10;
   --color-handdrawn: #B23A86;
