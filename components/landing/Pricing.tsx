@@ -7,8 +7,9 @@
  * "Un plan para cada momento" heading, so we do NOT repeat the heading here.
  *
  * Concept: a tiny "¿cuál te sirve?" selector (two single-select ToggleGroups)
- * derives a recommended tier. A hand-drawn clay annotation (arrow + tag
- * "Recomendado" + a hand-drawn box around the card) MOVES to the matching tier.
+ * derives a recommended tier. A hand-drawn support/wisp annotation (arrow + a
+ * buttermilk "Recomendado" pill + a hand-drawn box around the card, the firma
+ * role of the v2 system) MOVES to the matching tier.
  *
  * Motion (spec §4, motion level "medio"):
  * - The annotation moves between cards with a SHARED `layoutId` (FLIP): when the
@@ -17,8 +18,8 @@
  * - The hand-drawn box redraws via pathLength. pathLength is NOT a transform, so
  *   MotionConfig reducedMotion="user" does not degrade it on its own; we gate it
  *   explicitly with useReducedMotion().
- * - The static `highlighted` emphasis (scale 1.02 + hard shadow) stays on the
- *   target tier (Pro) and is owned by PricingCard; the annotation is what moves.
+ * - The static `highlighted` emphasis (scale 1.02 + ink border, no shadow) stays
+ *   on the target tier (Pro) and is owned by PricingCard; the annotation moves.
  *
  * a11y / reduced-motion (hard):
  * - The recommendation is ALSO in visible text ("Para ti: el plan {X}") and
@@ -43,7 +44,9 @@ import { cn } from "@/lib/utils";
 
 // --ease-snap = cubic-bezier(0.34, 1.56, 0.64, 1); FLIP ~400ms.
 const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const;
-const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+// v2 --easing-emphasis (cubic-bezier(0.2, 0.8, 0.2, 1)): the hand-drawn box /
+// arrow redraw on reveal. Mirrors the token; kept as a JS tuple for Motion.
+const EASE_EMPHASIS = [0.2, 0.8, 0.2, 1] as const;
 const FLIP_DURATION = 0.4;
 const DURATION_DRAW = 0.48;
 const DURATION_MICRO = 0.12;
@@ -125,7 +128,7 @@ export function Pricing({ tiers }: Props) {
             aria-live="polite"
             className="flex flex-col justify-center gap-1.5 border-t border-border bg-surface-sunken/40 p-5 md:border-l md:border-t-0"
           >
-            <span className="font-mono text-meta uppercase text-accent-secondary">
+            <span className="font-mono text-meta uppercase text-text-tertiary">
               Nuestra recomendación
             </span>
             <p className="text-body-lg text-text-secondary">
@@ -170,7 +173,7 @@ export function Pricing({ tiers }: Props) {
 /* ------------------------------------------------------------------------- *
  * Selector: two single-select ToggleGroups ("¿cuál te sirve?"). Each group is
  * a labelled radiogroup; color is never the only state cue (the active item is
- * also filled + bordered in the clay accent language).
+ * also filled + bordered in the ink accent language).
  * ------------------------------------------------------------------------- */
 function Selector({
   work,
@@ -185,7 +188,7 @@ function Selector({
 }) {
   return (
     <fieldset className="flex flex-col gap-3 p-5">
-      <legend className="font-mono text-meta uppercase text-accent-secondary">
+      <legend className="font-mono text-meta uppercase text-text-tertiary">
         ¿Cuál te sirve?
       </legend>
 
@@ -246,18 +249,18 @@ function ToggleField({
             key={option.value}
             value={option.value}
             // Separated pills (gap-2 on the group): each is its own rounded
-            // control. The active item adopts the clay accent language (soft
-            // fill + accent border + a small hard shadow lift) so the choice
-            // never relies on a single visual cue.
+            // interactive control. v2 is ink-led, so the active item reads in
+            // ink — ink border + faint support-soft fill + ink text — never via
+            // a single visual cue (border + fill + weight of color all shift).
             className={cn(
               "h-auto rounded-sm px-4 py-2.5 text-body-sm text-text-secondary",
-              "border-border-strong",
-              "transition-all duration-[var(--duration-micro)]",
+              "border-border-interactive",
+              "transition-all duration-[var(--duration-fast)]",
               "hover:bg-surface-sunken/60",
-              "data-[state=on]:border-accent-secondary",
-              "data-[state=on]:bg-accent-secondary-soft",
-              "data-[state=on]:text-accent-secondary",
-              "data-[state=on]:shadow-flat",
+              "data-[state=on]:border-accent-primary",
+              "data-[state=on]:bg-accent-soft",
+              "data-[state=on]:text-accent-primary",
+              "data-[state=on]:shadow-none",
             )}
           >
             {option.label}
@@ -269,7 +272,7 @@ function ToggleField({
 }
 
 /* ------------------------------------------------------------------------- *
- * Annotation: the moving hand-drawn clay mark. Three shared-layoutId parts so
+ * Annotation: the moving hand-drawn support/wisp mark. Three shared-layoutId parts so
  * they FLIP together to whichever card matches:
  *   - the tag "Recomendado" (top-right, slightly rotated like a sticker),
  *   - a hand-drawn arrow pointing at the card,
@@ -290,7 +293,7 @@ function Annotation({
       pathLength: 1,
       opacity: 1,
       transition: {
-        pathLength: { duration: reduceMotion ? 0 : DURATION_DRAW, ease: EASE_OUT },
+        pathLength: { duration: reduceMotion ? 0 : DURATION_DRAW, ease: EASE_EMPHASIS },
         opacity: { duration: reduceMotion ? 0 : DURATION_MICRO },
       },
     },
@@ -313,7 +316,7 @@ function Annotation({
           CTA. aria-hidden: the recommendation is already in the live text. */}
       <motion.svg
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-2 z-10 h-[calc(100%+1rem)] w-[calc(100%+1rem)] text-accent-secondary"
+        className="pointer-events-none absolute -inset-2 z-10 h-[calc(100%+1rem)] w-[calc(100%+1rem)] text-support"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
         fill="none"
@@ -332,7 +335,7 @@ function Annotation({
         />
       </motion.svg>
 
-      {/* The "Recomendado" tag: a clay sticker that FLIPs between cards. */}
+      {/* The "Recomendado" tag: a buttermilk sticker that FLIPs between cards. */}
       <motion.span
         layoutId="pricing-recommend-tag"
         layout={!reduceMotion}
@@ -340,8 +343,11 @@ function Annotation({
         aria-describedby={describedById}
         className={cn(
           "absolute -top-3 right-3 z-20 -rotate-2 rounded-sm",
-          "border border-border-strong bg-accent-secondary px-3 py-1",
-          "font-mono text-meta uppercase text-on-accent-secondary shadow-flat",
+          // "Recomendado" pill = highlight buttermilk used as a TEXT BACKGROUND
+          // (the one non-underline use of highlight, per the role contract):
+          // buttermilk fill + highlight-fg text (5.32:1). Never as a non-text mark.
+          "border border-border-hairline bg-highlight px-3 py-1",
+          "font-mono text-meta uppercase text-highlight-fg",
         )}
       >
         Recomendado
@@ -354,7 +360,7 @@ function Annotation({
         layout={!reduceMotion}
         transition={flip}
         aria-hidden="true"
-        className="absolute -left-6 -top-8 z-20 hidden text-accent-secondary md:block"
+        className="absolute -left-6 -top-8 z-20 hidden text-support md:block"
       >
         <motion.svg width="56" height="48" viewBox="0 0 56 48" fill="none">
           <motion.path

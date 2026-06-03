@@ -58,7 +58,7 @@ function ComparisonCell({ value }: { value: CellValue }) {
         <Check
           aria-hidden="true"
           weight="bold"
-          className="size-5 text-accent-secondary"
+          className="size-5 text-support"
         />
         <span className="sr-only">Incluido</span>
       </span>
@@ -113,9 +113,12 @@ export default function PricingPage() {
             >
               Compara las funciones
             </h2>
+            {/* Small firma rule under the section heading: support/wisp is the
+                only valid decorative accent (highlight is text-bg only, never a
+                non-text mark). One sparing accent on this sub-section. */}
             <span
               aria-hidden="true"
-              className="mt-3 block h-[3px] w-16 rounded-full bg-accent-secondary"
+              className="mt-3 block h-[3px] w-16 rounded-full bg-support"
             />
 
             <div className="mt-10 overflow-x-auto">
@@ -142,7 +145,7 @@ export default function PricingPage() {
                           {col}
                         </span>
                         {col === "Team" ? (
-                          <span className="mt-1 block font-mono text-meta uppercase text-accent-secondary">
+                          <span className="mt-1 block font-mono text-meta uppercase text-text-tertiary">
                             Próximamente
                           </span>
                         ) : null}

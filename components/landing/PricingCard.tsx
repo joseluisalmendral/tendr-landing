@@ -15,14 +15,16 @@ import type { PricingCardProps } from "@/components/landing/types";
 import { cn } from "@/lib/utils";
 
 /**
- * One pricing tier rendered as a brutalist paper card.
+ * One pricing tier rendered as a clean v2 card (flat surface + hairline border).
  *
- * Server Component: static markup only, no interactivity. The shadcn Card is
- * reused with className overrides; the base Card already ships `rounded-none`,
- * so only the ring/shadow/background differ from spec (no fork needed).
+ * Server Component: static markup only, no interactivity. These cards are NOT
+ * "notas vivas" (no rotation, no pushpin, no shadow-note) — they are structural
+ * surfaces, so they stay flat (shadow-none) with a hairline border per the v2
+ * clean direction. Elevation is communicated by the ink border on the target
+ * tier, not by drop shadows.
  *
- * `highlighted` is the static VISUAL emphasis of the target tier (a 2px accent
- * border + hard shadow + a layout-neutral `scale-[1.02]` transform). It does
+ * `highlighted` is the static VISUAL emphasis of the target tier (a 2px ink
+ * accent border + a layout-neutral `scale-[1.02]` transform, no shadow). It does
  * NOT print a "Recomendado" badge anymore: the live recommendation is the
  * moving annotation (arrow + tag + hand-drawn box) owned by the Pricing
  * recommender, so a static badge here would duplicate that intent.
@@ -51,10 +53,11 @@ export function PricingCard({
       className={cn(
         // h-full so every tier matches the tallest card in the row (equal
         // heights); the footer (CTA) is pushed to the bottom via flex below.
-        "h-full ring-0 border border-border bg-surface-raised",
-        // Highlighted tier: ink-accent 2px border, hard shadow, lifted scale.
+        "h-full ring-0 border border-border bg-surface-raised shadow-none",
+        // Highlighted tier: ink-accent 2px border + lifted scale (no shadow —
+        // the ink border is the affordance, the page stays flat/clean).
         highlighted &&
-          "border-2 border-accent-primary shadow-flat scale-[1.02]",
+          "border-2 border-accent-primary scale-[1.02]",
       )}
     >
       <JsonLd
@@ -83,7 +86,7 @@ export function PricingCard({
           {tier}
         </CardTitle>
         {forWho ? (
-          <span className="font-mono text-meta uppercase text-accent-secondary">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             {forWho}
           </span>
         ) : null}
@@ -101,7 +104,7 @@ export function PricingCard({
             <li key={feature} className="flex items-start gap-2">
               <Check
                 aria-hidden="true"
-                className="mt-0.5 size-4 shrink-0 text-accent-secondary"
+                className="mt-0.5 size-4 shrink-0 text-support"
                 weight="bold"
               />
               <span className="text-body text-text-secondary">{feature}</span>
@@ -114,7 +117,7 @@ export function PricingCard({
         {highlighted ? (
           <Button
             asChild
-            className="rounded-md bg-accent-primary text-on-accent border border-border-strong text-body h-auto w-full px-6 py-3 hover:bg-accent-primary-hover active:translate-y-px transition-all"
+            className="rounded-md bg-accent-primary text-accent-fg text-body h-auto w-full px-6 py-3 shadow-none hover:brightness-110 active:translate-y-px transition-all"
           >
             <Link href={cta.href}>{cta.label}</Link>
           </Button>
@@ -122,7 +125,7 @@ export function PricingCard({
           <Button
             asChild
             variant="outline"
-            className="rounded-md border-border-strong bg-transparent text-text-primary text-body h-auto w-full px-6 py-3 shadow-none"
+            className="rounded-md border-border-interactive bg-transparent text-text-primary text-body h-auto w-full px-6 py-3 shadow-none hover:bg-surface-sunken/60 active:translate-y-px transition-all"
           >
             <Link href={cta.href}>{cta.label}</Link>
           </Button>
