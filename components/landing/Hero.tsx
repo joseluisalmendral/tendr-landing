@@ -53,13 +53,22 @@ export function Hero({
   // itself in word by word with the --easing-expo curve reserved for the wow beat.
   const words = title.split(" ");
 
-  // The highlighter Mark lands on the single brand-anchor word: "clientes" (the
-  // CRM is about the client portfolio). Sparing by design — exactly ONE word.
-  // Matched case-insensitively, punctuation-stripped, so the device follows the
-  // word even if the prop copy is reworded around it.
-  const HIGHLIGHT_WORD = "clientes";
-  const isHighlightWord = (word: string) =>
-    word.toLowerCase().replace(/[^\p{L}]/gu, "") === HIGHLIGHT_WORD;
+  // The highlighter Mark lands on the single brand-anchor word: the CRM is about
+  // the client portfolio, so "cliente" (or its plural) is THE value word.
+  // Sparing by design — exactly ONE word gets the subrayador. Matched
+  // case-insensitively, punctuation-stripped, AND singular/plural-tolerant (a
+  // trailing "s" is dropped before comparing) so the device follows the word
+  // whether the copy says "cliente" or "clientes". (Root cause of the previously
+  // invisible Mark: the constant was "clientes" but the live headline word is
+  // the singular "cliente", so nothing ever matched and the span never rendered.)
+  const HIGHLIGHT_WORD = "cliente";
+  const normalize = (word: string) =>
+    word.toLowerCase().replace(/[^\p{L}]/gu, "").replace(/s$/, "");
+  const isHighlightWord = (word: string) => normalize(word) === HIGHLIGHT_WORD;
+
+  // The headline contains the value word at most once; flag the first match so a
+  // copy with two "cliente"/"clientes" never paints two markers.
+  const highlightIndex = words.findIndex(isHighlightWord);
 
   // Container drives the stagger between the text-column children: the headline
   // block first, then subhead, then the CTA group, with a small head start so
@@ -139,6 +148,44 @@ export function Hero({
     },
   };
 
+  // Washi tape "press-on": each strip drops in with a tiny scale + settle, as if
+  // a hand pressed it onto the panel corner. transform/opacity only (GPU). Custom
+  // carries the strip's final rotation so it lands at its tilt. Under reduced
+  // motion the tape is simply present (final state, no press animation).
+  const tapeVariants: Variants = reduceMotion
+    ? { hidden: (rot: number) => ({ opacity: 1, rotate: rot, scale: 1 }), visible: (rot: number) => ({ opacity: 1, rotate: rot, scale: 1 }) }
+    : {
+        hidden: (rot: number) => ({ opacity: 0, rotate: rot, scale: 0.8 }),
+        visible: (rot: number) => ({
+          opacity: 1,
+          rotate: rot,
+          scale: 1,
+          transition: {
+            duration: 0.35,
+            delay: 0.9, // after the pipeline has settled into order
+            ease: [0.34, 1.56, 0.64, 1], // --ease-snap (the press-on overshoot)
+          },
+        }),
+      };
+
+  // Hand-drawn annotation (firma): a single support-tinted arrow that draws in
+  // (stroke-dashoffset) from the CTA zone toward the pipeline, telling the eye
+  // "this is what you get". Exactly ONE per the design contract. Under reduced
+  // motion it is fully drawn from frame 1.
+  const arrowVariants: Variants = reduceMotion
+    ? { hidden: { pathLength: 1, opacity: 1 }, visible: { pathLength: 1, opacity: 1 } }
+    : {
+        hidden: { pathLength: 0, opacity: 0 },
+        visible: {
+          pathLength: 1,
+          opacity: 1,
+          transition: {
+            pathLength: { duration: 0.6, delay: 1.1, ease: [0.4, 0, 0.2, 1] }, // --easing-standard
+            opacity: { duration: 0.2, delay: 1.1 },
+          },
+        },
+      };
+
   return (
     <section
       className={cn(
@@ -165,12 +212,16 @@ export function Hero({
           >
             {words.map((word, i) => {
               const trailingSpace = i < words.length - 1 ? " " : "";
-              if (isHighlightWord(word)) {
+              if (i === highlightIndex) {
                 // The brand-anchor word: ink text sitting on a highlighter
-                // swipe. The Mark layer is behind the text (negative z, origin
-                // left) so the yellow draws in under the letters; text stays ink
-                // at all times (15.82:1). Padding gives the marker a hand-swiped
-                // overshoot beyond the glyph edges.
+                // swipe. The word span is `relative` so it owns a stacking
+                // context; INSIDE it the Mark sits at z-0 and the glyphs at
+                // z-10 (BOTH positive). The previous build used `-z-10` on the
+                // marker, which escaped this span's context and sank behind the
+                // section's own bg-surface paint — invisible. Positive in-context
+                // layering guarantees the buttermilk reads under the letters.
+                // Text stays ink at all times (15.82:1). Padding gives the marker
+                // a hand-swiped overshoot beyond the glyph edges.
                 return (
                   <motion.span
                     key={`${word}-${i}`}
@@ -181,10 +232,12 @@ export function Hero({
                     <motion.span
                       aria-hidden="true"
                       variants={markVariants}
-                      className="absolute inset-x-0 bottom-[0.08em] top-[0.18em] -z-10 origin-left rounded-[2px] bg-highlight"
+                      className="absolute inset-x-0 bottom-[0.06em] top-[0.16em] z-0 origin-left rounded-[3px] bg-highlight"
                     />
-                    {word}
-                    {trailingSpace}
+                    <span className="relative z-10">
+                      {word}
+                      {trailingSpace}
+                    </span>
                   </motion.span>
                 );
               }
@@ -237,13 +290,92 @@ export function Hero({
         </motion.div>
 
         {/* Faux-UI column: right, asymmetric. The pipeline micro-demo
-            (HeroPipeline): 4 paper-note client cards that organize from a
-            scatter into a clean ordered pipeline on load (change
-            hero-chaos-to-order). Fixed aspect-[4/3] slot reserved inside the
-            island for CLS 0. Isolated client leaf; not scroll-driven. */}
-        <div className="lg:col-span-6 lg:pl-6">
-          <HeroPipeline />
-        </div>
+            (HeroPipeline) is now PROMOTED into the brand's "nota viva" system —
+            a pinned living note rather than a flat boxed container. Enrichment
+            devices (v2 language, sparing, ≤3 devices):
+              1. Quiet warm dot-grid behind the panel only (notebook echo, almost
+                 subliminal at hairline tone) — depth without texture noise.
+              2. Two washi-tape strips on opposite corners holding the note, with
+                 a slight tilt on the whole note + shadow-note so it reads PINNED.
+              3. One hand-drawn support arrow curving from the CTA zone toward the
+                 note (firma; exactly one annotation per the design contract).
+            All transform/opacity (GPU, CLS 0). Decorative devices hide < lg so
+            the mobile stack never crowds. */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="relative lg:col-span-6 lg:pl-6"
+        >
+          {/* (1) Quiet dot-grid behind the note only. Hairline-tone support dots
+              at very low opacity (subliminal). Masked to fade at the edges so it
+              never reads as a hard panel. Hidden on mobile. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-6 -z-10 hidden rounded-xl opacity-[0.6] lg:block"
+            style={{
+              backgroundImage:
+                "radial-gradient(var(--color-border-strong) 1.2px, transparent 1.2px)",
+              backgroundSize: "20px 20px",
+              maskImage:
+                "radial-gradient(ellipse 80% 80% at 60% 45%, #000 35%, transparent 80%)",
+              WebkitMaskImage:
+                "radial-gradient(ellipse 80% 80% at 60% 45%, #000 35%, transparent 80%)",
+            }}
+          />
+
+          {/* The pinned living note: slight rotation + shadow-note (the ONLY
+              place shadow is allowed per the spec — it marks a nota viva). The
+              tape strips sit on top of its corners. */}
+          <div className="relative rotate-[-1.2deg] rounded-lg shadow-note lg:rotate-[-1.2deg]">
+            {/* (2) Washi tape — top-left corner. Semi-translucent warm support
+                tint, soft hairline edges, tilted across the corner. */}
+            <motion.span
+              aria-hidden="true"
+              custom={-24}
+              variants={tapeVariants}
+              className="pointer-events-none absolute -left-4 -top-2 z-20 hidden h-7 w-24 rounded-[2px] border border-support/15 bg-accent-soft shadow-soft lg:block"
+              style={{ originX: 0.5, originY: 0.5 }}
+            />
+            {/* (2) Washi tape — bottom-right corner, opposite diagonal tilt. */}
+            <motion.span
+              aria-hidden="true"
+              custom={16}
+              variants={tapeVariants}
+              className="pointer-events-none absolute -bottom-2 -right-4 z-20 hidden h-7 w-24 rounded-[2px] border border-support/15 bg-accent-soft shadow-soft lg:block"
+              style={{ originX: 0.5, originY: 0.5 }}
+            />
+
+            <HeroPipeline />
+          </div>
+
+          {/* (3) One hand-drawn arrow (firma): curves from the lower-left (CTA
+              side) up toward the note. support stroke, round caps, draws in on
+              load. SVG overlays the column; non-interactive. Hidden on mobile so
+              it never crosses stacked content. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 120 90"
+            fill="none"
+            className="pointer-events-none absolute -left-10 bottom-2 z-10 hidden h-24 w-32 overflow-visible text-handdrawn lg:block"
+          >
+            <motion.path
+              d="M6 84 C 28 78, 18 40, 52 30 C 78 22, 92 26, 108 18"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              variants={arrowVariants}
+            />
+            {/* Arrowhead, drawn with the same stroke; revealed together. */}
+            <motion.path
+              d="M108 18 L 97 14 M108 18 L 101 28"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              variants={arrowVariants}
+            />
+          </svg>
+        </motion.div>
       </div>
     </section>
   );
