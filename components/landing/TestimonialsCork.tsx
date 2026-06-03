@@ -300,7 +300,7 @@ function BoardPan({
 
   return (
     <section
-      data-cork
+      data-board
       id="testimonios"
       className="board-section relative w-full scroll-mt-16"
       aria-labelledby={HEADING_ID}
@@ -433,7 +433,7 @@ function StaticBoardGrid({
   const rows = chunkByPlan(testimonials, STATIC_ROW_PLAN);
   return (
     <section
-      data-cork
+      data-board
       id="testimonios"
       className="board-section board-section--static relative w-full scroll-mt-16"
       aria-labelledby={HEADING_ID}
