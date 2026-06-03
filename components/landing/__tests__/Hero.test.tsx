@@ -68,17 +68,32 @@ describe("Hero", () => {
     expect(secondary).toHaveAttribute("href", props.ctaSecondary.href);
   });
 
-  it("renders the pipeline micro-demo with exactly 4 client cards (R1)", () => {
+  it("renders the pipeline as a board: stage columns with the 4 client cards inside (R1)", () => {
     render(<Hero {...props} />);
 
-    // Each card shows a client name + a stage label from the allowed union.
-    expect(screen.getByText("Ana Ruiz")).toBeInTheDocument();
-    expect(screen.getByText("Marco Vidal")).toBeInTheDocument();
-    expect(screen.getByText("Lucía Fernández")).toBeInTheDocument();
-    expect(screen.getByText("Diego Sá")).toBeInTheDocument();
+    // The four client cards (first names). The board renders TWO responsive
+    // layouts in the DOM — a 3-column kanban (sm+) and a stacked list (<sm), each
+    // CSS-hidden at the other breakpoint — so every client appears twice. We
+    // assert presence (getAllByText) rather than a single node.
+    expect(screen.getAllByText("Ana").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Marco").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Lucía").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Diego").length).toBeGreaterThan(0);
 
-    const stages = screen.getAllByText(/^(Contacto|Propuesta|Activo)$/);
-    expect(stages).toHaveLength(4);
+    // The three canonical pipeline stages are present (as column headers on sm+
+    // and as per-card tags on mobile). Each of the union members appears.
+    expect(screen.getAllByText("Contacto").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Propuesta").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Activo").length).toBeGreaterThan(0);
+  });
+
+  it("renders the follow-up nudge (the product promise) with the slipping client", () => {
+    render(<Hero {...props} />);
+
+    // Nudge renders for both layouts (desktop corner chip + mobile in-flow).
+    expect(screen.getAllByText("Marta").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/12 días sin contacto/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Retomar/).length).toBeGreaterThan(0);
   });
 
   it("primary CTA carries the v2 ink-fill token classes (radius-md, ink bg, white text, no hard shadow)", () => {

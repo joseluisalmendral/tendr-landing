@@ -113,7 +113,14 @@ export function Pricing({ tiers }: Props) {
               moving annotation is an enhancement on top of this, never the only
               signal. Separated from the selector by a hairline (top on mobile,
               left on desktop) so the bar stays one surface. */}
-          <aside
+          {/* A11y: this is a content panel INSIDE the pricing recommender, not a
+              page-level complementary region. Using <aside> made it an implicit
+              `complementary` landmark nested inside <main>, which axe flags as
+              `landmark-complementary-is-top-level` (a nested complementary
+              landmark). It is a plain <div> with `aria-live="polite"` so the
+              recommendation is still announced on change without introducing a
+              stray nested landmark. */}
+          <div
             id={liveId}
             aria-live="polite"
             className="flex flex-col justify-center gap-1.5 border-t border-border bg-surface-sunken/40 p-5 md:border-l md:border-t-0"
@@ -129,7 +136,7 @@ export function Pricing({ tiers }: Props) {
               .
             </p>
             <p className="text-body-sm text-text-tertiary">{reason}</p>
-          </aside>
+          </div>
         </div>
       </div>
 

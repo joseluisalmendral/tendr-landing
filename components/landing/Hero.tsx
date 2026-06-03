@@ -297,8 +297,10 @@ export function Hero({
                  subliminal at hairline tone) — depth without texture noise.
               2. Two washi-tape strips on opposite corners holding the note, with
                  a slight tilt on the whole note + shadow-note so it reads PINNED.
-              3. One hand-drawn support arrow curving from the CTA zone toward the
-                 note (firma; exactly one annotation per the design contract).
+              3. One hand-drawn support arrow that points at the follow-up NUDGE
+                 chip overlapping the note's top-right corner (firma; exactly one
+                 annotation per the design contract). The arrow is now motivated:
+                 it singles out "a quién retomar hoy", the product promise.
             All transform/opacity (GPU, CLS 0). Decorative devices hide < lg so
             the mobile stack never crowds. */}
         <motion.div
@@ -349,26 +351,33 @@ export function Hero({
             <HeroPipeline />
           </div>
 
-          {/* (3) One hand-drawn arrow (firma): curves from the lower-left (CTA
-              side) up toward the note. support stroke, round caps, draws in on
-              load. SVG overlays the column; non-interactive. Hidden on mobile so
-              it never crosses stacked content. */}
+          {/* (3) One hand-drawn arrow (firma) — NOW MOTIVATED: it points at the
+              nudge chip ("Marta · 12 días sin contacto → Retomar") that overlaps
+              the note's top-right corner. The previous arrow curved into the
+              middle of the board and pointed at nothing meaningful; re-aiming it
+              at the follow-up nudge makes the gesture say "esto es lo que importa
+              hoy" — the product promise. It sits ABOVE the note's top-right,
+              curving from the left of the chip up into it. support stroke, round
+              caps, draws in on load. Non-interactive, hidden on mobile so it never
+              crosses stacked content. */}
           <svg
             aria-hidden="true"
-            viewBox="0 0 120 90"
+            viewBox="0 0 120 70"
             fill="none"
-            className="pointer-events-none absolute -left-10 bottom-2 z-10 hidden h-24 w-32 overflow-visible text-handdrawn lg:block"
+            className="pointer-events-none absolute -top-16 right-0 z-30 hidden h-20 w-32 overflow-visible text-handdrawn lg:block"
           >
+            {/* Curves from the upper-left down toward the chip's leading edge at
+                the note's top-right corner (bottom-right of this SVG box). */}
             <motion.path
-              d="M6 84 C 28 78, 18 40, 52 30 C 78 22, 92 26, 108 18"
+              d="M8 12 C 30 6, 44 30, 70 40 C 88 47, 100 50, 110 56"
               stroke="currentColor"
               strokeWidth={2.5}
               strokeLinecap="round"
               variants={arrowVariants}
             />
-            {/* Arrowhead, drawn with the same stroke; revealed together. */}
+            {/* Arrowhead pointing down-right at the chip; revealed together. */}
             <motion.path
-              d="M108 18 L 97 14 M108 18 L 101 28"
+              d="M110 56 L 99 53 M110 56 L 105 45"
               stroke="currentColor"
               strokeWidth={2.5}
               strokeLinecap="round"
