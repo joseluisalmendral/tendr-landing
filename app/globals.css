@@ -158,7 +158,7 @@
    redefine para no duplicar tokens. */
 
 :root {
-  --radius: 0.875rem; /* v2.1 "suave moderado": 14px base (lock de forma taste 4.4) */
+  --radius: 0.75rem; /* v2 "suave-medio": 12px base = radius-md de design.md §2.5 (botones/controles); los próximos `shadcn add` (preset maia) derivan su escala de aquí */
 
   /* ---- Paper surfaces ---- */
   --surface: oklch(0.97 0.015 90);
