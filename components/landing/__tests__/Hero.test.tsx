@@ -31,9 +31,9 @@ function stubMatchMedia(matches: boolean) {
 }
 
 describe("Hero", () => {
-  // HeroPipeline (the right column) reads useSyncExternalStore-backed
-  // matchMedia. Stub it to the mobile/static branch so the pipeline renders its
-  // ordered final state deterministically (no animation timing in the test).
+  // HeroThread (the right column, "El Hilo") reads matchMedia / reduced-motion.
+  // Stub it so the scene mounts at its final composed state deterministically
+  // (no animation timing in the test).
   beforeEach(() => {
     stubMatchMedia(false);
   });
@@ -68,32 +68,31 @@ describe("Hero", () => {
     expect(secondary).toHaveAttribute("href", props.ctaSecondary.href);
   });
 
-  it("renders the pipeline as a board: stage columns with the 4 client cards inside (R1)", () => {
+  it("renders the thread scene ('El Hilo') with its three narrative moments (R1)", () => {
     render(<Hero {...props} />);
 
-    // The four client cards (first names). The board renders TWO responsive
-    // layouts in the DOM — a 3-column kanban (sm+) and a stacked list (<sm), each
-    // CSS-hidden at the other breakpoint — so every client appears twice. We
-    // assert presence (getAllByText) rather than a single node.
-    expect(screen.getAllByText("Ana").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Marco").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Lucía").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Diego").length).toBeGreaterThan(0);
-
-    // The three canonical pipeline stages are present (as column headers on sm+
-    // and as per-card tags on mobile). Each of the union members appears.
-    expect(screen.getAllByText("Contacto").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Propuesta").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Activo").length).toBeGreaterThan(0);
+    // The three line-art moments carry real rendered micro-copy (the SVG glyphs
+    // are aria-hidden; these labels are the narrative the user reads).
+    expect(screen.getByText("9:12 · Ana")).toBeInTheDocument();
+    expect(screen.getByText("propuesta")).toBeInTheDocument();
+    expect(screen.getByText("Marta · 12 días")).toBeInTheDocument();
   });
 
-  it("renders the follow-up nudge (the product promise) with the slipping client", () => {
+  it("renders the rescue payoff: a 'Retomar' label (the product promise)", () => {
     render(<Hero {...props} />);
 
-    // Nudge renders for both layouts (desktop corner chip + mobile in-flow).
-    expect(screen.getAllByText("Marta").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/12 días sin contacto/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Retomar/).length).toBeGreaterThan(0);
+    // "Retomar" is the rescued follow-up label that the buttermilk subrayador
+    // sweeps over at the end of the loop.
+    expect(screen.getByText("Retomar")).toBeInTheDocument();
+  });
+
+  it("exposes a screen-reader summary of the promise (the SVG scene is decorative)", () => {
+    const { container } = render(<Hero {...props} />);
+
+    // The illustrative SVG is aria-hidden; the narrative is summarized for AT.
+    const srOnly = container.querySelector("p.sr-only");
+    expect(srOnly).not.toBeNull();
+    expect(srOnly?.textContent).toMatch(/cartera/);
   });
 
   it("primary CTA carries the v2 ink-fill token classes (radius-md, ink bg, white text, no hard shadow)", () => {
@@ -106,6 +105,19 @@ describe("Hero", () => {
     expect(primary.className).toContain("focus-ring");
     // v2 retired the offset hard shadow: ink fill is the affordance.
     expect(primary.className).not.toContain("shadow-hard");
+  });
+
+  it("under reduced motion still renders the full final composition (static)", () => {
+    // prefers-reduced-motion: reduce → the thread mounts at its final composed
+    // frame (path drawn, 3 moments visible, clock up, check + subrayador
+    // painted). We assert the narrative content is all present and unanimated.
+    stubMatchMedia(true);
+    render(<Hero {...props} />);
+
+    expect(screen.getByText("9:12 · Ana")).toBeInTheDocument();
+    expect(screen.getByText("propuesta")).toBeInTheDocument();
+    expect(screen.getByText("Marta · 12 días")).toBeInTheDocument();
+    expect(screen.getByText("Retomar")).toBeInTheDocument();
   });
 
   it("has no axe violations", async () => {

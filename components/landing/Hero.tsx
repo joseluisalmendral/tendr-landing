@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 
 import { Button } from "@/components/ui/button";
-import { HeroPipeline } from "@/components/landing/HeroPipeline";
+import { HeroThread } from "@/components/landing/HeroThread";
 import { cn } from "@/lib/utils";
 import type { HeroProps } from "@/components/landing/types";
 
@@ -35,10 +35,16 @@ import type { HeroProps } from "@/components/landing/types";
  * state (opacity 1, y 0, no blur) with zero animation; the Mark renders at its
  * full painted state (no draw-in) so the value word is highlighted from frame 1.
  *
- * LCP: the right column is now <HeroPipeline /> (faux-UI, DOM/SVG, no network
- * asset), so the LCP candidate is the text column (measured: the subhead
- * paragraph, ~0.8s on a local prod build). The text reveal is transform/opacity
- * only and short.
+ * LCP: the right column is now <HeroThread /> (frameless SVG illustration, no
+ * network asset), so the LCP candidate is the text column (the subhead
+ * paragraph). The text reveal is transform/opacity only and short.
+ *
+ * Right column (B1-fix-3): the framed "nota viva" board (window chrome, cards,
+ * washi tape, nudge chip, dot-grid, hand-drawn arrow) is RETIRED. In its place,
+ * "El Hilo" — a frameless looping scene where the client portfolio draws itself
+ * as a single living ink stroke that threads three moments (note, propuesta,
+ * clock), drops a forgotten follow-up, then loops back to rescue it. The tape,
+ * grid and arrow belonged to the frame; with no frame they are gone.
  */
 export function Hero({
   title,
@@ -148,44 +154,6 @@ export function Hero({
     },
   };
 
-  // Washi tape "press-on": each strip drops in with a tiny scale + settle, as if
-  // a hand pressed it onto the panel corner. transform/opacity only (GPU). Custom
-  // carries the strip's final rotation so it lands at its tilt. Under reduced
-  // motion the tape is simply present (final state, no press animation).
-  const tapeVariants: Variants = reduceMotion
-    ? { hidden: (rot: number) => ({ opacity: 1, rotate: rot, scale: 1 }), visible: (rot: number) => ({ opacity: 1, rotate: rot, scale: 1 }) }
-    : {
-        hidden: (rot: number) => ({ opacity: 0, rotate: rot, scale: 0.8 }),
-        visible: (rot: number) => ({
-          opacity: 1,
-          rotate: rot,
-          scale: 1,
-          transition: {
-            duration: 0.35,
-            delay: 0.9, // after the pipeline has settled into order
-            ease: [0.34, 1.56, 0.64, 1], // --ease-snap (the press-on overshoot)
-          },
-        }),
-      };
-
-  // Hand-drawn annotation (firma): a single support-tinted arrow that draws in
-  // (stroke-dashoffset) from the CTA zone toward the pipeline, telling the eye
-  // "this is what you get". Exactly ONE per the design contract. Under reduced
-  // motion it is fully drawn from frame 1.
-  const arrowVariants: Variants = reduceMotion
-    ? { hidden: { pathLength: 1, opacity: 1 }, visible: { pathLength: 1, opacity: 1 } }
-    : {
-        hidden: { pathLength: 0, opacity: 0 },
-        visible: {
-          pathLength: 1,
-          opacity: 1,
-          transition: {
-            pathLength: { duration: 0.6, delay: 1.1, ease: [0.4, 0, 0.2, 1] }, // --easing-standard
-            opacity: { duration: 0.2, delay: 1.1 },
-          },
-        },
-      };
-
   return (
     <section
       className={cn(
@@ -289,101 +257,26 @@ export function Hero({
           </motion.div>
         </motion.div>
 
-        {/* Faux-UI column: right, asymmetric. The pipeline micro-demo
-            (HeroPipeline) is now PROMOTED into the brand's "nota viva" system —
-            a pinned living note rather than a flat boxed container. Enrichment
-            devices (v2 language, sparing, ≤3 devices):
-              1. Quiet warm dot-grid behind the panel only (notebook echo, almost
-                 subliminal at hairline tone) — depth without texture noise.
-              2. Two washi-tape strips on opposite corners holding the note, with
-                 a slight tilt on the whole note + shadow-note so it reads PINNED.
-              3. One hand-drawn support arrow that points at the follow-up NUDGE
-                 chip overlapping the note's top-right corner (firma; exactly one
-                 annotation per the design contract). The arrow is now motivated:
-                 it singles out "a quién retomar hoy", the product promise.
-            All transform/opacity (GPU, CLS 0). Decorative devices hide < lg so
-            the mobile stack never crowds. */}
+        {/* Illustration column: right, asymmetric. "El Hilo" — a frameless
+            looping scene (no window chrome, no card, no tape, no grid, no
+            arrow). The portfolio draws itself as a single living ink stroke that
+            threads three moments, drops a forgotten follow-up, then loops back
+            to rescue it. The scene owns its own motion timeline and a11y; this
+            column is just its asymmetric slot, vertically centered. */}
         <motion.div
-          variants={containerVariants}
+          variants={itemVariants}
           initial="hidden"
           animate="visible"
           className="relative lg:col-span-6 lg:pl-6"
         >
-          {/* (1) Quiet dot-grid behind the note only. Hairline-tone support dots
-              at very low opacity (subliminal). Masked to fade at the edges so it
-              never reads as a hard panel. Hidden on mobile. */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -inset-6 -z-10 hidden rounded-xl opacity-[0.6] lg:block"
-            style={{
-              backgroundImage:
-                "radial-gradient(var(--color-border-strong) 1.2px, transparent 1.2px)",
-              backgroundSize: "20px 20px",
-              maskImage:
-                "radial-gradient(ellipse 80% 80% at 60% 45%, #000 35%, transparent 80%)",
-              WebkitMaskImage:
-                "radial-gradient(ellipse 80% 80% at 60% 45%, #000 35%, transparent 80%)",
-            }}
-          />
-
-          {/* The pinned living note: slight rotation + shadow-note (the ONLY
-              place shadow is allowed per the spec — it marks a nota viva). The
-              tape strips sit on top of its corners. */}
-          <div className="relative rotate-[-1.2deg] rounded-lg shadow-note lg:rotate-[-1.2deg]">
-            {/* (2) Washi tape — top-left corner. Semi-translucent warm support
-                tint, soft hairline edges, tilted across the corner. */}
-            <motion.span
-              aria-hidden="true"
-              custom={-24}
-              variants={tapeVariants}
-              className="pointer-events-none absolute -left-4 -top-2 z-20 hidden h-7 w-24 rounded-[2px] border border-support/15 bg-accent-soft shadow-soft lg:block"
-              style={{ originX: 0.5, originY: 0.5 }}
-            />
-            {/* (2) Washi tape — bottom-right corner, opposite diagonal tilt. */}
-            <motion.span
-              aria-hidden="true"
-              custom={16}
-              variants={tapeVariants}
-              className="pointer-events-none absolute -bottom-2 -right-4 z-20 hidden h-7 w-24 rounded-[2px] border border-support/15 bg-accent-soft shadow-soft lg:block"
-              style={{ originX: 0.5, originY: 0.5 }}
-            />
-
-            <HeroPipeline />
+          {/* On mobile the scene is a compact supporting illustration (capped
+              width so the square viewBox does not reserve a tall void above
+              "Cómo funciona"); on lg+ it fills the asymmetric column beside the
+              headline. The narrative (route + 3 moments + rescue) is identical at
+              both sizes and reads at 390px. */}
+          <div className="mx-auto max-w-[260px] sm:max-w-[340px] lg:mx-0 lg:max-w-none">
+            <HeroThread />
           </div>
-
-          {/* (3) One hand-drawn arrow (firma) — NOW MOTIVATED: it points at the
-              nudge chip ("Marta · 12 días sin contacto → Retomar") that overlaps
-              the note's top-right corner. The previous arrow curved into the
-              middle of the board and pointed at nothing meaningful; re-aiming it
-              at the follow-up nudge makes the gesture say "esto es lo que importa
-              hoy" — the product promise. It sits ABOVE the note's top-right,
-              curving from the left of the chip up into it. support stroke, round
-              caps, draws in on load. Non-interactive, hidden on mobile so it never
-              crosses stacked content. */}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 120 70"
-            fill="none"
-            className="pointer-events-none absolute -top-16 right-0 z-30 hidden h-20 w-32 overflow-visible text-handdrawn lg:block"
-          >
-            {/* Curves from the upper-left down toward the chip's leading edge at
-                the note's top-right corner (bottom-right of this SVG box). */}
-            <motion.path
-              d="M8 12 C 30 6, 44 30, 70 40 C 88 47, 100 50, 110 56"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              variants={arrowVariants}
-            />
-            {/* Arrowhead pointing down-right at the chip; revealed together. */}
-            <motion.path
-              d="M110 56 L 99 53 M110 56 L 105 45"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              variants={arrowVariants}
-            />
-          </svg>
         </motion.div>
       </div>
     </section>
