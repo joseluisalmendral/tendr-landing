@@ -11,7 +11,16 @@ import { motion, type MotionValue } from "motion/react";
  * cork clay fist. A small wisp "press" mark accents the fingertip. The glyph is
  * drawn with the fingertip at TOP CENTRE (the press point + transform origin).
  *
- * CHOREOGRAPHY (B5-fix-2 — restored to the ORIGINAL CorkHand timing):
+ * CHOREOGRAPHY (B5-fix-3 — full CARRY + PLACE, restored from the ORIGINAL board):
+ *   The hand does not just press a pre-placed note — it CARRIES the first note in.
+ *   The hand sweeps DOWN from above the frame on the same descent curve as the
+ *   note ([tIn, hArrive], "-86vh"→"0vh"), so the note travels WITH the hand into
+ *   its empty slot; the tape press seals it; the hand exits downward + fades,
+ *   leaving the note placed. The note's carry transform lives in the parent
+ *   (cardCarryY/Opacity/Rotate); this glyph just shares the same y/scale/rotate
+ *   curve so the two read as one gesture. See TestimonialsCork.
+ *
+ * PRIOR (B5-fix-2 — restored to the ORIGINAL CorkHand timing):
  *   The old cork board drove the hand with the SAME scrollYProgress as the board
  *   zoom/pan, during a dedicated hand phase [tIn, tHand] that ran AFTER the board
  *   finished zooming in and BEFORE the lateral pan. The hand swept DOWN from above

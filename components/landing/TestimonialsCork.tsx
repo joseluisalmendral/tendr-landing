@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "motion/react";
 
+import { BoardDoodleArrow, BoardDoodleTally } from "@/components/landing/BoardDoodles";
 import { BoardHand } from "@/components/landing/BoardHand";
 import { TestimonialCard } from "@/components/landing/TestimonialCard";
 import type { NoteSize, TestimonialCardProps } from "@/components/landing/types";
@@ -37,12 +38,14 @@ import type { NoteSize, TestimonialCardProps } from "@/components/landing/types"
  * ("salta muy pronto"); rebinding it to scrollYProgress fixes the timing):
  *   P0 ZOOM-IN  [0, tIn]
  *     The framed board scales SMALL → 1 (grows to fill the screen) over --ease-expo.
- *     The first note is already present and reveals via its whileInView entrance.
- *   P1 HAND PRESS  [tIn, tHand]
- *     The subtle line-art hand sweeps DOWN from above the frame, dips to PRESS the
- *     first note's tape, then continues down and out of frame, fading. Scrubbed by
- *     scroll (same scrollYProgress), so it only appears once the board has zoomed
- *     in and the press follows the user's scroll.
+ *     The board starts WITHOUT the first note (its slot is empty).
+ *   P1 HAND CARRY + PLACE  [tIn, tHand]  (B5-fix-3)
+ *     The subtle line-art hand sweeps DOWN from above the frame CARRYING the first
+ *     note (the note rides the same descent curve, slight dangle), places it in its
+ *     empty slot, the tape press seals it, then the hand continues down and out of
+ *     frame, fading — leaving the note placed. Scrubbed by scroll (same
+ *     scrollYProgress) → scrub-safe both ways: scrolling back up un-places it
+ *     gracefully (rides out + fades).
  *   P2 PAN  [tHand, tPanEnd]
  *     The board pans laterally (x: 0 → -panVw) and notes #2..n appear
  *     (whileInView, time-based — see TestimonialCard). The first note is centred
@@ -202,36 +205,75 @@ function BoardPan({
     clamp: true,
   });
 
-  // Hand press beats inside [tIn, tHand] (B5-fix-2 — restored original CorkHand
-  // model). The line-art hand sweeps DOWN from above the frame, reaches the first
-  // note, presses (a small dip), then continues DOWN and out of frame, fading.
-  // All scroll-scrubbed (same scrollYProgress), transform/opacity only.
+  // Hand CARRY + PLACE beats inside [tIn, tHand] (B5-fix-3 — full placing
+  // choreography, restored from the ORIGINAL cork board, rendered with the subtle
+  // line-art hand). The first note is NOT pre-placed on the board: the hand sweeps
+  // DOWN from above CARRYING the note, the note rides the SAME descent curve as
+  // the hand into its empty slot, the tape press seals it, then the hand
+  // continues DOWN and out of frame, fading — leaving the note placed. The hand
+  // enters a touch EARLIER in the phase than B5-fix-2 (hEnter < tIn padding via a
+  // longer arrive window) so the carry reads, not a teleport. All scroll-scrubbed
+  // (same scrollYProgress, transform/opacity only) → scrub-safe in BOTH directions
+  // (scrolling back up un-places gracefully: the note rides back up with the hand
+  // and fades out, no glitch, because every value is a pure useTransform of
+  // progress with clamp).
   const hSpan = tHand - tIn;
-  const hArrive = tIn + hSpan * 0.4; // reached the press point
-  const hPress = tIn + hSpan * 0.5; // contact (dip)
-  const hExit0 = tIn + hSpan * 0.64; // starts withdrawing downward
+  const hArrive = tIn + hSpan * 0.46; // note reaches its slot (carry complete)
+  const hPress = tIn + hSpan * 0.56; // tape press contact (small dip)
+  const hExit0 = tIn + hSpan * 0.7; // hand starts withdrawing downward
   const hExit1 = tHand;
 
+  // Hand sweeps in from above (earlier ramp), carries the note down, dips to press
+  // the tape, then exits below.
   const handY = useTransform(
     scrollYProgress,
     [tIn, hArrive, hPress, hExit0, hExit1],
-    ["-78vh", "0vh", "1.4vh", "0vh", "118vh"],
+    ["-86vh", "0vh", "1.6vh", "0vh", "120vh"],
     { clamp: true, ease: EASE_OUT },
   );
   const handScale = useTransform(scrollYProgress, [tIn, hArrive], [1.1, 1], {
     clamp: true,
     ease: EASE_SNAP, // tiny pop as it lands
   });
-  const handRotate = useTransform(scrollYProgress, [hExit0, hExit1], [0, 7], {
-    clamp: true,
-    ease: EASE_OUT,
-  });
-  // Fades up at the start of the phase, holds, fades out as it exits below.
+  // Slight carry dangle: the hand (and the note it carries) rotates a touch on the
+  // way in, straightens at the slot, then tips on exit.
+  const handRotate = useTransform(
+    scrollYProgress,
+    [tIn, hArrive, hExit0, hExit1],
+    [-5, 0, 0, 8],
+    { clamp: true, ease: EASE_OUT },
+  );
+  // Visible the whole carry+press, fades out as it exits below.
   const handOpacity = useTransform(
     scrollYProgress,
-    [tIn, tIn + hSpan * 0.12, hExit0, hExit1],
+    [tIn, tIn + hSpan * 0.1, hExit0, hExit1],
     [0, 1, 1, 0],
     { clamp: true },
+  );
+
+  // The note the hand CARRIES: it rides the SAME descent curve as the hand from
+  // above into its empty slot ([tIn, hArrive]), fading up early so it reads as a
+  // note being carried (slight dangle rotation matches the hand), then holding at
+  // rest. `placed` on the card keeps the tape opaque + the note tilted the whole
+  // time (it arrives already taped — the press just seals it). Before tIn the
+  // opacity is 0 → the board genuinely starts WITHOUT the first note.
+  const cardCarryY = useTransform(
+    scrollYProgress,
+    [tIn, hArrive],
+    ["-86vh", "0vh"],
+    { clamp: true, ease: EASE_OUT },
+  );
+  const cardCarryOpacity = useTransform(
+    scrollYProgress,
+    [tIn, tIn + hSpan * 0.12],
+    [0, 1],
+    { clamp: true },
+  );
+  const cardCarryRotate = useTransform(
+    scrollYProgress,
+    [tIn, hArrive],
+    [-4, 0],
+    { clamp: true, ease: EASE_OUT },
   );
 
   // R11 (WCAG 2.4.3 / 2.4.7): focusing an off-screen note snaps the pan to it.
@@ -277,6 +319,13 @@ function BoardPan({
               {HEADING}
             </h2>
 
+            {/* Whiteboard character (B5-fix-3): tasteful hand-drawn marker
+                patina — an "¡este!" arrow flagging a favourite card + a kanban
+                "done" tally/check cluster. Sits UNDER the notes (z-0) so it reads
+                as board surface, not content. Sparing (2 marks), low opacity. */}
+            <BoardDoodleArrow className="pointer-events-none absolute left-[7%] top-[34%] z-0 h-20 w-32 md:h-24 md:w-40" />
+            <BoardDoodleTally className="pointer-events-none absolute bottom-[8%] right-[6%] z-0 h-16 w-20 md:h-20 md:w-24" />
+
             {/* Horizontal track. Lead/trail padding centre the first note at x=0
                 and leave board to the right of the last note at the end. */}
             <motion.ol
@@ -295,14 +344,40 @@ function BoardPan({
                   aria-label={`Testimonio ${i + 1} de ${testimonials.length}`}
                   onFocusCapture={() => handleCellFocus(panPositions[i])}
                 >
-                  {/* All notes (incl. the first) reveal via their normal
-                      whileInView entrance as the board pans/zooms in. */}
-                  <TestimonialCard
-                    {...t}
-                    panProgress={scrollYProgress}
-                    index={i}
-                    total={testimonials.length}
-                  />
+                  {i === 0 ? (
+                    // First note: NOT pre-placed. The hand carries it in — it
+                    // rides the SAME descent curve as the hand into the empty
+                    // slot. `placed` makes it render opaque + taped + tilted (it
+                    // arrives already taped; the press just seals it), so the hand
+                    // visibly drops a finished note and leaves. Scrub-safe both
+                    // ways: scrolling back up rides it out of frame and fades it.
+                    <motion.div
+                      style={{
+                        y: cardCarryY,
+                        opacity: cardCarryOpacity,
+                        rotate: cardCarryRotate,
+                        transformOrigin: "top center",
+                        willChange: "transform, opacity",
+                      }}
+                    >
+                      <TestimonialCard
+                        {...t}
+                        placed
+                        panProgress={scrollYProgress}
+                        index={i}
+                        total={testimonials.length}
+                      />
+                    </motion.div>
+                  ) : (
+                    // The rest reveal via their normal whileInView entrance as the
+                    // board pans in.
+                    <TestimonialCard
+                      {...t}
+                      panProgress={scrollYProgress}
+                      index={i}
+                      total={testimonials.length}
+                    />
+                  )}
                 </li>
               ))}
             </motion.ol>
@@ -360,10 +435,14 @@ function StaticBoardGrid({
     <section
       data-cork
       id="testimonios"
-      className="board-section board-section--static w-full scroll-mt-16"
+      className="board-section board-section--static relative w-full scroll-mt-16"
       aria-labelledby={HEADING_ID}
     >
-      <div className="mx-auto max-w-[1200px] px-6 py-16 md:py-24">
+      {/* Same whiteboard patina as the pan path (B5-fix-3): "¡este!" arrow + kanban
+          tally, low opacity, behind the notes. */}
+      <BoardDoodleArrow className="pointer-events-none absolute left-[4%] top-[18%] z-0 hidden h-20 w-32 md:block md:h-24 md:w-40" />
+      <BoardDoodleTally className="pointer-events-none absolute bottom-[10%] right-[5%] z-0 hidden h-16 w-20 md:block md:h-20 md:w-24" />
+      <div className="relative z-[1] mx-auto max-w-[1200px] px-6 py-16 md:py-24">
         <h2
           id={HEADING_ID}
           className="board-heading--static mx-auto mb-12 w-fit max-w-full rounded-lg border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-flat"

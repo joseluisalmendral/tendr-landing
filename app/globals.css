@@ -760,7 +760,26 @@
 .board-panel,
 .board-section--static {
   background-color: var(--color-surface-sunken);
+  /* CHARACTER (B5-fix-3): the board reads more like a real whiteboard with
+     tasteful "patina" — two faint erased-marker ghost smudge zones (very
+     low-contrast warm-gray organic washes, like marker wiped off) layered UNDER
+     the kanban column guides. Radial gradients, no noise, no texture image; they
+     keep the board clean/modern but give it a lived-in surface. The guides stay on
+     top so the kanban echo still reads. */
   background-image:
+    /* erased-marker ghost smudge — upper-left organic wash */
+    radial-gradient(
+      62% 46% at 24% 30%,
+      color-mix(in oklab, var(--color-border-strong) 26%, transparent) 0%,
+      transparent 70%
+    ),
+    /* erased-marker ghost smudge — lower-right, fainter + wider */
+    radial-gradient(
+      54% 40% at 78% 74%,
+      color-mix(in oklab, var(--color-border-strong) 18%, transparent) 0%,
+      transparent 72%
+    ),
+    /* kanban column guides (unchanged) */
     repeating-linear-gradient(
       to right,
       transparent 0,
@@ -770,8 +789,14 @@
       transparent 20%,
       transparent 40%
     );
-  background-size: 100% 16px;
-  background-repeat: repeat-y;
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 16px;
+  background-repeat:
+    no-repeat,
+    no-repeat,
+    repeat-y;
 }
 
 /* El wrapper escalable del tablero. Ocupa el viewport fijado (la sticky tiene
@@ -806,6 +831,39 @@
     inset 0 0 0 1px var(--color-border-hairline),
     inset 0 2px 4px color-mix(in oklab, var(--color-border-strong) 55%, transparent),
     0 0 0 1px var(--color-border-hairline);
+}
+
+/* SCALE-AWARE FRAME (B5-fix-3). The pan panel scales down to SMALL (0.74) during
+   the zoom-in / zoom-out beats; the static mobile grid renders physically small.
+   At that size the 2px bezel + box-shadow shrink WITH the transform and read too
+   faint ("el marco, para cuando se vea más pequeña"). Fix: the STATIC variant
+   (mobile + reduced-motion, never scaled) gets a stronger, thicker frame outright
+   — a 3px strong border + a darker contact ring — so the frame holds at small
+   physical size. The pan panel additionally gets a scale-compensated OUTER ring
+   (.board-panel::after, drawn just outside the border) so that when the transform
+   downscales the panel, a heavier dark hairline still separates it from the cream
+   page during the zoomed-out beats — the box-shadow may thin out, but this solid
+   ring keeps minimum frame contrast. */
+.board-section--static::before {
+  border-width: 3px;
+  box-shadow:
+    inset 0 0 0 1px var(--color-border-hairline),
+    inset 0 2px 5px color-mix(in oklab, var(--color-border-strong) 70%, transparent),
+    0 0 0 1.5px color-mix(in oklab, var(--color-border-strong) 60%, transparent),
+    0 6px 18px color-mix(in oklab, var(--color-border-strong) 30%, transparent);
+}
+
+.board-panel::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+  /* A solid, slightly heavier dark hairline hugging the bezel. Unlike the
+     box-shadow ring (which fades as the panel downscales), a border keeps a
+     visible edge against the cream page during the SMALL zoom beats. */
+  border: 1.5px solid color-mix(in oklab, var(--color-border-strong) 70%, transparent);
 }
 
 /* Encabezado montado en el tablero (etiqueta), por encima del marco. */
