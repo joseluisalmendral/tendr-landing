@@ -652,7 +652,14 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
 /** A template variable that RESOLVES from its {{token}} to the real value. The
  * resolution is a quick rotateX/opacity crossfade in place (motion-graphics flip)
  * and a restyle from accent-outline (editable token) to a calmer "real data"
- * look. Both states are absolute-stacked in a fixed slot so nothing rewraps. */
+ * look.
+ *
+ * LAYOUT (B3-fix-2): the two states share ONE grid cell ([grid-area:1/1]) so the
+ * slot sizes INTRINSICALLY to whichever layer is wider/taller — no fixed-width
+ * spacer, no whitespace-nowrap that could force the chip past the line and overlap
+ * neighbouring text. `max-w-full` + `min-w-0` keep the chip inside its flex parent;
+ * text may wrap to a second line (break-words) instead of overflowing. The rotateX
+ * flip is per-layer and unchanged, so the choreography identity is preserved. */
 function ResolvingVar({
   token,
   value,
@@ -671,18 +678,23 @@ function ResolvingVar({
 
   if (reduceMotion) {
     // Resting source state under reduced motion: the editable token.
-    return <span className={tokenCls}>{token}</span>;
+    return (
+      <span className={tokenCls + " inline-block max-w-full break-words"}>
+        {token}
+      </span>
+    );
   }
 
   return (
-    <span className="relative inline-flex" style={{ perspective: 400 }}>
-      {/* Invisible spacer = the wider of the two, so the inline slot never
-          changes width as token↔value crossfade (minimizes rewrap). */}
-      <span className={valueCls + " invisible whitespace-nowrap"} aria-hidden="true">
-        {value}
-      </span>
+    <span
+      className="inline-grid max-w-full min-w-0 align-middle"
+      style={{ perspective: 400 }}
+    >
       <motion.span
-        className={"absolute inset-0 flex items-center justify-center whitespace-nowrap " + tokenCls}
+        className={
+          "col-start-1 row-start-1 inline-flex max-w-full items-center justify-center break-words " +
+          tokenCls
+        }
         animate={{ opacity: resolved ? 0 : 1, rotateX: resolved ? 90 : 0 }}
         transition={{ duration: 0.35, ease: EASE_OUT }}
         style={{ transformStyle: "preserve-3d", backfaceVisibility: "hidden" }}
@@ -690,7 +702,10 @@ function ResolvingVar({
         {token}
       </motion.span>
       <motion.span
-        className={"absolute inset-0 flex items-center justify-center whitespace-nowrap " + valueCls}
+        className={
+          "col-start-1 row-start-1 inline-flex max-w-full items-center justify-center break-words " +
+          valueCls
+        }
         animate={{ opacity: resolved ? 1 : 0, rotateX: resolved ? 0 : -90 }}
         transition={{ duration: 0.35, ease: EASE_SNAP }}
         style={{ transformStyle: "preserve-3d", backfaceVisibility: "hidden" }}
