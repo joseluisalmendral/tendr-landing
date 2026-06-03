@@ -148,7 +148,7 @@ Section gap mínimo: `space-16` (64px). Card padding: `space-6`–`space-8`.
 | `duration-slow` | 400ms | Reveals on scroll |
 | `easing-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` | Default |
 | `easing-emphasis` | `cubic-bezier(0.2, 0.8, 0.2, 1)` | Reveals |
-| `easing-expo` | `cubic-bezier(0.16, 1, 0.3, 1)` | El único momento wow (Hero→"Cómo funciona") |
+| `easing-expo` | `cubic-bezier(0.16, 1, 0.3, 1)` | El wow con scroll-pin (Hero→"Cómo funciona") y los reveals de transición (page-peel) |
 
 Tope de 3 librerías de animación: **Motion (`motion/react`) + CSS scroll-driven nativo + Lenis**. Reduced-motion: estado final estático en cada coreografía.
 
@@ -175,7 +175,8 @@ Tope de 3 librerías de animación: **Motion (`motion/react`) + CSS scroll-drive
 |---|---|---|---|---|---|
 | Reveal on scroll | Fade+rise de secciones | 400ms | emphasis | whileInView once | Motion |
 | Hand-drawn draw-in | `stroke-dashoffset` de flechas/círculos | ~600ms | standard | in-view once | CSS/Motion |
-| Wow Hero→Cómo funciona | Sticky overlap (único wow) | scroll | expo | scroll-driven + Lenis | CSS scroll-driven + Lenis |
+| Wow Hero→Cómo funciona | Sticky overlap (el único wow con scroll-pin) | scroll | expo | scroll-driven + Lenis | CSS scroll-driven + Lenis |
+| Page-peel Funciones→Pricing | Reveal de transición (transform-only, sin pin) | scroll | expo | view-timeline | CSS scroll-driven + Lenis |
 | Hover lift nota viva | Leve scale + shadow-soft | 150ms | standard | hover | Motion/CSS |
 | FLIP recomendador pricing | Flecha/tag salta al tier | ~400ms | emphasis | toggle | Motion layout |
 
@@ -189,7 +190,7 @@ Tope de 3 librerías de animación: **Motion (`motion/react`) + CSS scroll-drive
 - **Base siempre cálida** (warm-white near-white), alto contraste de texto (AA+).
 - **Hand-drawn + notas vivas como firma**, usadas con disciplina (sparing) y en versión moderna (trazo limpio).
 - Mostrar el producto con **faux-UI**, no describirlo con iconos.
-- Motion sutil; un único momento wow en toda la página.
+- Motion sutil: **un único wow con scroll-pin** (Hero→"Cómo funciona") como pico de la página. Los **reveals de transición** (page-peel Funciones→Pricing) se permiten como recursos de costura entre secciones: son transform-only, no fijan (`pin`) ni secuestran el scroll, y nunca compiten con el wow. La regla es no acumular wows ni añadir más scroll-pins.
 - Bordes hairline para estructura; sombra solo en las notas vivas.
 
 ---
@@ -215,7 +216,8 @@ Patrones de **referencia que se re-implementan en Motion**, nunca dependencias i
 
 | Patrón de referencia | De dónde | Qué aporta | Dónde en Tendr |
 |---|---|---|---|
-| Sticky overlap inter-sección | Motion Primitives / scroll-driven | El único wow | Hero → Cómo funciona |
+| Sticky overlap inter-sección | Motion Primitives / scroll-driven | El único wow con scroll-pin | Hero → Cómo funciona |
+| Page-peel inter-sección | scroll-driven (view-timeline) | Reveal de transición (sin pin) | Funciones → Pricing |
 | Drag físico de cards | Motion (`drag`, `useMotionValue`) | "Tú organizas tus clientes" | Bento Features (notas vivas) |
 | Reveal escalonado | Motion `whileInView` | Entrada editorial | Cómo funciona, secciones |
 | Draw-in de trazo a mano | CSS `stroke-dashoffset` | Firma hand-drawn moderna | Anotaciones por sección |
