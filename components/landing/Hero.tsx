@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 
 import { Button } from "@/components/ui/button";
-import { HeroThread } from "@/components/landing/HeroThread";
+import { HeroTriptych } from "@/components/landing/HeroTriptych";
 import { cn } from "@/lib/utils";
 import type { HeroProps } from "@/components/landing/types";
 
@@ -35,16 +35,18 @@ import type { HeroProps } from "@/components/landing/types";
  * state (opacity 1, y 0, no blur) with zero animation; the Mark renders at its
  * full painted state (no draw-in) so the value word is highlighted from frame 1.
  *
- * LCP: the right column is now <HeroThread /> (frameless SVG illustration, no
+ * LCP: the right column is now <HeroTriptych /> (frameless SVG illustration, no
  * network asset), so the LCP candidate is the text column (the subhead
  * paragraph). The text reveal is transform/opacity only and short.
  *
- * Right column (B1-fix-3): the framed "nota viva" board (window chrome, cards,
- * washi tape, nudge chip, dot-grid, hand-drawn arrow) is RETIRED. In its place,
- * "El Hilo" — a frameless looping scene where the client portfolio draws itself
- * as a single living ink stroke that threads three moments (note, propuesta,
- * clock), drops a forgotten follow-up, then loops back to rescue it. The tape,
- * grid and arrow belonged to the frame; with no frame they are gone.
+ * Right column (B1-fix-5): the hero TRIPTYCH (<HeroTriptych />). One global
+ * clock (21.6s desktop) runs three acts back-to-back over a single shared SVG
+ * stage: Acto I "El Hilo" (the portfolio draws itself, AI detects a cold client
+ * and the cursor "tú" clicks Retomar), Acto II "Constelación" (the portfolio
+ * floats; a client drifts, the cursor drags it back), Acto III "El día" (the
+ * day writes itself as a timeline and the AI plans tomorrow), then the closing
+ * point relaunches as Acto I's nib. Mobile <lg shows Acto I only; reduced motion
+ * shows the Acto I resolved frame. Source: docs/motion/hero-triptico-score.md.
  */
 export function Hero({
   title,
@@ -275,7 +277,7 @@ export function Hero({
               headline. The narrative (route + 3 moments + rescue) is identical at
               both sizes and reads at 390px. */}
           <div className="mx-auto max-w-[260px] sm:max-w-[340px] lg:mx-0 lg:max-w-none">
-            <HeroThread />
+            <HeroTriptych />
           </div>
         </motion.div>
       </div>

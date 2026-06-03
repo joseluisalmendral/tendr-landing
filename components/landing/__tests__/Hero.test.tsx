@@ -13,12 +13,19 @@ const props: HeroProps = {
   ctaSecondary: { label: "Ver cómo funciona", href: "/demo" },
 };
 
-/** matchMedia stub returning a fixed `matches` for every query. */
-function stubMatchMedia(matches: boolean) {
+/**
+ * matchMedia stub. `reducedMotion` controls the
+ * `prefers-reduced-motion: reduce` query specifically; every other query
+ * (notably the `max-width` mobile query) returns `mobile`.
+ */
+function stubMatchMedia({
+  reducedMotion = false,
+  mobile = false,
+}: { reducedMotion?: boolean; mobile?: boolean } = {}) {
   vi.stubGlobal(
     "matchMedia",
     vi.fn().mockImplementation((query: string) => ({
-      matches,
+      matches: /prefers-reduced-motion/.test(query) ? reducedMotion : mobile,
       media: query,
       onchange: null,
       addEventListener: vi.fn(),
@@ -31,11 +38,12 @@ function stubMatchMedia(matches: boolean) {
 }
 
 describe("Hero", () => {
-  // HeroThread (the right column, "El Hilo") reads matchMedia / reduced-motion.
-  // Stub it so the scene mounts at its final composed state deterministically
-  // (no animation timing in the test).
+  // HeroTriptych reads matchMedia (mobile + reduced-motion). Default: desktop,
+  // full motion. Under jsdom the global clock does not advance, so we assert
+  // the reduced-motion frame (the Acto I resolved composition) where all
+  // narrative text is painted statically — that is the deterministic surface.
   beforeEach(() => {
-    stubMatchMedia(false);
+    stubMatchMedia({ reducedMotion: true });
   });
 
   afterEach(() => {
@@ -68,34 +76,56 @@ describe("Hero", () => {
     expect(secondary).toHaveAttribute("href", props.ctaSecondary.href);
   });
 
-  it("renders the thread scene ('El Hilo') with its narrative moments (R1)", () => {
+  it("renders the Acto I resolved frame: the thread's narrative moments (reduced-motion)", () => {
     render(<Hero {...props} />);
 
-    // The line-art moments carry real rendered micro-copy (the SVG glyphs are
-    // aria-hidden; these labels are the narrative the user reads). Director's
-    // cut: the desktop composition (matchMedia stub → false) has FOUR moments —
-    // note, propuesta, the fugaz 4th moment (iter-A: "visto") and the clock.
+    // Reduced motion freezes the triptych at the Acto I resolved frame
+    // (master score §5). The four moments are painted with their real
+    // micro-copy (SVG glyphs are aria-hidden; these labels are the narrative).
     expect(screen.getByText("9:12 · Ana")).toBeInTheDocument();
     expect(screen.getByText("propuesta")).toBeInTheDocument();
-    expect(screen.getByText("visto")).toBeInTheDocument();
+    expect(screen.getByText("visto")).toBeInTheDocument(); // fugaz iter-A
     expect(screen.getByText("Marta · 12 días")).toBeInTheDocument();
   });
 
-  it("renders the rescue payoff: a 'Retomar' label (the product promise)", () => {
+  it("renders the AI suggestion and the human action (the IA→tú split)", () => {
     render(<Hero {...props} />);
 
-    // "Retomar" is the rescued follow-up label that the buttermilk subrayador
-    // sweeps over at the end of the loop.
+    // The product truth: the AI detects + suggests, the human (cursor "tú")
+    // acts. Both must be present in the resolved frame.
+    expect(screen.getByText(/Marta lleva 12 días/)).toBeInTheDocument();
     expect(screen.getByText("Retomar")).toBeInTheDocument();
+    // The AI pill carries the "IA" label (the single support signature).
+    expect(screen.getAllByText("IA").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("names the right at-risk client per act (monogram canon: Marta in Acto I)", () => {
+    render(<Hero {...props} />);
+
+    // master §3-canon / D11: Acto I rescues Marta (12 days). The bubble must
+    // name Marta, never Lucía (Lucía is Acto II's at-risk client).
+    const bubble = screen.getByText(/Marta lleva 12 días/);
+    expect(bubble.textContent).toMatch(/Marta/);
+    expect(bubble.textContent).not.toMatch(/Lucía/);
+  });
+
+  it("shows the act indicator with 01 active on the resolved frame", () => {
+    render(<Hero {...props} />);
+
+    // master §1.3: indicator 01·02·03 present; the reduced-motion frame is
+    // Acto I, so 01 is the active numeral.
+    expect(screen.getByText("01")).toBeInTheDocument();
+    expect(screen.getByText("02")).toBeInTheDocument();
+    expect(screen.getByText("03")).toBeInTheDocument();
   });
 
   it("exposes a screen-reader summary of the promise (the SVG scene is decorative)", () => {
     const { container } = render(<Hero {...props} />);
 
-    // The illustrative SVG is aria-hidden; the narrative is summarized for AT.
     const srOnly = container.querySelector("p.sr-only");
     expect(srOnly).not.toBeNull();
     expect(srOnly?.textContent).toMatch(/cartera/);
+    expect(srOnly?.textContent).toMatch(/mañana/);
   });
 
   it("primary CTA carries the v2 ink-fill token classes (radius-md, ink bg, white text, no hard shadow)", () => {
@@ -106,21 +136,25 @@ describe("Hero", () => {
     expect(primary.className).toContain("bg-accent-primary");
     expect(primary.className).toContain("text-accent-fg");
     expect(primary.className).toContain("focus-ring");
-    // v2 retired the offset hard shadow: ink fill is the affordance.
     expect(primary.className).not.toContain("shadow-hard");
   });
 
-  it("under reduced motion still renders the full final composition (static)", () => {
-    // prefers-reduced-motion: reduce → the thread mounts at its final composed
-    // frame (path drawn, 3 moments visible, clock up, check + subrayador
-    // painted). We assert the narrative content is all present and unanimated.
-    stubMatchMedia(true);
-    render(<Hero {...props} />);
+  it("color discipline: highlight is only ever a text background, never a stroke/dot", () => {
+    const { container } = render(<Hero {...props} />);
 
-    expect(screen.getByText("9:12 · Ana")).toBeInTheDocument();
-    expect(screen.getByText("propuesta")).toBeInTheDocument();
-    expect(screen.getByText("Marta · 12 días")).toBeInTheDocument();
-    expect(screen.getByText("Retomar")).toBeInTheDocument();
+    // master §4 / design.md hard rule: --color-highlight (bg-highlight) appears
+    // ONLY as a text-background swipe (the buttermilk underline), never as an
+    // SVG stroke or a non-text element. Assert no SVG element uses the highlight
+    // token as a stroke or fill.
+    const highlightStroked = Array.from(
+      container.querySelectorAll("[stroke]"),
+    ).filter((el) =>
+      (el.getAttribute("stroke") ?? "").includes("--color-highlight"),
+    );
+    expect(highlightStroked).toHaveLength(0);
+
+    // The buttermilk span (text background) does exist.
+    expect(container.querySelector(".bg-highlight")).not.toBeNull();
   });
 
   it("has no axe violations", async () => {
