@@ -28,20 +28,22 @@ export function Section({
         "relative w-full bg-surface",
         // Vertical section rhythm (design §2.4): space-16 between sections.
         "py-16",
-        // Sections that open with a fold seam get extra breathing room up top so
-        // the heading sits clearly below the soft shadow, not glued to the edge.
+        // Sections that open with a seam get extra breathing room up top so the
+        // heading sits clearly below the boundary, not glued to the edge.
         divider && "pt-24 md:pt-28",
         className,
       )}
     >
-      {/* Soft "fold" seam: instead of a drawn line, a gentle warm shadow at the
-          top edge — as if this sheet rests under the one above. Token-only
-          gradient (shadow-tint), decorative, pointer-events-none, no layout. It
-          marks the boundary naturally without a hard mark. */}
+      {/* Section seam (v2 taming): the v1 warm "fold shadow" (shadow-tint) was a
+          dead token on the new near-white surface — near-invisible and dirty
+          against the clean base, and the page already earns its big boundaries
+          from the two wow transitions + the whiteboard frame. So the soft fold
+          is simplified to a single honest hairline at the top edge, in line with
+          the design principle "hairlines for structure". Decorative, no layout. */}
       {divider ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-shadow-tint/8 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-border-hairline"
         />
       ) : null}
 
@@ -54,20 +56,23 @@ export function Section({
               <span
                 className={cn(
                   "inline-flex w-fit items-center rounded-full",
-                  "border border-accent-secondary px-3 py-1",
-                  "font-mono text-meta uppercase text-accent-secondary",
+                  "border border-border-strong px-3 py-1",
+                  "font-mono text-meta uppercase text-text-secondary",
                 )}
               >
                 {eyebrow}
               </span>
             ) : null}
             <h2 className="font-heading text-h2 text-text-primary">{heading}</h2>
-            {/* Accent rule: a short clay underline that grows in under the
+            {/* Firma rule: a short wisp underline that grows in under the
                 heading as the section enters (scroll-driven scaleX in
-                globals.css). Decorative; fallback / reduced-motion = full. */}
+                globals.css). v2: repointed to the support "firma" hue (wisp,
+                5.4:1 vs surface) — one small brand mark per section, the role
+                contract's firma beat, not a dense adjacent run. Decorative;
+                fallback / reduced-motion = full width. */}
             <span
               aria-hidden="true"
-              className="section-rule block h-[3px] w-16 origin-left rounded-full bg-accent-secondary"
+              className="section-rule block h-[3px] w-16 origin-left rounded-full bg-support"
             />
           </header>
           {/* Internal rhythm (design §2.4): space-12 between heading and body. */}

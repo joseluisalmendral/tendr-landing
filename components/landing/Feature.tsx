@@ -19,7 +19,7 @@ export function Feature({ title, description, visual, link }: FeatureProps) {
   return (
     <article className="flex flex-col gap-3">
       {visual.kind === "icon" ? (
-        <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-sm border border-border bg-surface-raised text-accent-secondary">
+        <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-sm border border-border bg-surface-raised text-text-primary">
           <visual.icon size={28} weight="duotone" aria-hidden="true" />
         </span>
       ) : (
@@ -40,7 +40,7 @@ export function Feature({ title, description, visual, link }: FeatureProps) {
       {link ? (
         <Link
           href={link.href}
-          className="text-body-sm font-medium text-accent-secondary underline-offset-4 hover:underline"
+          className="text-body-sm font-medium text-text-primary underline underline-offset-4 hover:text-accent-primary"
         >
           {link.label}
         </Link>

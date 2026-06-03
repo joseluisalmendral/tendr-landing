@@ -85,7 +85,7 @@ export default function TermsPage() {
               tratamiento de tu email se detalla en la{" "}
               <Link
                 href="/privacy"
-                className="text-accent-secondary underline underline-offset-4 hover:text-text-primary"
+                className="text-text-primary underline underline-offset-4 hover:text-accent-primary"
               >
                 Política de privacidad
               </Link>
@@ -101,7 +101,7 @@ export default function TermsPage() {
               Para cualquier consulta sobre estos términos puedes escribirnos a{" "}
               <a
                 href="mailto:privacy@tendr.app"
-                className="text-accent-secondary underline underline-offset-4 hover:text-text-primary"
+                className="text-text-primary underline underline-offset-4 hover:text-accent-primary"
               >
                 privacy@tendr.app
               </a>
@@ -116,14 +116,14 @@ export default function TermsPage() {
               Consulta también la{" "}
               <Link
                 href="/privacy"
-                className="text-accent-secondary underline underline-offset-4 hover:text-text-primary"
+                className="text-text-primary underline underline-offset-4 hover:text-accent-primary"
               >
                 Política de privacidad
               </Link>{" "}
               o vuelve al{" "}
               <Link
                 href="/"
-                className="text-accent-secondary underline underline-offset-4 hover:text-text-primary"
+                className="text-text-primary underline underline-offset-4 hover:text-accent-primary"
               >
                 Inicio
               </Link>

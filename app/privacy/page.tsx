@@ -52,7 +52,7 @@ export default function PrivacyPage() {
               a{" "}
               <a
                 href="mailto:privacy@tendr.app"
-                className="text-accent-secondary underline underline-offset-4 hover:text-text-primary"
+                className="text-text-primary underline underline-offset-4 hover:text-accent-primary"
               >
                 privacy@tendr.app
               </a>
@@ -156,14 +156,14 @@ export default function PrivacyPage() {
               Consulta también los{" "}
               <Link
                 href="/terms"
-                className="text-accent-secondary underline underline-offset-4 hover:text-text-primary"
+                className="text-text-primary underline underline-offset-4 hover:text-accent-primary"
               >
                 Términos de servicio
               </Link>{" "}
               o vuelve al{" "}
               <Link
                 href="/"
-                className="text-accent-secondary underline underline-offset-4 hover:text-text-primary"
+                className="text-text-primary underline underline-offset-4 hover:text-accent-primary"
               >
                 Inicio
               </Link>
