@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
 import { Bricolage_Grotesque, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AxeReporter } from "@/components/a11y/AxeReporter";
 import { Providers } from "@/components/Providers";
+import { baseMetadata } from "@/components/seo/metadata";
 
 // Display: Bricolage Grotesque (Google variable font, OFL).
 const bricolage = Bricolage_Grotesque({
@@ -29,11 +29,12 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Tendr · tu mini-CRM de clientes",
-  description:
-    "Tendr organiza tu cartera de clientes, te recuerda a quien seguir y la IA te avisa que cliente esta en riesgo. El CRM agil para freelancers y perfiles junior.",
-};
+// Root metadata via the shared helper: this is the ONLY place `metadataBase`
+// is set, and Next.js needs it in the metadata tree to absolutize the relative
+// `alternates.canonical` and `openGraph.url` that the per-route helpers emit.
+// Defining a bare metadata object here (the previous build) silently dropped
+// `metadataBase`, so canonical/og:url shipped as relative paths (SEO defect).
+export const metadata = baseMetadata();
 
 export default function RootLayout({
   children,
