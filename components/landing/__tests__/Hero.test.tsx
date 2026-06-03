@@ -68,13 +68,16 @@ describe("Hero", () => {
     expect(secondary).toHaveAttribute("href", props.ctaSecondary.href);
   });
 
-  it("renders the thread scene ('El Hilo') with its three narrative moments (R1)", () => {
+  it("renders the thread scene ('El Hilo') with its narrative moments (R1)", () => {
     render(<Hero {...props} />);
 
-    // The three line-art moments carry real rendered micro-copy (the SVG glyphs
-    // are aria-hidden; these labels are the narrative the user reads).
+    // The line-art moments carry real rendered micro-copy (the SVG glyphs are
+    // aria-hidden; these labels are the narrative the user reads). Director's
+    // cut: the desktop composition (matchMedia stub → false) has FOUR moments —
+    // note, propuesta, the fugaz 4th moment (iter-A: "visto") and the clock.
     expect(screen.getByText("9:12 · Ana")).toBeInTheDocument();
     expect(screen.getByText("propuesta")).toBeInTheDocument();
+    expect(screen.getByText("visto")).toBeInTheDocument();
     expect(screen.getByText("Marta · 12 días")).toBeInTheDocument();
   });
 
