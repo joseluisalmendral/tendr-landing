@@ -6,16 +6,20 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { siteUrl } from "@/components/seo/metadata";
 
 /**
- * Footer (spec §7): sober closing block on sunken paper (Server Component).
+ * Footer (spec §7): the page's closing moment on sunken paper (Server Component).
  *
- * Four columns on desktop, single-column stack on mobile, plus a bottom row with
- * the copyright and a (placeholder) legal address. Emits an Organization JSON-LD
- * block (brand identity for SEO / answer engines) including sameAs (the social
- * profiles), foundingDate and a postal address.
+ * v2 distinctive treatment (design §3, §5): a large display wordmark anchors the
+ * block (warm-ink, Bricolage, generous size) with ONE hand-drawn touch — a single
+ * wisp underline (--color-support firma stroke) swiped beneath it. Hairline top +
+ * generous breathing (space-24). The link columns are organized under the
+ * wordmark; a single short tagline carries the voice. The bottom row is just the
+ * copyright (no locale/address strip, no version footer).
  *
- * TODO: real social profiles, legal pages and registered address. The social
- * URLs, the /logo.png asset and the postal address below are placeholders.
- * TODO(opcional): pre-footer roles marquee (the page's only marquee).
+ * Emits an Organization JSON-LD block (brand identity for SEO / answer engines)
+ * including sameAs (the social profiles) and foundingDate.
+ *
+ * TODO: real social profiles and legal pages. The social URLs and the /logo.png
+ * asset below are placeholders.
  */
 
 // Social profiles: reused for the visible links AND the JSON-LD `sameAs`.
@@ -55,20 +59,32 @@ export function Footer() {
             "Mini-CRM con IA para profesionales B2B junior y freelancers que gestionan clientes externos.",
           sameAs: SOCIALS.map((s) => s.href),
           foundingDate: "2026",
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: "Calle Ejemplo 1",
-            addressLocality: "Madrid",
-            postalCode: "28001",
-            addressCountry: "ES",
-          },
         }}
       />
 
-      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 py-16 md:grid-cols-4 md:px-8">
-        {/* Col 1: brand + tagline */}
-        <div className="flex flex-col gap-3">
-          <span className="font-display text-h3 text-text-primary">Tendr</span>
+      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 py-24 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:px-8">
+        {/* Col 1: brand anchor — large display wordmark + the ONE hand-drawn
+            wisp underline (firma) + a single short tagline. */}
+        <div className="flex flex-col gap-4">
+          <span className="relative inline-flex w-fit flex-col font-display text-display-lg font-bold tracking-tight text-text-primary">
+            Tendr<span className="text-support" aria-hidden="true">.</span>
+            {/* Wisp underline (design §3): a single hand-drawn support stroke,
+                the footer's only flourish. Sits below the wordmark baseline. */}
+            <svg
+              className="mt-1 h-2 w-[5.5rem] text-support"
+              viewBox="0 0 120 12"
+              fill="none"
+              aria-hidden="true"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M3 8C26 4 52 3 78 5c14 1 28 2 39 1"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
           <p className="max-w-[32ch] text-body-sm text-text-secondary">
             Tu cartera de clientes, casos y seguimientos en un solo sitio.
           </p>
@@ -112,13 +128,10 @@ export function Footer() {
         </nav>
       </div>
 
-      {/* Bottom row: copyright + legal address placeholder */}
-      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-2 border-t border-border px-6 py-6 md:flex-row md:items-center md:justify-between md:px-8">
+      {/* Bottom row: copyright only (no locale strip, no version footer). */}
+      <div className="mx-auto w-full max-w-[1280px] border-t border-border-hairline px-6 py-6 md:px-8">
         <p className="font-mono text-meta uppercase text-text-tertiary">
           © 2026 Tendr
-        </p>
-        <p className="text-meta font-mono uppercase text-text-tertiary">
-          Calle Ejemplo 1, 28001 Madrid, España
         </p>
       </div>
     </footer>

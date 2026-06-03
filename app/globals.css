@@ -611,6 +611,46 @@
 }
 
 /* =========================================================================
+   NAV LINK — subrayador buttermilk (the brand Mark device, design §3).
+
+   Nav links are interactive, so the highlight subrayador is a MOTIVATED hover
+   affordance (feedback), not decoration. The buttermilk (--color-highlight) is
+   used here strictly as a TEXT BACKGROUND swipe behind the label (design §2.1
+   hard rule: highlight is only ever a text-bg). It draws in left->right with
+   transform-only scaleX (GPU, CLS 0). The label itself stays warm-ink at all
+   times (the swipe sits behind the glyphs), so AA never depends on the sweep.
+
+   Reduced motion: the swipe collapses to an instant fill (no draw-in) but the
+   hover affordance is preserved.
+   ========================================================================= */
+.nav-underline {
+  position: relative;
+  isolation: isolate;
+}
+.nav-underline::after {
+  content: "";
+  position: absolute;
+  inset-inline: -0.2em;
+  /* Sit the swipe low, behind the text baseline, like the headline Mark. */
+  bottom: 0.05em;
+  height: 0.45em;
+  z-index: -1;
+  border-radius: 3px;
+  background: var(--color-highlight);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nav-underline::after {
+    transition: transform var(--duration-base, 250ms) var(--easing-emphasis);
+  }
+}
+.nav-underline:hover::after,
+.nav-underline:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* =========================================================================
    TESTIMONIALS NOTE -- ficha de papel sujeta con celo al tablero (ADR-3, design §3, §4).
 
    La entrada cinemática (entrance variado + "stab" de la chincheta) la conduce
@@ -733,11 +773,41 @@
     color-mix(in oklab, var(--color-surface-raised) 16%, transparent) 100%
   );
   box-shadow:
-    /* filo recto superior e inferior (los dos bordes del celo) */
-    inset 0 1px 0 color-mix(in oklab, var(--color-surface-raised) 75%, transparent),
+    /* filo recto superior e inferior (los dos bordes del celo). Satinado un punto
+       más marcado arriba (B5-fix-final item 3b): el celo lee como capa física
+       independiente sobre el papel. */
+    inset 0 1px 0 color-mix(in oklab, var(--color-surface-raised) 88%, transparent),
     inset 0 -1px 0 var(--tape-edge, color-mix(in oklab, var(--color-border-strong) 42%, transparent)),
     /* sombra de contacto bajo el filo inferior (celo despegando del papel) */
     0 1px 2px color-mix(in oklab, var(--color-border-strong) 20%, transparent);
+  /* DIFERENCIACIÓN DE CAPA (B5-fix-final item 3b): dos lóbulos de sombra de
+     contacto SUAVE bajo los EXTREMOS del celo (no bajo el centro) — leídos como
+     los dos puntos donde la tira se despega levemente del papel. ::before = lóbulo
+     izquierdo, ::after = lóbulo derecho. Translúcidos, decorativos (no afectan AA),
+     en tokens (color-mix sobre border-strong). El celo así se separa del papel
+     como una capa física encima, no estampada. */
+  position: relative;
+}
+.tw-note__tape::before,
+.tw-note__tape::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  width: 1.5rem;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--color-border-strong) 30%, transparent) 0%,
+    transparent 100%
+  );
+}
+.tw-note__tape::before {
+  left: 0.35rem;
+}
+.tw-note__tape::after {
+  right: 0.35rem;
 }
 
 /* Unidad opaca movible: contiene sombras + figure + avatar. El pan-JS escribe
@@ -852,13 +922,23 @@
   box-shadow: var(--shadow-flat);
 }
 
-/* Marco VISIBLE del tablero limpio (B5-fix-1) — sustituye el marco hairline que
-   "se leía como sin marco". Ahora es un bisel moderno de pizarra: una banda
-   sólida de 2px en --border-strong (el filo del tablero) + una hairline interior
-   más clara (--border-hairline) que da el relieve "elevado" de una pizarra
-   enmarcada, y una hairline exterior que lo despega del cream de la página. Lee
-   inequívocamente como tablero ENMARCADO a primera vista, sin volver a la madera
-   v1. pointer-events:none. */
+/* Marco CRAFTED del tablero (B5-fix-final item 1) — el usuario quería un marco
+   "mejor hecho y marcado", inequívoco como una pizarra real. Sube de un bisel de
+   2px a un MARCO de aluminio cálido leído por capas (hairlines apiladas, técnica
+   B5-fix-2 del celo aplicada al marco):
+     1. BANDA del marco: 5px sólida en --border-strong (el filo grueso de la
+        pizarra) — antes 2px, ahora lee inequívocamente como marco.
+     2. HAIRLINE INTERIOR clara (--border-hairline) → el labio interno elevado
+        del marco (radio ligeramente menor que el exterior por estar 5px adentro).
+     3. HAIRLINE EXTERIOR oscura → despega la banda del cream de la página.
+     4. RELIEVE DE ALUMINIO: un segundo inset hairline claro un poco más adentro
+        da el reflejo metálico del canto del marco.
+     5. PROFUNDIDAD DEL TABLERO: sombra inset SUAVE en el BORDE SUPERIOR interior
+        (la superficie hundida bajo el labio del marco — board depth). Más marcada
+        arriba que abajo, como cae la luz sobre una pizarra enmarcada.
+   Radio: el marco hereda radius-xl (exterior); el labio interior (inset hairline)
+   queda visualmente un punto menor por estar 5px adentro del radio exterior.
+   pointer-events:none. */
 .board-panel::before,
 .board-section--static::before {
   content: "";
@@ -867,11 +947,46 @@
   pointer-events: none;
   z-index: 2;
   border-radius: inherit;
-  border: 2px solid var(--color-border-strong);
+  border: 5px solid var(--color-border-strong);
   box-shadow:
+    /* labio interior elevado del marco (hairline clara) */
     inset 0 0 0 1px var(--color-border-hairline),
-    inset 0 2px 4px color-mix(in oklab, var(--color-border-strong) 55%, transparent),
+    /* reflejo metálico del canto (segunda hairline clara, más adentro) */
+    inset 0 0 0 2.5px color-mix(in oklab, var(--color-surface-raised) 55%, transparent),
+    /* profundidad del tablero: sombra del borde superior bajo el labio del marco */
+    inset 0 6px 7px -3px color-mix(in oklab, var(--color-border-strong) 50%, transparent),
+    inset 0 2px 3px color-mix(in oklab, var(--color-border-strong) 32%, transparent),
+    /* hairline exterior oscura: despega del cream de la página */
     0 0 0 1px var(--color-border-hairline);
+}
+
+/* MARKER TRAY (B5-fix-final item 1): el rasgo que grita "PIZARRA" — una repisa
+   corta horizontal sobre el borde INFERIOR del marco, ligeramente descentrada a la
+   izquierda (como una bandeja de rotuladores real). Banda baja en --border-strong
+   con un labio superior claro (canto de la bandeja) y una sombra de contacto
+   suave bajo ella (la bandeja sobresale del marco). Tokens only, decorativa. Vive
+   en .board-panel (pan) y en el estático. Sobre el ::after-ring (z 2) → z 3. */
+.board-panel > .board-tray,
+.board-section--static > .board-tray {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 18%;
+  width: 26%;
+  height: 7px;
+  pointer-events: none;
+  z-index: 3;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-surface-raised) 60%, var(--color-border-strong)) 0%,
+    var(--color-border-strong) 100%
+  );
+  box-shadow:
+    /* canto superior claro de la repisa */
+    inset 0 1px 0 color-mix(in oklab, var(--color-surface-raised) 70%, transparent),
+    /* sombra de contacto: la bandeja sobresale del marco */
+    0 2px 3px color-mix(in oklab, var(--color-border-strong) 35%, transparent);
 }
 
 /* SCALE-AWARE FRAME (B5-fix-3). The pan panel scales down to SMALL (0.74) during
@@ -886,10 +1001,16 @@
    page during the zoomed-out beats — the box-shadow may thin out, but this solid
    ring keeps minimum frame contrast. */
 .board-section--static::before {
-  border-width: 3px;
+  /* Crafted frame, escala estática: banda 6px (un punto más que el pan 5px, para
+     que el marco aguante el tamaño físico pequeño del grid móvil) + el mismo
+     relieve por capas + profundidad superior + un anillo de contacto exterior
+     más oscuro y una sombra de despegue. */
+  border-width: 6px;
   box-shadow:
     inset 0 0 0 1px var(--color-border-hairline),
-    inset 0 2px 5px color-mix(in oklab, var(--color-border-strong) 70%, transparent),
+    inset 0 0 0 2.5px color-mix(in oklab, var(--color-surface-raised) 55%, transparent),
+    inset 0 7px 8px -3px color-mix(in oklab, var(--color-border-strong) 60%, transparent),
+    inset 0 2px 4px color-mix(in oklab, var(--color-border-strong) 40%, transparent),
     0 0 0 1.5px color-mix(in oklab, var(--color-border-strong) 60%, transparent),
     0 6px 18px color-mix(in oklab, var(--color-border-strong) 30%, transparent);
 }

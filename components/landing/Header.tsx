@@ -5,13 +5,24 @@ import { Button } from "@/components/ui/button";
 /**
  * Header: top navigation bar (Server Component, static).
  *
- * Skeleton for F5: brand wordmark + 3 in-page nav links + single primary CTA.
- * One line at desktop, height under 80px. The CTA shares the page's single
- * signup intent ("Empezar gratis") with the Hero primary CTA, so there is no
+ * Brand wordmark + 3 in-page nav links + single primary CTA. One line at
+ * desktop, 64px tall (≤72px cap). The CTA shares the page's single signup
+ * intent ("Empezar gratis") with the Hero primary CTA, so there is no
  * duplicate-intent violation.
  *
- * TODO(F5): floating nav pill treatment (Cal-style) and a mobile menu. For now
- * the nav links are desktop-only; mobile shows brand + CTA.
+ * v2 distinctive treatment (design §2, §3):
+ *  - Wordmark in display (Bricolage) with the tight display tracking, and the
+ *    period of "Tendr." rendered in the wisp firma hue (--color-support). The
+ *    dot is a real glyph tied to the letterform, not a decorative status dot,
+ *    so it reads as a brand mark and stays within the support="firma" role.
+ *  - Nav links carry the buttermilk subrayador sweep (.nav-underline) — the
+ *    brand Mark device as a motivated hover/focus affordance (links are
+ *    interactive). CSS-only scaleX, reduced-motion safe.
+ *  - Cleaner sticky: hairline bottom + a slightly stronger surface blur so the
+ *    bar reads as frosted warm-white over content, not an opaque slab.
+ *
+ * TODO(F5): mobile menu. For now the nav links are desktop-only; mobile shows
+ * brand + CTA.
  */
 const NAV_LINKS = [
   { label: "Cómo funciona", href: "#como-funciona" },
@@ -21,14 +32,14 @@ const NAV_LINKS = [
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-surface/90 backdrop-blur">
+    <header className="sticky top-0 z-40 w-full border-b border-border-hairline bg-surface/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between px-6 md:px-8">
         <Link
           href="/"
-          className="font-display text-h3 text-text-primary"
+          className="focus-ring rounded-sm font-display text-h3 font-semibold tracking-tight text-text-primary"
           aria-label="Tendr, inicio"
         >
-          Tendr
+          Tendr<span className="text-support" aria-hidden="true">.</span>
         </Link>
 
         <nav aria-label="Principal" className="hidden items-center gap-8 md:flex">
@@ -36,7 +47,7 @@ export function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-body-sm text-text-secondary underline-offset-4 hover:text-text-primary hover:underline"
+              className="nav-underline focus-ring rounded-sm text-body-sm text-text-secondary transition-colors duration-fast hover:text-text-primary"
             >
               {link.label}
             </Link>

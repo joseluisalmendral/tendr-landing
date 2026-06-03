@@ -10,7 +10,12 @@ import {
   useTransform,
 } from "motion/react";
 
-import { BoardDoodleArrow, BoardDoodleTally } from "@/components/landing/BoardDoodles";
+import {
+  BoardDoodleArrow,
+  BoardDoodleReroute,
+  BoardDoodleTally,
+  BoardKanbanHeaders,
+} from "@/components/landing/BoardDoodles";
 import { BoardHand } from "@/components/landing/BoardHand";
 import { TestimonialCard } from "@/components/landing/TestimonialCard";
 import type { NoteSize, TestimonialCardProps } from "@/components/landing/types";
@@ -251,16 +256,21 @@ function BoardPan({
     { clamp: true },
   );
 
-  // The note the hand CARRIES: it rides the SAME descent curve as the hand from
-  // above into its empty slot ([tIn, hArrive]), fading up early so it reads as a
-  // note being carried (slight dangle rotation matches the hand), then holding at
-  // rest. `placed` on the card keeps the tape opaque + the note tilted the whole
-  // time (it arrives already taped — the press just seals it). Before tIn the
-  // opacity is 0 → the board genuinely starts WITHOUT the first note.
+  // The note the hand CARRIES (B5-fix-final item 3a — the carry now READS as the
+  // note HANGING from the fingertips): it rides essentially the SAME descent curve
+  // as the hand from above into its empty slot, but with a slight LAG + PENDULUM so
+  // it swings BEHIND the hand's motion (like a note dangling from a pinch) instead
+  // of moving rigidly in lockstep. The note starts a hair higher and lands a hair
+  // LATER than the hand (its top edge tracking the fingertip with a small trailing
+  // offset), then settles. `placed` on the card keeps the tape opaque + the note
+  // tilted the whole time (it arrives already taped — the press just seals it).
+  // Before tIn the opacity is 0 → the board genuinely starts WITHOUT the first
+  // note. cardLand is a touch after hArrive so the swing reads on arrival.
+  const cardLand = hArrive + hSpan * 0.06;
   const cardCarryY = useTransform(
     scrollYProgress,
-    [tIn, hArrive],
-    ["-86vh", "0vh"],
+    [tIn, hArrive, cardLand],
+    ["-90vh", "0.8vh", "0vh"],
     { clamp: true, ease: EASE_OUT },
   );
   const cardCarryOpacity = useTransform(
@@ -269,10 +279,14 @@ function BoardPan({
     [0, 1],
     { clamp: true },
   );
+  // Pendulum swing BEHIND the hand: the note dangles back a touch during descent,
+  // overshoots slightly as it reaches the slot, then settles upright (a damped
+  // swing of a hanging note). Lags the hand's straighten so it reads as a separate
+  // object swinging from the fingertips, not glued to the hand.
   const cardCarryRotate = useTransform(
     scrollYProgress,
-    [tIn, hArrive],
-    [-4, 0],
+    [tIn, hArrive, cardLand, tIn + hSpan * 0.66],
+    [-6, 2.5, -1, 0],
     { clamp: true, ease: EASE_OUT },
   );
 
@@ -311,6 +325,10 @@ function BoardPan({
             className="board-panel"
             style={{ scale, transformOrigin: "center center", willChange: "transform" }}
           >
+            {/* Marker tray hint on the bottom frame edge (crafted-frame affordance,
+                B5-fix-final item 1). Decorative, styled in globals.css. */}
+            <span aria-hidden className="board-tray" />
+
             {/* Board-mounted heading label (real h2, first in reading order). */}
             <h2
               id={HEADING_ID}
@@ -319,11 +337,20 @@ function BoardPan({
               {HEADING}
             </h2>
 
-            {/* Whiteboard character (B5-fix-3): tasteful hand-drawn marker
-                patina — an "¡este!" arrow flagging a favourite card + a kanban
-                "done" tally/check cluster. Sits UNDER the notes (z-0) so it reads
-                as board surface, not content. Sparing (2 marks), low opacity. */}
+            {/* Kanban column HEADERS (B5-fix-final item 2): hand-written marker
+                labels across the top make the board legibly Tendr's client
+                follow-up kanban. Spread across the board width, just under the
+                heading; sit on the frame (z-0, behind the notes) — they belong to
+                the board, not the panning track. */}
+            <BoardKanbanHeaders className="pointer-events-none absolute left-1/2 top-[11.5rem] z-0 flex w-[min(78%,52rem)] -translate-x-1/2 items-start justify-between md:top-[12.5rem]" />
+
+            {/* Whiteboard character (B5-fix-3 + item 2): tasteful hand-drawn marker
+                patina — an "¡este!" arrow flagging a favourite card, a kanban
+                "done" tally/check cluster, and a small re-route arrow (a case
+                moving to the next column). Sits UNDER the notes (z-0) so it reads
+                as board surface, not content. Sparing, low opacity. */}
             <BoardDoodleArrow className="pointer-events-none absolute left-[7%] top-[34%] z-0 h-20 w-32 md:h-24 md:w-40" />
+            <BoardDoodleReroute className="pointer-events-none absolute bottom-[18%] left-[34%] z-0 h-14 w-24 md:h-16 md:w-28" />
             <BoardDoodleTally className="pointer-events-none absolute bottom-[8%] right-[6%] z-0 h-16 w-20 md:h-20 md:w-24" />
 
             {/* Horizontal track. Lead/trail padding centre the first note at x=0
@@ -388,9 +415,23 @@ function BoardPan({
                 rests at x=0. Scroll-driven over [tIn, tHand]: sweeps DOWN from
                 above, presses the first note's tape, exits downward + fades.
                 Decorative → aria-hidden. Positioned so the fingertip (top centre
-                of the glyph) lands on the note's tape strip. */}
+                of the glyph) lands on the note's tape strip.
+
+                CARRY READ (B5-fix-final item 3a): the hand was resting ~15rem
+                above the panel centre, so the fingertip floated WAY above the
+                note's top edge and the carry read as "note floating beside hand".
+                The first note is `lg` (~300px tall), vertically centred in the
+                100dvh sticky → its top edge sits ≈ centre − ~10rem, and the tape
+                (.tw-note__pin, top:-0.6rem) ≈ centre − ~10.6rem. The glyph's
+                fingertip is at ~5% of its own height (h-44 ≈ 11rem → ~0.55rem
+                below the wrapper top). So to land the fingertip ON the tape zone:
+                wrapper top ≈ centre − 10.6rem − 0.55rem ≈ centre − 11.15rem. We use
+                calc(50% - 11.5rem): the fingertip now overlaps the note's
+                top-edge/tape zone through the whole descent (note + hand share the
+                same y curve), so the hand visibly CARRIES the note instead of
+                floating beside it. */}
             <BoardHand
-              className="pointer-events-none absolute left-1/2 top-[calc(50%-15rem)] z-[3] h-36 w-28 -translate-x-1/2 md:h-44 md:w-32"
+              className="pointer-events-none absolute left-1/2 top-[calc(50%-11.5rem)] z-[3] h-36 w-28 -translate-x-1/2 md:h-44 md:w-32"
               y={handY}
               scale={handScale}
               rotate={handRotate}
@@ -438,9 +479,17 @@ function StaticBoardGrid({
       className="board-section board-section--static relative w-full scroll-mt-16"
       aria-labelledby={HEADING_ID}
     >
-      {/* Same whiteboard patina as the pan path (B5-fix-3): "¡este!" arrow + kanban
-          tally, low opacity, behind the notes. */}
+      {/* Marker tray hint on the bottom frame edge (crafted-frame affordance,
+          B5-fix-final item 1). Direct child of .board-section--static so it sits
+          on the frame; decorative, styled in globals.css. */}
+      <span aria-hidden className="board-tray" />
+
+      {/* Same whiteboard patina as the pan path (B5-fix-3 + item 2): "¡este!"
+          arrow + kanban tally + re-route arrow, low opacity, behind the notes.
+          The patina/extras are md-only; the kanban HEADERS (below, in flow) stay
+          visible on mobile because they aid comprehension. */}
       <BoardDoodleArrow className="pointer-events-none absolute left-[4%] top-[18%] z-0 hidden h-20 w-32 md:block md:h-24 md:w-40" />
+      <BoardDoodleReroute className="pointer-events-none absolute bottom-[22%] left-[6%] z-0 hidden h-14 w-24 md:block md:h-16 md:w-28" />
       <BoardDoodleTally className="pointer-events-none absolute bottom-[10%] right-[5%] z-0 hidden h-16 w-20 md:block md:h-20 md:w-24" />
       <div className="relative z-[1] mx-auto max-w-[1200px] px-6 py-16 md:py-24">
         <h2
@@ -449,6 +498,9 @@ function StaticBoardGrid({
         >
           {HEADING}
         </h2>
+        {/* Kanban column headers in normal flow (item 2): visible on every path
+            incl. mobile (they aid comprehension). */}
+        <BoardKanbanHeaders className="pointer-events-none relative z-[1] mx-auto mb-10 flex w-[min(92%,32rem)] items-start justify-between" />
         <ol className="board-grid flex flex-col gap-12 md:gap-10">
           {rows.map((row, rowIndex) => (
             <li key={`row-${rowIndex}`} className="board-grid__row">

@@ -26,6 +26,17 @@ const INK = {
   fill: "none",
 };
 
+/* Marker INK in the hand-drawn "one pen" grammar, but readable as deliberate
+   marker text (B5-fix-final item 2). Slightly darker/heavier than the patina INK
+   so the column HEADERS read as legible labels (they aid comprehension — the board
+   IS Tendr's kanban), while still clearly hand-drawn, same round caps + stroke. */
+const MARKER = {
+  stroke: "var(--color-text-primary)",
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  fill: "none",
+};
+
 /** Arrow + "¡este!" annotation (top-left). The fingertip-style scribble that a
  *  user would draw to flag a favourite card. */
 export function BoardDoodleArrow({ className }: { className?: string }) {
@@ -59,6 +70,87 @@ export function BoardDoodleArrow({ className }: { className?: string }) {
         <path d="M 104 40 q 22 6 24 32" />
         {/* arrowhead */}
         <path d="M 119 66 l 9 6 l 3 -11" />
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * Kanban column HEADERS (B5-fix-final item 2). The board IS Tendr's client
+ * follow-up kanban; these hand-written headers across the top make that legible
+ * ("se entienda mejor"). Names are the canonical pipeline states (journey-stages:
+ * Contacto → Propuesta → En curso → Cerrado); we surface the three most legible
+ * end-to-end stages for a freelancer at a glance: Contacto · En curso · Cerrado.
+ *
+ * Rendered as REAL text (font-mono, far more legible than hand-lettered paths,
+ * anti-kitsch) with a marker treatment: ink at ~60% opacity, a slight per-header
+ * rotation, and ONE hand-drawn underline (SVG, same round-cap "one pen" stroke)
+ * under "En curso" — the column the protagonist note sits in. Decorative wrapper,
+ * but the words themselves aid comprehension, so they stay visible on the static /
+ * reduced-motion path too. aria-hidden: the section already has its real h2 +
+ * per-note labels; these are visual scaffolding.
+ */
+export function BoardKanbanHeaders({ className }: { className?: string }) {
+  return (
+    <div aria-hidden className={className}>
+      <span
+        className="font-mono text-meta uppercase tracking-[0.18em] text-text-primary"
+        style={{ opacity: 0.58, transform: "rotate(-2.5deg)" }}
+      >
+        Contacto
+      </span>
+      <span className="relative inline-flex flex-col items-center">
+        <span
+          className="font-mono text-meta uppercase tracking-[0.18em] text-text-primary"
+          style={{ opacity: 0.6, transform: "rotate(1.5deg)" }}
+        >
+          En curso
+        </span>
+        {/* hand-drawn underline (same one-pen marker stroke) under the active
+            column — the one the protagonist note lives in. */}
+        <svg
+          viewBox="0 0 80 10"
+          className="mt-0.5 h-2 w-16"
+          aria-hidden="true"
+          role="presentation"
+        >
+          <path
+            d="M 3 5 q 20 -4 38 -1 q 18 3 36 -2"
+            {...MARKER}
+            strokeWidth={2}
+            opacity={0.5}
+          />
+        </svg>
+      </span>
+      <span
+        className="font-mono text-meta uppercase tracking-[0.18em] text-text-primary"
+        style={{ opacity: 0.58, transform: "rotate(-1.5deg)" }}
+      >
+        Cerrado
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Re-route arrow (B5-fix-final item 2): a small hand-drawn arrow that loops from
+ * one column toward the next — "moviendo un caso por el tablero" (journey stage
+ * 02). Reinforces the kanban-as-pipeline read with sense, not noise. Same one-pen
+ * grammar, low opacity, round caps. Decorative.
+ */
+export function BoardDoodleReroute({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 110 60"
+      className={className}
+      aria-hidden="true"
+      role="presentation"
+    >
+      <g {...INK} strokeWidth={2.4} opacity={0.4}>
+        {/* an arc hopping rightward (a note moving to the next column) */}
+        <path d="M 8 44 q 18 -40 48 -30 q 28 9 46 24" />
+        {/* arrowhead landing on the right column */}
+        <path d="M 90 30 l 12 8 l -3 -13" />
       </g>
     </svg>
   );

@@ -145,7 +145,7 @@ export function Hero({
         "bg-surface",
       )}
     >
-      <div className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 px-6 pt-24 pb-16 lg:grid-cols-12 lg:gap-8">
+      <div className="mx-auto grid min-h-[100dvh] max-w-[1280px] grid-cols-1 content-center items-center gap-12 px-6 py-20 lg:grid-cols-12 lg:gap-8 lg:py-16">
         {/* Text column: left, asymmetric (does not span the full grid). The
             headline runs its own Motion word-cascade (the wow entrance); the
             subhead + CTA enter via CSS (.hero-text-enter) so the LCP <p> paints
