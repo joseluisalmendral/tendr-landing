@@ -19,7 +19,7 @@ export function Feature({ title, description, visual, link }: FeatureProps) {
   return (
     <article className="flex flex-col gap-3">
       {visual.kind === "icon" ? (
-        <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-input border border-border bg-surface-raised text-accent-secondary">
+        <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-sm border border-border bg-surface-raised text-accent-secondary">
           <visual.icon size={28} weight="duotone" aria-hidden="true" />
         </span>
       ) : (
@@ -29,7 +29,7 @@ export function Feature({ title, description, visual, link }: FeatureProps) {
           width={visual.width}
           height={visual.height}
           sizes="(max-width: 768px) 100vw, 33vw"
-          className="rounded-input"
+          className="rounded-sm"
         />
       )}
 

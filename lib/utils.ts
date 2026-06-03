@@ -31,14 +31,14 @@ const twMerge = extendTailwindMerge({
           ],
         },
       ],
-      // Same footgun for our custom radius scale: an unknown `rounded-cta`
+      // Same footgun for our custom radius scale: an unknown `rounded-md`
       // is not recognised as border-radius, so a base `rounded-none` (the
-      // brutalist Button/Card default) wins and the CTA renders square even
-      // though --radius-cta is 10px. Registering them lets `rounded-cta`
-      // correctly override the base radius.
+      // shadcn Button/Card default) wins and the element renders square even
+      // though --radius-md is 12px. Registering the v2 semantic radii lets
+      // `rounded-sm|md|lg|xl` correctly override the base radius.
       rounded: [
         {
-          rounded: ["cta", "control", "card", "input", "note"],
+          rounded: ["sm", "md", "lg", "xl"],
         },
       ],
     },

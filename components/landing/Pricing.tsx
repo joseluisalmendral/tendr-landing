@@ -99,7 +99,7 @@ export function Pricing({ tiers }: Props) {
           balanced and separated by a hairline. This reads as a single
           instrument and feeds the eye straight down into the cards, instead of
           two mismatched boxes side by side. */}
-      <div className="overflow-hidden rounded-card border border-border-strong bg-surface-raised shadow-hard-sm">
+      <div className="overflow-hidden rounded-lg border border-border-strong bg-surface-raised shadow-flat">
         <div className="grid grid-cols-1 md:grid-cols-2">
           <Selector
             work={work}
@@ -128,7 +128,7 @@ export function Pricing({ tiers }: Props) {
               </span>
               .
             </p>
-            <p className="text-body-sm text-text-muted">{reason}</p>
+            <p className="text-body-sm text-text-tertiary">{reason}</p>
           </aside>
         </div>
       </div>
@@ -223,7 +223,7 @@ function ToggleField({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="font-mono text-meta uppercase text-text-muted">
+      <span className="font-mono text-meta uppercase text-text-tertiary">
         {label}
       </span>
       <ToggleGroup
@@ -243,14 +243,14 @@ function ToggleField({
             // fill + accent border + a small hard shadow lift) so the choice
             // never relies on a single visual cue.
             className={cn(
-              "h-auto rounded-input px-4 py-2.5 text-body-sm text-text-secondary",
+              "h-auto rounded-sm px-4 py-2.5 text-body-sm text-text-secondary",
               "border-border-strong",
               "transition-all duration-[var(--duration-micro)]",
               "hover:bg-surface-sunken/60",
               "data-[state=on]:border-accent-secondary",
               "data-[state=on]:bg-accent-secondary-soft",
               "data-[state=on]:text-accent-secondary",
-              "data-[state=on]:shadow-hard-sm",
+              "data-[state=on]:shadow-flat",
             )}
           >
             {option.label}
@@ -332,9 +332,9 @@ function Annotation({
         transition={flip}
         aria-describedby={describedById}
         className={cn(
-          "absolute -top-3 right-3 z-20 -rotate-2 rounded-input",
+          "absolute -top-3 right-3 z-20 -rotate-2 rounded-sm",
           "border border-border-strong bg-accent-secondary px-3 py-1",
-          "font-mono text-meta uppercase text-on-accent-secondary shadow-hard-sm",
+          "font-mono text-meta uppercase text-on-accent-secondary shadow-flat",
         )}
       >
         Recomendado

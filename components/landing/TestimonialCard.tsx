@@ -45,14 +45,14 @@ import type {
  * live INSIDE the moving unit, so shadows travel + lean WITH the paper (no
  * desync, no cork bleed behind a moving edge). The pushpin stays on the ARTICLE
  * (the cork) so the paper swings under it. The avatar `<Image>` is wrapped in a
- * `tw-note__avatar` span (bg + rounded-input + overflow-hidden) so the
+ * `tw-note__avatar` span (bg + rounded-sm + overflow-hidden) so the
  * transparent dicebear edge is clipped against an opaque surface.
  *
  * When NOT in the pan path (reduced-motion / mobile static grid) the card renders
  * pinned-static (full opacity, resting tilt, pin visible) with the hover lean
  * only — no entrance.
  *
- * Tokens only (zero hex), rounded-note radius, Phosphor-free (no icons).
+ * Tokens only (zero hex), rounded-md radius, Phosphor-free (no icons).
  */
 
 // Spring for the hover lean: soft, slightly springy paper feel.
@@ -63,7 +63,7 @@ const HOVER_SPRING = { stiffness: 220, damping: 18, mass: 0.6 } as const;
 type Bezier = [number, number, number, number];
 const EASE_OUT: Bezier = [0.22, 1, 0.36, 1];
 const EASE_SNAP: Bezier = [0.34, 1.56, 0.64, 1]; // bounce overshoot
-const EASE_EXPO: Bezier = [0.19, 1, 0.22, 1];
+const EASE_EXPO: Bezier = [0.16, 1, 0.3, 1];
 
 const ENTRANCE_EASE: Record<EntranceVariant, Bezier> = {
   "slide-up": EASE_OUT,
@@ -260,7 +260,7 @@ export function TestimonialCard({
           <figure
             className={cn(
               // The opaque cream surface lives HERE (moves with the unit).
-              "flex flex-col gap-6 rounded-note border border-border bg-surface-raised p-6",
+              "flex flex-col gap-6 rounded-md border border-border bg-surface-raised p-6",
               featured && "gap-8 p-8",
             )}
           >
@@ -277,7 +277,7 @@ export function TestimonialCard({
             <figcaption className="flex items-center gap-4">
               {/* Avatar wrapper: bg + rounded + overflow-hidden clips the
                   transparent dicebear edge against an opaque surface. */}
-              <span className="tw-note__avatar inline-flex h-16 w-16 shrink-0 overflow-hidden rounded-input bg-surface-raised">
+              <span className="tw-note__avatar inline-flex h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-surface-raised">
                 <Image
                   src={avatar.src}
                   alt={avatarAlt}

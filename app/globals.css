@@ -5,10 +5,11 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =========================================================================
-   Tendr design tokens · destilado de docs/design.md v2.0 (dirección #3
-   "Papel anotado", ADR-002). La capa semántica de shadcn se recolorea al
-   papel; los tokens de marca de Tendr se exponen como utilidades propias.
-   Notación OKLCH. Page theme lock = light (sin dark mode en v2.0).
+   Tendr design tokens · destilado de docs/design.md v2.0 (2026-06-03,
+   dirección clean/warm ink-led). La capa semántica de shadcn se re-apunta a
+   tinta+papel; los tokens de marca de Tendr se exponen como utilidades propias.
+   Notación HEX (v2 es hex-led; oklch sólo como comentario de referencia).
+   Page theme lock = light (sin dark mode en v2.0).
    ========================================================================= */
 
 @theme inline {
@@ -45,7 +46,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* ---- Tendr brand tokens (design.md §2.1) ---- */
+  /* ---- Tendr brand tokens (design.md §2.1, v2 ink-led) ---- */
   /* surfaces */
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
@@ -53,104 +54,99 @@
   /* warm ink text */
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
-  --color-text-muted: var(--text-muted);
-  /* amber action accent (= acción) */
+  --color-text-tertiary: var(--text-tertiary);
+  /* ink action accent (= acción). NO hover/active tokens: usar CSS :hover/:active */
   --color-accent-primary: var(--accent-primary);
-  --color-accent-primary-hover: var(--accent-primary-hover);
-  --color-accent-primary-active: var(--accent-primary-active);
-  --color-on-accent: var(--on-accent);
-  /* clay annotation accent (= atención, tono Anthropic) */
-  --color-accent-secondary: var(--accent-secondary);
-  --color-accent-secondary-soft: var(--accent-secondary-soft);
-  --color-on-accent-secondary: var(--on-accent-secondary);
+  --color-accent-fg: var(--accent-fg);
+  /* support magenta-wine (= firma / hand-drawn) */
+  --color-support: var(--support);
+  --color-support-fg: var(--support-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-handdrawn: var(--handdrawn);
+  /* highlight (sólo text-bg, p.ej. pill "Recomendado") */
+  --color-highlight: var(--highlight);
+  --color-highlight-fg: var(--highlight-fg);
   /* functional states (= estado) */
   --color-success: var(--success);
-  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   /* borders / focus */
+  --color-border-hairline: var(--border-hairline);
   --color-border-strong: var(--border-strong);
-  --color-focus-ring: var(--focus-ring);
-  /* disabled */
-  --color-disabled-bg: var(--disabled-bg);
-  --color-disabled-fg: var(--disabled-fg);
-  /* hard-shadow tint + hero washes */
-  --color-shadow-tint: var(--shadow-tint);
-  --color-wash-from: var(--wash-from);
-  --color-wash-to: var(--wash-to);
-  /* wooden frame del tablero de corcho */
-  --color-cork-wood-dark: var(--cork-wood-dark);
-  --color-cork-wood-mid: var(--cork-wood-mid);
-  --color-cork-wood-edge: var(--cork-wood-edge);
-  --color-cork-frame-shadow: var(--cork-frame-shadow);
+  --color-border-interactive: var(--border-interactive);
+  --color-focus: var(--focus);
 
-  /* ---- Type families (design.md §2.2) ----
-     Registradas con next/font en app/layout.tsx: Clash Display (local,
-     self-host) + Hanken Grotesk + JetBrains Mono. Fallbacks literales por
-     si la var no carga. */
-  --font-display: var(--font-clash-display), "Clash Display", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-hanken-grotesk), "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, monospace;
+  /* ---- Type families (design.md §2.2, v2) ----
+     Registradas con next/font en app/layout.tsx: Bricolage Grotesque (display)
+     + Plus Jakarta Sans (body) + Geist Mono (numerales/meta). Fallbacks
+     literales por si la var no carga. NOTA: se conserva el NOMBRE --font-sans
+     (no --font-body) para no tocar la cadena @layer base / utilidades; sólo se
+     re-apunta su valor. */
+  --font-display: var(--font-bricolage), "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
   --font-heading: var(--font-display);
 
-  /* ---- Type scale (design.md §2.3) · base 20px, ratio 1.25 ---- */
-  --text-display-xl: clamp(3rem, 6vw, 4.75rem);
-  --text-display-xl--line-height: 1.02;
+  /* ---- Type scale (design.md §2.3, v2) · base 16px (antes 20px: down-shift
+     deliberado más limpio). --text-meta NO está en §2.3 pero ~40 componentes
+     dependen de él: carry-over documentado como label mono 12px. ---- */
+  --text-display-xl: clamp(4rem, 5vw + 1rem, 4.5rem);
+  --text-display-xl--line-height: 1.05;
   --text-display-xl--letter-spacing: -0.02em;
-  --text-display-lg: clamp(2.5rem, 4.5vw, 3.5rem);
-  --text-display-lg--line-height: 1.05;
-  --text-display-lg--letter-spacing: -0.018em;
-  --text-h1: 2.5rem;
+  --text-display-lg: clamp(3rem, 4vw, 3.5rem);
+  --text-display-lg--line-height: 1.08;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-h1: 2.375rem;
   --text-h1--line-height: 1.1;
-  --text-h1--letter-spacing: -0.015em;
-  --text-h2: 2rem;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h2: 1.875rem;
   --text-h2--line-height: 1.15;
-  --text-h2--letter-spacing: -0.01em;
-  --text-h3: 1.5rem;
+  --text-h2--letter-spacing: -0.015em;
+  --text-h3: 1.375rem;
   --text-h3--line-height: 1.2;
-  --text-h3--letter-spacing: -0.005em;
-  --text-body-lg: 1.375rem;
+  --text-h3--letter-spacing: -0.01em;
+  --text-body-lg: 1.25rem;
   --text-body-lg--line-height: 1.55;
-  --text-body: 1.25rem;
+  --text-body-lg--letter-spacing: 0;
+  --text-body: 1.0625rem;
   --text-body--line-height: 1.6;
-  --text-body-sm: 1rem;
-  --text-body-sm--line-height: 1.55;
-  --text-caption: 0.875rem;
+  --text-body--letter-spacing: 0;
+  --text-body-sm: 0.9375rem;
+  --text-body-sm--line-height: 1.5;
+  --text-caption: 0.8125rem;
   --text-caption--line-height: 1.4;
   --text-caption--letter-spacing: 0.01em;
   --text-meta: 0.75rem;
   --text-meta--line-height: 1.3;
   --text-meta--letter-spacing: 0.14em;
 
-  /* ---- Radii (design.md §2.5 · v2.1 "suave moderado", lock de forma taste 4.4)
-     UN solo sistema de esquinas, bloqueado en toda la página. Antes era
-     brutalist 0px (salvo CTA 4px); ahora editorial-amable. Cada token genera su
-     utilidad Tailwind v4 (rounded-card, rounded-control, rounded-input,
-     rounded-note). --radius-cta se REPUNTEA a 10px para que todos los CTA
-     primarios (Hero, Pricing, Header) redondeen sin tocar su markup. ---- */
-  --radius-cta: 0.625rem;     /* 10px · CTA primario (= control) */
-  --radius-control: 0.625rem; /* 10px · botones, toggles, controles */
-  --radius-card: 0.875rem;    /* 14px · cards, paneles, fieldsets */
-  --radius-input: 0.5rem;     /* 8px  · inputs, badges, avatares */
-  --radius-note: 0.75rem;     /* 12px · notas de papel (Features, Testimonios) */
+  /* ---- Radii (design.md §2.5 · v2 "suave-medio", lock de forma taste 4.4)
+     UN solo sistema de esquinas, bloqueado en toda la página: 4 radios
+     semánticos. Cada token genera su utilidad Tailwind v4 nativa
+     (rounded-sm/md/lg/xl). Las clases v1 (rounded-cta/control/card/input/note)
+     se renombraron en el barrido B0:
+       input -> sm; cta/control/note -> md; card -> lg; (nuevo) xl. ---- */
+  --radius-sm: 0.5rem;   /* 8px  · inputs, badges, avatares, pequeños */
+  --radius-md: 0.75rem;  /* 12px · botones, CTAs, toggles, controles, nota viva */
+  --radius-lg: 1rem;     /* 16px · cards, diálogos, paneles */
+  --radius-xl: 1.25rem;  /* 20px · superficies grandes (hero/tablero) */
+  --radius-full: 9999px;
 
-  /* ---- Shadows (design.md §2.6) · hard sin blur, tintada al papel ---- */
-  --shadow-hard: 4px 4px 0 var(--shadow-tint);
-  --shadow-hard-sm: 2px 2px 0 var(--shadow-tint);
-  --shadow-soft: 0 8px 24px -12px oklch(0.30 0.04 60 / 0.25);
+  /* ---- Shadows (design.md §2.6, v2) · base plana + hairline; sombra sólo en
+     notas vivas / hover. KILL --shadow-hard/-hard-sm. ---- */
+  --shadow-flat: none;
+  --shadow-soft: 0 1px 2px rgba(31, 27, 22, 0.06), 0 2px 8px rgba(31, 27, 22, 0.09);
+  --shadow-note: 0 6px 18px rgba(31, 27, 22, 0.1);
 
-  /* ---- Movimiento (design.md §2.7) · genera utilidades ease-* ---- */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);     /* reveals on-scroll */
-  --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);     /* toggles, tabs, FAQ */
-  --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1); /* pop-in brutalist */
-  --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);    /* EXCLUSIVO momento wow */
+  /* ---- Movimiento (design.md §2.7, v2) · genera utilidades ease-* ---- */
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);   /* toggles, tabs, FAQ */
+  --easing-emphasis: cubic-bezier(0.2, 0.8, 0.2, 1); /* reveals on-scroll */
+  --easing-expo: cubic-bezier(0.16, 1, 0.3, 1);      /* momento wow */
+  --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);    /* FLIP Pricing / overshoot (inline) */
 
-  /* duraciones canónicas (usar como var, p.ej. duration-[var(--duration-reveal)]) */
-  --duration-micro: 120ms;
-  --duration-reveal: 480ms;
-  --duration-wow: 720ms;
-  --duration-beat: 1400ms;
-  --duration-wash: 20s; /* loop ambient del wash del Hero (continuo, lento) */
+  /* duraciones canónicas (usar como var, p.ej. duration-[var(--duration-slow)]) */
+  --duration-fast: 150ms;
+  --duration-slow: 400ms;
 }
 
 /* Nota: la escala de espacio (design.md §2.4) coincide 1:1 con la escala
@@ -158,92 +154,85 @@
    redefine para no duplicar tokens. */
 
 :root {
-  --radius: 0.75rem; /* v2 "suave-medio": 12px base = radius-md de design.md §2.5 (botones/controles); los próximos `shadcn add` (preset maia) derivan su escala de aquí */
+  --radius: 0.75rem; /* v2 "suave-medio": 12px base = --radius-md (botones/controles); los `shadcn add` (preset maia) derivan su escala de aquí */
 
-  /* ---- Paper surfaces ---- */
-  --surface: oklch(0.97 0.015 90);
-  --surface-raised: oklch(0.985 0.012 90);
-  --surface-sunken: oklch(0.94 0.018 88);
+  /* ---- Surfaces warm-white (design.md §2.1) ---- */
+  --surface: #fefefc;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f7f6f2;
 
-  /* ---- Warm ink text ---- */
-  --text-primary: oklch(0.18 0.020 50);
-  --text-secondary: oklch(0.42 0.015 50);
-  --text-muted: oklch(0.52 0.012 50);
+  /* ---- Warm ink text (tertiary = #736b5e, 5.21:1 sobre surface — AA, NO aclarar) ---- */
+  --text-primary: #1f1b16;
+  --text-secondary: #5a5247;
+  --text-tertiary: #736b5e;
 
-  /* ---- Amber action accent ---- */
-  --accent-primary: oklch(0.85 0.13 88);
-  --accent-primary-hover: oklch(0.81 0.14 86);
-  --accent-primary-active: oklch(0.77 0.15 84);
-  --on-accent: oklch(0.18 0.020 50);
+  /* ---- Ink action accent (= acción). 19:1 white-on-ink. Hover/active vía CSS. ---- */
+  --accent-primary: #101010;
+  --accent-fg: #ffffff;
 
-  /* ---- Clay annotation accent (Anthropic) ---- */
-  --accent-secondary: oklch(0.50 0.16 38);
-  --accent-secondary-soft: oklch(0.92 0.04 40);
-  /* texto sobre clay SOLIDO: cream del papel del sistema (AA 5.93:1 sobre clay).
-     No usar --on-accent (tinta oscura): pensado para el amber claro, sobre clay da 2.9:1. */
-  --on-accent-secondary: var(--surface);
+  /* ---- Support magenta-wine (= firma / hand-drawn). support-fg para texto. ---- */
+  --support: #b23a86;
+  --support-fg: #b23a86;
+  /* tinte muy suave del support sobre papel (bg de hover shadcn / chips) */
+  --accent-soft: color-mix(in oklab, var(--support) 12%, var(--surface-raised));
+  --handdrawn: var(--support);
 
-  /* ---- Functional states ---- */
-  --success: oklch(0.48 0.07 185);
-  --success-soft: oklch(0.90 0.03 185);
-  --warning: oklch(0.70 0.14 65);
-  --danger: oklch(0.55 0.17 28);
+  /* ---- Highlight (sólo text-bg, p.ej. pill "Recomendado") ---- */
+  --highlight: #fff8bb;
+  --highlight-fg: #7a6a10;
+
+  /* ---- Functional states (ocre cálido, no amber-wash) ---- */
+  --success: #3e7d52;
+  --danger: #b3402e;
+  --warning: #b5832e;
 
   /* ---- Borders / focus ---- */
-  --border-hairline: oklch(0.85 0.015 80);
-  --border-strong: oklch(0.18 0.020 50);
-  --focus-ring: oklch(0.50 0.16 38);
+  --border-hairline: #eeece6;   /* decorativo */
+  --border-strong: #dedbd2;     /* estructural (INVERSIÓN de v1 tinta oscura) */
+  --border-interactive: #87837b; /* límites interactivos (outline/pills/toggles, >=3:1) */
+  --focus: var(--accent-primary);
 
-  /* ---- Disabled ---- */
-  --disabled-bg: oklch(0.92 0.008 88);
-  --disabled-fg: oklch(0.68 0.008 60);
-
-  /* ---- Shadow tint + hero washes ---- */
-  --shadow-tint: oklch(0.30 0.04 60);
-  --wash-from: oklch(0.90 0.06 70);
-  --wash-to: oklch(0.93 0.05 40);
-
-  /* ---- Wooden frame del tablero de corcho (testimonios full-bleed) ----
-     Familia madera cálida (hue 55-72), más profunda y con más croma que el tan
-     del corcho (0.74/0.055/70). 100% OKLCH (cero hex). Se usan en
-     .cork-section::before como capas de inset box-shadow (marco elevado). */
-  --cork-wood-dark: oklch(0.42 0.07 58);          /* cuerpo profundo / bisel exterior */
-  --cork-wood-mid: oklch(0.55 0.075 62);          /* cara de madera iluminada */
-  --cork-wood-edge: oklch(0.68 0.06 72);          /* labio superior iluminado */
-  --cork-frame-shadow: oklch(0.30 0.05 55 / 0.45); /* sombra de contacto corcho↔marco */
-
-  /* ---- shadcn semantic layer → mapeada al papel ---- */
+  /* ---- shadcn semantic layer → re-apuntada a tinta + papel (design.md ADR-1h) ---- */
   --background: var(--surface);
   --foreground: var(--text-primary);
   --card: var(--surface-raised);
   --card-foreground: var(--text-primary);
   --popover: var(--surface-raised);
   --popover-foreground: var(--text-primary);
-  --primary: var(--accent-primary);
-  --primary-foreground: var(--on-accent);
+  --primary: var(--accent-primary);          /* amber -> ink */
+  --primary-foreground: var(--accent-fg);    /* dark -> white (INVERSIÓN) */
   --secondary: var(--surface-sunken);
   --secondary-foreground: var(--text-primary);
   --muted: var(--surface-sunken);
-  --muted-foreground: var(--text-muted);
-  --accent: var(--accent-secondary-soft);   /* hover/highlight bg de shadcn (≠ accent-primary de marca) */
+  --muted-foreground: var(--text-tertiary);
+  --accent: var(--accent-soft);              /* hover/highlight bg de shadcn (support-soft) */
   --accent-foreground: var(--text-primary);
   --destructive: var(--danger);
   --border: var(--border-hairline);
   --input: var(--border-hairline);
-  --ring: var(--focus-ring);
-  --chart-1: var(--accent-primary);
-  --chart-2: var(--accent-secondary);
+  --ring: var(--accent-primary);             /* clay -> ink */
+  --chart-1: var(--accent-primary);          /* ink */
+  --chart-2: var(--support);                 /* support */
   --chart-3: var(--success);
-  --chart-4: oklch(0.55 0.012 50);
-  --chart-5: oklch(0.42 0.015 50);
+  --chart-4: var(--text-secondary);
+  --chart-5: var(--text-tertiary);
   --sidebar: var(--surface-raised);
   --sidebar-foreground: var(--text-primary);
   --sidebar-primary: var(--accent-primary);
-  --sidebar-primary-foreground: var(--on-accent);
-  --sidebar-accent: var(--accent-secondary-soft);
+  --sidebar-primary-foreground: var(--accent-fg);
+  --sidebar-accent: var(--accent-soft);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-hairline);
-  --sidebar-ring: var(--focus-ring);
+  --sidebar-ring: var(--accent-primary);
+}
+
+/* Focus ring offset pattern (SC 2.4.13): 2px surface-raised + 4px accent-primary.
+   Utilidad compartida; aplicar con focus-visible. */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-surface-raised),
+    0 0 0 4px var(--color-accent-primary);
 }
 
 /* Page theme lock = light en v2.0 (design.md §2.1). El bloque .dark queda
@@ -291,7 +280,7 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans; /* body = Hanken Grotesk (antes font-mono, corregido) */
+    @apply font-sans; /* body = Plus Jakarta Sans (v2) */
   }
 }
 
@@ -351,7 +340,7 @@
       animation: wow-section-rise linear both;
       animation-timeline: view();
       animation-range: entry 0% entry 80%;
-      animation-timing-function: var(--ease-expo);
+      animation-timing-function: var(--easing-expo);
       will-change: transform;
     }
 
@@ -369,7 +358,7 @@
       animation: wow-hero-fade linear both;
       animation-timeline: scroll(root);
       animation-range: 0 100vh;
-      animation-timing-function: var(--ease-expo);
+      animation-timing-function: var(--easing-expo);
       transform-origin: center top;
       will-change: transform, opacity;
     }
@@ -433,7 +422,7 @@
          Funciones (cuando de verdad estás terminando la sección), no al primer
          píxel en que su borde superior se va. */
       animation-range: exit 35% exit 100%;
-      animation-timing-function: var(--ease-expo);
+      animation-timing-function: var(--easing-expo);
       will-change: transform, opacity;
     }
 
@@ -447,7 +436,7 @@
       animation-timeline: view();
       /* también más tarde, para que el solape no salte pronto. */
       animation-range: entry 20% entry 90%;
-      animation-timing-function: var(--ease-expo);
+      animation-timing-function: var(--easing-expo);
       will-change: transform;
     }
 
@@ -474,68 +463,10 @@
 }
 
 /* =========================================================================
-   HERO WASH AMBIENT -- loop continuo ~20s (design-spec-visual.md seccion 1
-   trigger "continuo"; design.md patron #1 / motion catalog seccion 6.10
-   "loop ambient"). Bloque INDEPENDIENTE del WOW #1 de arriba.
-
-   Objetivo: hacer "respirar" muy despacio el wash calido amber->clay del Hero
-   sin coste de repaint. No se anima el gradiente por color-stops (caro): se
-   pinta el gradiente amber->clay (tokens, cero hex) en una CAPA absoluta
-   sobredimensionada detras del contenido y se anima SOLO transform (scale +
-   translate) y opacity, ambos GPU/compositor. La calidez deriva despacio.
-
-   Base estatica: el Hero conserva su bg-[linear-gradient(...)] estatico, por
-   lo que el wash amber->clay SIEMPRE se ve (reduced-motion, navegadores sin
-   soporte, primer frame). Esta capa solo ENRIQUECE, no es la base.
-
-   THE LILA RULE: barrido calido->calido (amber->clay), jamas lila/violeta.
-
-   Gateo de accesibilidad: la animacion solo existe dentro de
-   @media (prefers-reduced-motion: no-preference). En reduced-motion la capa
-   queda en su estado base (sin animation) y se ve el wash estatico.
-
-   Sin CLS: la capa es position:absolute inset-0, pointer-events:none, -z-10
-   dentro del Hero (relative isolate overflow-hidden). No empuja layout y el
-   sobredimensionado (scale) queda recortado por el overflow-hidden del Hero.
+   HERO WASH AMBIENT -- RETIRADO en v2 (ADR-4). El Hero ahora se apoya en
+   tipografía + asimetría + faux-UI sobre --surface plano (sin wash amber->clay,
+   sin loop ambient, sin --duration-wash). Bloque eliminado.
    ========================================================================= */
-.hero-wash-ambient {
-  position: absolute;
-  inset: 0;
-  z-index: -10;
-  pointer-events: none;
-  background-image: linear-gradient(
-    135deg,
-    var(--color-wash-from),
-    var(--color-wash-to)
-  );
-  /* Sobredimensionado leve: al escalar/trasladar nunca descubre los bordes. */
-  transform: scale(1.15);
-  transform-origin: center;
-  will-change: transform, opacity;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .hero-wash-ambient {
-    animation: hero-wash-breathe var(--duration-wash) linear infinite;
-  }
-
-  /* Deriva calida lenta: scale + translate sutiles + opacity respirando.
-     Solo transform/opacity. Ida y vuelta (0% == 100%) para loop sin salto. */
-  @keyframes hero-wash-breathe {
-    0% {
-      transform: scale(1.15) translate3d(0, 0, 0);
-      opacity: 0.85;
-    }
-    50% {
-      transform: scale(1.22) translate3d(2%, -1.5%, 0);
-      opacity: 1;
-    }
-    100% {
-      transform: scale(1.15) translate3d(0, 0, 0);
-      opacity: 0.85;
-    }
-  }
-}
 
 /* =========================================================================
    SECTION SEAM + REVEAL (v2.1) -- separacion clara entre secciones.
@@ -566,7 +497,7 @@
       /* arranca al asomar y termina pronto: el contenido ya esta asentado
          cuando la seccion ocupa el viewport (no "persigue" el scroll). */
       animation-range: entry 0% entry 38%;
-      animation-timing-function: var(--ease-out);
+      animation-timing-function: var(--easing-emphasis);
       will-change: transform, opacity;
     }
 
@@ -589,7 +520,7 @@
       animation: section-rule-grow linear both;
       animation-timeline: view();
       animation-range: entry 0% entry 42%;
-      animation-timing-function: var(--ease-out);
+      animation-timing-function: var(--easing-emphasis);
     }
 
     @keyframes section-rule-grow {
@@ -658,11 +589,14 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  border-radius: var(--radius-note); /* v2.1: sigue el redondeo de la nota */
+  border-radius: var(--radius-md); /* v2: sigue el redondeo de la nota (md 12px) */
   background: var(--color-surface-raised);
 }
+/* v2: la clase NAME se conserva (hook e2e + JS) pero la capa "hard" ahora pinta
+   --shadow-note (no la vieja --shadow-hard, retirada). El cross note->soft lo
+   sigue cruzando el hover/lift por opacity. */
 .tw-note__shadow--hard {
-  box-shadow: var(--shadow-hard);
+  box-shadow: var(--shadow-note);
   opacity: 1; /* base: clavada */
 }
 .tw-note__shadow--soft {
@@ -755,16 +689,16 @@
   width: 100%;
   height: 100dvh;
   overflow: hidden;
-  /* Un pelo de radio + sombra para que, al estar pequeño, lea como un tablero
-     enmarcado flotando sobre el cream (R14 polish, solo tokens). */
-  border-radius: var(--radius-card);
+  /* B0: radio re-apuntado a --radius-lg (antes --radius-card). La reinvención
+     cork->tablero limpio (panel sunken + frame hairline) la hace B5. */
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
 }
 
-/* Marco de madera elevado: labio iluminado + cara + cuerpo profundo + sombra de
-   contacto interior hacia el corcho. pointer-events:none para no bloquear nada.
-   En el pan path el marco vive en .cork-board (escala con el tablero); en el
-   estático, en .cork-section--static. */
+/* B0 (pendiente B5): el marco de madera con tokens --cork-* se retiró (tokens
+   killed). Hasta B5 (reinvención del tablero) queda un frame hairline neutro
+   para no referenciar tokens muertos ni romper el build. El look "madera" v1
+   desaparece — esperado/unpolished hasta B5. pointer-events:none. */
 .cork-board::before,
 .cork-section--static::before {
   content: "";
@@ -773,11 +707,7 @@
   pointer-events: none;
   z-index: 2;
   border-radius: inherit;
-  box-shadow:
-    inset 0 0 0 10px var(--color-cork-wood-edge),
-    inset 0 0 0 28px var(--color-cork-wood-mid),
-    inset 0 0 0 34px var(--color-cork-wood-dark),
-    inset 0 0 22px 34px var(--color-cork-frame-shadow);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
 
 /* Encabezado montado en el corcho (etiqueta), por encima del marco. */

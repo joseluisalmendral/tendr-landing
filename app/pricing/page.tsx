@@ -70,7 +70,7 @@ function ComparisonCell({ value }: { value: CellValue }) {
         <Minus
           aria-hidden="true"
           weight="bold"
-          className="size-5 text-text-muted"
+          className="size-5 text-text-tertiary"
         />
         <span className="sr-only">No incluido</span>
       </span>
@@ -128,7 +128,7 @@ export default function PricingPage() {
                   <tr className="border-b border-border-strong">
                     <th
                       scope="col"
-                      className="py-4 pr-4 font-mono text-meta uppercase text-text-muted"
+                      className="py-4 pr-4 font-mono text-meta uppercase text-text-tertiary"
                     >
                       Función
                     </th>

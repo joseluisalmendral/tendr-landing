@@ -38,7 +38,7 @@ const COMPANY_LINKS = [
   { label: "Contacto", href: "#" },
 ];
 
-const headingClass = "font-mono text-meta uppercase text-text-muted";
+const headingClass = "font-mono text-meta uppercase text-text-tertiary";
 const linkClass =
   "text-body-sm text-text-secondary underline-offset-4 hover:text-text-primary hover:underline";
 
@@ -114,10 +114,10 @@ export function Footer() {
 
       {/* Bottom row: copyright + legal address placeholder */}
       <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-2 border-t border-border px-6 py-6 md:flex-row md:items-center md:justify-between md:px-8">
-        <p className="font-mono text-meta uppercase text-text-muted">
+        <p className="font-mono text-meta uppercase text-text-tertiary">
           © 2026 Tendr
         </p>
-        <p className="text-meta font-mono uppercase text-text-muted">
+        <p className="text-meta font-mono uppercase text-text-tertiary">
           Calle Ejemplo 1, 28001 Madrid, España
         </p>
       </div>

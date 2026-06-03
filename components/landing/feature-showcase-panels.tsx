@@ -99,14 +99,14 @@ function PanelShell({
   return (
     <div
       className={
-        "flex h-full w-full flex-col overflow-hidden rounded-card border bg-surface-raised transition-[opacity,box-shadow] duration-300 " +
+        "flex h-full w-full flex-col overflow-hidden rounded-lg border bg-surface-raised transition-[opacity,box-shadow] duration-300 " +
         (active
-          ? "border-border-strong opacity-100 shadow-hard"
+          ? "border-border-strong opacity-100 shadow-flat"
           : "border-border opacity-100 shadow-soft")
       }
     >
       <div className="flex items-center justify-between border-b border-border px-5 py-3">
-        <span className="font-mono text-meta uppercase text-text-muted">
+        <span className="font-mono text-meta uppercase text-text-tertiary">
           {label}
         </span>
         <span className="flex gap-1.5" aria-hidden="true">
@@ -134,9 +134,9 @@ function MiniClientCard({
   return (
     <div
       className={
-        "flex items-center gap-2 rounded-input border px-2 py-1.5 " +
+        "flex items-center gap-2 rounded-sm border px-2 py-1.5 " +
         (highlight
-          ? "border-accent-secondary bg-accent-secondary-soft shadow-hard-sm ring-1 ring-accent-secondary"
+          ? "border-accent-secondary bg-accent-secondary-soft shadow-flat ring-1 ring-accent-secondary"
           : "border-border bg-surface")
       }
     >
@@ -156,13 +156,13 @@ function MiniClientCard({
         >
           {name}
         </span>
-        <span className="font-mono text-meta uppercase text-text-muted">
+        <span className="font-mono text-meta uppercase text-text-tertiary">
           {amount}
         </span>
       </span>
       <DotsThreeVertical
         size={14}
-        className="shrink-0 text-text-muted"
+        className="shrink-0 text-text-tertiary"
         aria-hidden="true"
       />
     </div>
@@ -250,20 +250,20 @@ function PipelineColumn({
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="truncate font-mono text-meta uppercase text-text-muted">
+        <span className="truncate font-mono text-meta uppercase text-text-tertiary">
           {title}
         </span>
-        <span className="rounded-input bg-surface-sunken px-1.5 font-mono text-meta text-text-muted">
+        <span className="rounded-sm bg-surface-sunken px-1.5 font-mono text-meta text-text-tertiary">
           {count}
         </span>
       </div>
-      <div className="relative flex min-h-[10.5rem] flex-col gap-2 rounded-input border border-dashed border-border p-1.5">
+      <div className="relative flex min-h-[10.5rem] flex-col gap-2 rounded-sm border border-dashed border-border p-1.5">
         {/* Drop-target cue: a token-colored accent ring overlay that fades in
             when the card lands here, then relaxes. Opacity-only (no animated
             color), so it stays GPU-friendly and token-pure. */}
         <motion.span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-input border border-dashed border-accent-secondary ring-1 ring-accent-secondary"
+          className="pointer-events-none absolute inset-0 rounded-sm border border-dashed border-accent-secondary ring-1 ring-accent-secondary"
           initial={false}
           animate={{ opacity: isTarget ? 1 : 0 }}
           transition={{ duration: 0.45, ease: EASE_OUT }}
@@ -293,14 +293,14 @@ function RestPipelineColumn({
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="truncate font-mono text-meta uppercase text-text-muted">
+        <span className="truncate font-mono text-meta uppercase text-text-tertiary">
           {title}
         </span>
-        <span className="rounded-input bg-surface-sunken px-1.5 font-mono text-meta text-text-muted">
+        <span className="rounded-sm bg-surface-sunken px-1.5 font-mono text-meta text-text-tertiary">
           {count}
         </span>
       </div>
-      <div className="flex min-h-[10.5rem] flex-col gap-2 rounded-input border border-dashed border-border p-1.5">
+      <div className="flex min-h-[10.5rem] flex-col gap-2 rounded-sm border border-dashed border-border p-1.5">
         {cards.map((c) => (
           <MiniClientCard key={c.name} {...c} />
         ))}
@@ -408,7 +408,7 @@ type DocPhase = "analyzing" | "extracted";
  * produced this"). Animate the wrapper, never the Phosphor svg. */
 function AIChip({ pulse, reduceMotion }: { pulse?: boolean; reduceMotion?: boolean }) {
   const className =
-    "inline-flex items-center gap-1 rounded-input border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary";
+    "inline-flex items-center gap-1 rounded-sm border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary";
   if (pulse && !reduceMotion) {
     return (
       <motion.span
@@ -474,7 +474,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
         {/* The uploaded document. A thin accent scan line sweeps top→bottom on
             activation ("la IA lo lee"). Overlay is absolute inside the relative,
             clipped card; reduced motion ⇒ not rendered, resting card unchanged. */}
-        <div className="relative flex items-center gap-3 overflow-hidden rounded-note border border-border-strong bg-surface px-3 py-3 shadow-hard-sm">
+        <div className="relative flex items-center gap-3 overflow-hidden rounded-md border border-border-strong bg-surface px-3 py-3 shadow-flat">
           {active && !reduceMotion ? (
             <motion.span
               key={`scan-${active}`}
@@ -486,7 +486,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
             />
           ) : null}
           <span
-            className="flex size-9 shrink-0 items-center justify-center rounded-input border border-border-strong bg-surface-sunken text-text-secondary"
+            className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-surface-sunken text-text-secondary"
             aria-hidden="true"
           >
             <FileText size={18} />
@@ -495,14 +495,14 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
             <span className="truncate text-body-sm text-text-primary">
               propuesta_estudio-hibo.pdf
             </span>
-            <span className="font-mono text-meta uppercase text-text-muted">
+            <span className="font-mono text-meta uppercase text-text-tertiary">
               PDF · 248 KB {/* mock */}
             </span>
           </span>
         </div>
 
         {/* AI-extracted block. */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-note border border-border bg-surface px-3 py-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-md border border-border bg-surface px-3 py-3">
           {/* Header row. The label SWAPS "Analizando…" → "Extraído"; both are
               absolute-stacked + crossfaded inside a fixed-height slot so nothing
               shifts (CLS 0). The AIChip pulses once extraction lands. */}
@@ -516,7 +516,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
                 {!extracted ? (
                   <motion.span
                     key="analyzing"
-                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-tertiary"
                     initial={reduceMotion ? false : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={reduceMotion ? undefined : { opacity: 0 }}
@@ -527,7 +527,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
                 ) : (
                   <motion.span
                     key="extracted"
-                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-tertiary"
                     initial={reduceMotion ? false : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={reduceMotion ? undefined : { opacity: 0 }}
@@ -569,14 +569,14 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
             animate={reduceMotion ? "show" : showItems ? "show" : "hidden"}
           >
             <div className="flex flex-col gap-1.5">
-              <span className="font-mono text-meta uppercase text-text-muted">
+              <span className="font-mono text-meta uppercase text-text-tertiary">
                 Deals detectados
               </span>
               {EXTRACTED_DEALS.map((deal) => (
                 <motion.div
                   key={deal}
                   variants={staggerItem}
-                  className="flex items-center gap-2 rounded-input border border-border bg-surface-raised px-2 py-1.5"
+                  className="flex items-center gap-2 rounded-sm border border-border bg-surface-raised px-2 py-1.5"
                 >
                   <span
                     className="size-2 shrink-0 rounded-full bg-accent-secondary"
@@ -590,7 +590,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <span className="font-mono text-meta uppercase text-text-muted">
+              <span className="font-mono text-meta uppercase text-text-tertiary">
                 Próximos pasos
               </span>
               <ul className="flex flex-col gap-1.5">
@@ -619,7 +619,7 @@ export function DocumentosPanel({ active, reduceMotion }: PanelProps) {
                 after the items. Mono + muted so it reads as a quiet recap. */}
             <span className="relative mt-auto block h-4">
               <motion.span
-                className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-tertiary"
                 variants={staggerItem}
               >
                 2 deals · 3 próximos pasos {/* mock */}
@@ -664,9 +664,9 @@ function ResolvingVar({
   reduceMotion: boolean;
 }) {
   const tokenCls =
-    "rounded-input border border-accent-secondary bg-accent-secondary-soft px-1.5 py-0.5 font-mono text-meta text-accent-secondary";
+    "rounded-sm border border-accent-secondary bg-accent-secondary-soft px-1.5 py-0.5 font-mono text-meta text-accent-secondary";
   const valueCls =
-    "rounded-input border border-border bg-surface-sunken px-1.5 py-0.5 text-body-sm text-text-primary";
+    "rounded-sm border border-border bg-surface-sunken px-1.5 py-0.5 text-body-sm text-text-primary";
 
   if (reduceMotion) {
     // Resting source state under reduced motion: the editable token.
@@ -719,14 +719,14 @@ function ViewToggle({
   onSelect: (next: PlantillasView) => void;
 }) {
   const base =
-    "flex-1 rounded-input px-2.5 py-1 font-mono text-meta uppercase transition-colors";
-  const activeCls = "bg-accent-primary text-on-accent shadow-hard-sm";
-  const idleCls = "text-text-muted hover:text-text-secondary";
+    "flex-1 rounded-sm px-2.5 py-1 font-mono text-meta uppercase transition-colors";
+  const activeCls = "bg-accent-primary text-on-accent shadow-flat";
+  const idleCls = "text-text-tertiary hover:text-text-secondary";
   return (
     <div
       role="radiogroup"
       aria-label="Vista de la plantilla"
-      className="flex items-center gap-1 rounded-input border border-border bg-surface-sunken p-1"
+      className="flex items-center gap-1 rounded-sm border border-border bg-surface-sunken p-1"
     >
       <button
         type="button"
@@ -762,9 +762,9 @@ function TemplateView({
   return (
     <div className="flex h-full flex-col gap-3">
       {/* Brand row = "Tu marca": sender identity / signature. */}
-      <div className="flex items-center gap-2 rounded-input border border-border bg-surface px-3 py-2">
+      <div className="flex items-center gap-2 rounded-sm border border-border bg-surface px-3 py-2">
         <span
-          className="flex size-7 shrink-0 items-center justify-center rounded-input border border-border-strong bg-accent-primary font-mono text-meta uppercase text-on-accent"
+          className="flex size-7 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-accent-primary font-mono text-meta uppercase text-on-accent"
           aria-hidden="true"
         >
           T
@@ -773,16 +773,16 @@ function TemplateView({
           <span className="truncate text-body-sm text-text-primary">
             Tu marca
           </span>
-          <span className="font-mono text-meta uppercase text-text-muted">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             Remitente · firma propia
           </span>
         </span>
       </div>
 
       {/* Template body with variable chips that resolve to client data. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-note border border-border bg-surface px-3 py-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-md border border-border bg-surface px-3 py-3">
         <div className="flex items-baseline gap-2">
-          <span className="font-mono text-meta uppercase text-text-muted">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             Asunto
           </span>
           <span className="flex flex-wrap items-center gap-1 text-body-sm text-text-primary">
@@ -820,11 +820,11 @@ function TemplateView({
 
       {/* Copy affordance (no campaigns, no mass email). */}
       <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 font-mono text-meta uppercase text-text-muted">
+        <span className="inline-flex items-center gap-1.5 font-mono text-meta uppercase text-text-tertiary">
           <EnvelopeSimple size={14} aria-hidden="true" />
           Plantilla con tus variables
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-control border border-border-strong bg-surface-raised px-3 py-1.5 text-body-sm text-text-primary shadow-hard-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-surface-raised px-3 py-1.5 text-body-sm text-text-primary shadow-flat">
           <Copy size={14} weight="bold" aria-hidden="true" />
           Copiar
         </span>
@@ -838,7 +838,7 @@ function TemplateView({
 function PreviewView() {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-note border border-border bg-surface">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-border bg-surface">
         {/* Branded header band: monogram + sender + recipient meta. */}
         <div className="flex items-center gap-2 bg-surface-sunken px-3 py-3">
           <span
@@ -851,7 +851,7 @@ function PreviewView() {
             <span className="truncate text-body-sm text-text-primary">
               Tu marca
             </span>
-            <span className="font-mono text-meta uppercase text-text-muted">
+            <span className="font-mono text-meta uppercase text-text-tertiary">
               para Estudio Hibö
             </span>
           </span>
@@ -873,12 +873,12 @@ function PreviewView() {
             Dentro tienes el alcance, los plazos y el presupuesto.
           </p>
           <span
-            className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-control bg-accent-primary px-3 py-1.5 text-body-sm text-on-accent shadow-hard-sm"
+            className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-md bg-accent-primary px-3 py-1.5 text-body-sm text-on-accent shadow-flat"
             aria-hidden="true"
           >
             Ver propuesta
           </span>
-          <p className="mt-auto text-meta text-text-muted">
+          <p className="mt-auto text-meta text-text-tertiary">
             Un saludo, — Tu marca
           </p>
         </div>
@@ -1020,7 +1020,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
             "thinking" it reads faint with a working label, then the summary
             writes in word-by-word and the AIChip settles. */}
         <motion.div
-          className="flex flex-col gap-2 rounded-note border border-border bg-surface px-3 py-3"
+          className="flex flex-col gap-2 rounded-md border border-border bg-surface px-3 py-3"
           initial={reduceMotion ? false : { opacity: 0.55 }}
           animate={{ opacity: thinking ? 0.55 : 1 }}
           transition={{ duration: 0.4, ease: EASE_OUT }}
@@ -1036,7 +1036,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
                 {thinking ? (
                   <motion.span
                     key="thinking"
-                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-tertiary"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0.5, 1, 0.5] }}
                     exit={{ opacity: 0 }}
@@ -1051,7 +1051,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
                 ) : (
                   <motion.span
                     key="summary-label"
-                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-muted"
+                    className="absolute inset-0 flex items-center font-mono text-meta uppercase text-text-tertiary"
                     initial={reduceMotion ? false : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -1085,7 +1085,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
         {/* Próxima acción sugerida. Always reserved; reveals (opacity + small y)
             with a MagicWand wrapper pulse once the action phase lands. */}
         <motion.div
-          className="flex items-start gap-3 rounded-note border border-accent-secondary bg-accent-secondary-soft px-3 py-3 shadow-hard-sm"
+          className="flex items-start gap-3 rounded-md border border-accent-secondary bg-accent-secondary-soft px-3 py-3 shadow-flat"
           initial={reduceMotion ? false : { opacity: 0, y: 8 }}
           animate={{
             opacity: showAction ? 1 : reduceMotion ? 1 : 0,
@@ -1096,7 +1096,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
           {showAction && !reduceMotion ? (
             <motion.span
               key={`wand-${phase}`}
-              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-input border border-accent-secondary bg-surface-raised text-accent-secondary"
+              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm border border-accent-secondary bg-surface-raised text-accent-secondary"
               aria-hidden="true"
               initial={{ scale: 0.9 }}
               animate={{ scale: [0.9, 1.12, 1] }}
@@ -1106,7 +1106,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
             </motion.span>
           ) : (
             <span
-              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-input border border-accent-secondary bg-surface-raised text-accent-secondary"
+              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm border border-accent-secondary bg-surface-raised text-accent-secondary"
               aria-hidden="true"
             >
               <MagicWand size={16} weight="fill" />
@@ -1124,7 +1124,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
 
         {/* Template-tone tip (faithful: adapta plantillas). Reserved; fades in last. */}
         <motion.div
-          className="flex items-center justify-between gap-2 rounded-input border border-border bg-surface px-3 py-2"
+          className="flex items-center justify-between gap-2 rounded-sm border border-border bg-surface px-3 py-2"
           initial={reduceMotion ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: showRest ? 1 : reduceMotion ? 1 : 0, y: showRest ? 0 : 8 }}
           transition={{ duration: 0.34, ease: EASE_OUT }}
@@ -1142,7 +1142,7 @@ export function AsistentePanel({ active, reduceMotion }: PanelProps) {
 
         {/* Trust chip: BYO encrypted API key (the AI cost model). Fades in last. */}
         <motion.div
-          className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-input border border-border bg-surface-sunken px-2 py-1"
+          className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-sm border border-border bg-surface-sunken px-2 py-1"
           initial={reduceMotion ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: showRest ? 1 : reduceMotion ? 1 : 0, y: showRest ? 0 : 8 }}
           transition={{ duration: 0.34, ease: EASE_OUT, delay: showRest ? 0.1 : 0 }}

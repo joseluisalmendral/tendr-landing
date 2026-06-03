@@ -74,14 +74,14 @@ export function FauxShell({
   return (
     <div
       className={
-        "flex min-h-[22rem] w-full flex-col overflow-hidden rounded-card border bg-surface-raised transition-[opacity,box-shadow] duration-300 " +
+        "flex min-h-[22rem] w-full flex-col overflow-hidden rounded-lg border bg-surface-raised transition-[opacity,box-shadow] duration-300 " +
         (active
-          ? "border-border-strong opacity-100 shadow-hard"
+          ? "border-border-strong opacity-100 shadow-flat"
           : "border-border opacity-100 shadow-soft md:opacity-[0.55]")
       }
     >
       <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-        <span className="font-mono text-meta uppercase text-text-muted">
+        <span className="font-mono text-meta uppercase text-text-tertiary">
           {label}
         </span>
         <span className="flex gap-1.5" aria-hidden="true">
@@ -114,9 +114,9 @@ export function JourneyCardContent({
   closed?: boolean;
 } = {}) {
   return (
-    <div className="flex w-full items-center gap-3 rounded-note border border-border-strong bg-surface px-3 py-2.5 shadow-hard-sm">
+    <div className="flex w-full items-center gap-3 rounded-md border border-border-strong bg-surface px-3 py-2.5 shadow-flat">
       <span
-        className="flex size-9 shrink-0 items-center justify-center rounded-input border border-border-strong bg-accent-secondary-soft font-mono text-body-sm uppercase text-accent-secondary"
+        className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-accent-secondary-soft font-mono text-body-sm uppercase text-accent-secondary"
         aria-hidden="true"
       >
         H
@@ -125,13 +125,13 @@ export function JourneyCardContent({
         <span className="truncate text-body-sm text-text-primary">
           Estudio Hibö
         </span>
-        <span className="font-mono text-meta uppercase text-text-muted">
+        <span className="font-mono text-meta uppercase text-text-tertiary">
           Diseño · €2.000 {/* mock */}
         </span>
       </span>
       <span
         className={
-          "rounded-input border px-2 py-0.5 font-mono text-meta uppercase " +
+          "rounded-sm border px-2 py-0.5 font-mono text-meta uppercase " +
           (closed
             ? "border-success bg-success-soft text-success"
             : "border-accent-secondary bg-accent-secondary-soft text-accent-secondary")
@@ -157,19 +157,19 @@ function FauxField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="font-mono text-meta uppercase text-text-muted">
+      <span className="font-mono text-meta uppercase text-text-tertiary">
         {label}
       </span>
-      <div className="flex h-9 items-center gap-2 rounded-input border border-border bg-surface px-3">
+      <div className="flex h-9 items-center gap-2 rounded-sm border border-border bg-surface px-3">
         {icon ? (
-          <span className="shrink-0 text-text-muted" aria-hidden="true">
+          <span className="shrink-0 text-text-tertiary" aria-hidden="true">
             {icon}
           </span>
         ) : null}
         <span
           className={
             "truncate text-body-sm " +
-            (muted ? "text-text-muted" : "text-text-primary")
+            (muted ? "text-text-tertiary" : "text-text-primary")
           }
         >
           {value}
@@ -213,16 +213,16 @@ export function StageFormFaux({ active }: { active: boolean }) {
 
         {/* Faux SELECT with chevron. */}
         <div className="flex flex-col gap-1">
-          <span className="font-mono text-meta uppercase text-text-muted">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             Tipo de servicio
           </span>
-          <div className="flex h-9 items-center justify-between rounded-input border border-border bg-surface px-3">
+          <div className="flex h-9 items-center justify-between rounded-sm border border-border bg-surface px-3">
             <span className="truncate text-body-sm text-text-primary">
               Retainer mensual
             </span>
             <CaretDown
               size={15}
-              className="shrink-0 text-text-muted"
+              className="shrink-0 text-text-tertiary"
               aria-hidden="true"
             />
           </div>
@@ -230,23 +230,23 @@ export function StageFormFaux({ active }: { active: boolean }) {
 
         {/* Tag chips. */}
         <div className="flex items-center gap-2">
-          <span className="font-mono text-meta uppercase text-text-muted">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             Etiquetas
           </span>
-          <span className="rounded-input border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary">
+          <span className="rounded-sm border border-accent-secondary bg-accent-secondary-soft px-2 py-0.5 font-mono text-meta uppercase text-accent-secondary">
             Diseño
           </span>
-          <span className="rounded-input border border-border px-2 py-0.5 font-mono text-meta uppercase text-text-muted">
+          <span className="rounded-sm border border-border px-2 py-0.5 font-mono text-meta uppercase text-text-tertiary">
             Retainer
           </span>
         </div>
 
         {/* Helper line + primary action. */}
         <div className="flex items-center justify-between pt-1">
-          <span className="text-meta text-text-muted">
+          <span className="text-meta text-text-tertiary">
             Se guardará en tu cartera
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-control border border-border-strong bg-accent-primary px-3 py-1.5 text-body-sm text-on-accent shadow-hard-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-accent-primary px-3 py-1.5 text-body-sm text-on-accent shadow-flat">
             <Plus size={14} weight="bold" aria-hidden="true" />
             Guardar cliente
           </span>
@@ -277,9 +277,9 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
   return (
     <div
       className={
-        "flex items-center gap-2 rounded-input border px-2 py-1.5 " +
+        "flex items-center gap-2 rounded-sm border px-2 py-1.5 " +
         (highlight
-          ? "border-accent-secondary bg-accent-secondary-soft ring-1 ring-accent-secondary shadow-hard-sm"
+          ? "border-accent-secondary bg-accent-secondary-soft ring-1 ring-accent-secondary shadow-flat"
           : "border-border bg-surface")
       }
     >
@@ -301,13 +301,13 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
         >
           {name}
         </span>
-        <span className="font-mono text-meta uppercase text-text-muted">
+        <span className="font-mono text-meta uppercase text-text-tertiary">
           {amount}
         </span>
       </span>
       <DotsThreeVertical
         size={14}
-        className="shrink-0 text-text-muted"
+        className="shrink-0 text-text-tertiary"
         aria-hidden="true"
       />
     </div>
@@ -328,14 +328,14 @@ function PipelineColumn({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="font-mono text-meta uppercase text-text-muted">
+        <span className="font-mono text-meta uppercase text-text-tertiary">
           {title}
         </span>
-        <span className="rounded-input bg-surface-sunken px-1.5 font-mono text-meta text-text-muted">
+        <span className="rounded-sm bg-surface-sunken px-1.5 font-mono text-meta text-text-tertiary">
           {count}
         </span>
       </div>
-      <div className="flex min-h-[10rem] flex-col gap-2 rounded-input border border-dashed border-border p-1.5">
+      <div className="flex min-h-[10rem] flex-col gap-2 rounded-sm border border-dashed border-border p-1.5">
         {cards.map((c) => (
           <MiniClientCard key={c.name} {...c} />
         ))}
@@ -355,7 +355,7 @@ function ActivityEvent({ text, when }: { text: string; when: string }) {
       <span className="block text-body-sm leading-tight text-text-secondary">
         {text}
       </span>
-      <span className="font-mono text-meta uppercase text-text-muted">
+      <span className="font-mono text-meta uppercase text-text-tertiary">
         {when}
       </span>
     </li>
@@ -405,7 +405,7 @@ export function StagePipelineFaux({ active }: { active: boolean }) {
 
           {/* Activity rail. */}
           <div className="border-t border-border pt-3 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
-            <span className="font-mono text-meta uppercase text-text-muted">
+            <span className="font-mono text-meta uppercase text-text-tertiary">
               Actividad
             </span>
             <ol className="mt-2 flex flex-col gap-2.5">
@@ -417,7 +417,7 @@ export function StagePipelineFaux({ active }: { active: boolean }) {
         </div>
 
         {/* AI nudge — same brand language as FeaturesBoard. */}
-        <div className="inline-flex items-center gap-1.5 self-start rounded-input border border-warning bg-surface px-2 py-1">
+        <div className="inline-flex items-center gap-1.5 self-start rounded-sm border border-warning bg-surface px-2 py-1">
           <WarningCircle
             size={14}
             weight="bold"
@@ -478,7 +478,7 @@ function CaseTimelineEvent({ text, when, done }: CaseEvent) {
       <span className="block text-body-sm leading-tight text-text-secondary">
         {text}
       </span>
-      <span className="font-mono text-meta uppercase text-text-muted">
+      <span className="font-mono text-meta uppercase text-text-tertiary">
         {when}
       </span>
     </li>
@@ -496,16 +496,16 @@ export function StageReportFaux({ active }: { active: boolean }) {
         {/* Case meta row: a single deal-value field (NOT a totals breakdown) +
             the closed state, kept as a faithful caso summary. */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1 rounded-input border border-border bg-surface px-3 py-2">
-            <span className="font-mono text-meta uppercase text-text-muted">
+          <div className="flex flex-col gap-1 rounded-sm border border-border bg-surface px-3 py-2">
+            <span className="font-mono text-meta uppercase text-text-tertiary">
               Valor del caso
             </span>
             <span className="font-mono text-body-sm text-text-primary">
               €2.000 {/* mock */}
             </span>
           </div>
-          <div className="flex flex-col gap-1 rounded-input border border-border bg-surface px-3 py-2">
-            <span className="font-mono text-meta uppercase text-text-muted">
+          <div className="flex flex-col gap-1 rounded-sm border border-border bg-surface px-3 py-2">
+            <span className="font-mono text-meta uppercase text-text-tertiary">
               Estado
             </span>
             <span className="text-body-sm text-text-primary">
@@ -517,8 +517,8 @@ export function StageReportFaux({ active }: { active: boolean }) {
         {/* Case timeline — markdown-note / activity style, same language as the
             seguimiento ACTIVIDAD rail. The journey of the caso through its states
             up to closed/paid. */}
-        <div className="flex flex-col gap-2 rounded-input border border-border bg-surface px-3 py-2.5">
-          <span className="font-mono text-meta uppercase text-text-muted">
+        <div className="flex flex-col gap-2 rounded-sm border border-border bg-surface px-3 py-2.5">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             Historial del caso
           </span>
           <ol className="flex flex-col gap-2.5">
@@ -531,10 +531,10 @@ export function StageReportFaux({ active }: { active: boolean }) {
         {/* Hand-drawn "Cobrado" ink stamp, rotated — an on-brand STATE mark
             (the case is marked cobrado), NOT a payment receipt. */}
         <div className="flex items-center justify-between">
-          <span className="font-mono text-meta uppercase text-text-muted">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             Estudio Hibö · 28 mar {/* mock */}
           </span>
-          <span className="inline-flex -rotate-6 items-center gap-1.5 rounded-input border-2 border-success bg-success-soft px-3 py-1 font-mono text-meta uppercase tracking-[0.18em] text-success shadow-hard-sm">
+          <span className="inline-flex -rotate-6 items-center gap-1.5 rounded-sm border-2 border-success bg-success-soft px-3 py-1 font-mono text-meta uppercase tracking-[0.18em] text-success shadow-flat">
             <Check size={13} weight="bold" aria-hidden="true" />
             Cobrado
           </span>

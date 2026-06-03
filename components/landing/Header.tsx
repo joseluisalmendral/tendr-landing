@@ -45,7 +45,7 @@ export function Header() {
 
         <Button
           asChild
-          className="rounded-cta bg-accent-primary border border-border-strong shadow-hard text-body-sm text-on-accent h-auto px-4 py-2 transition-all hover:bg-accent-primary-hover active:translate-y-px active:shadow-hard-sm"
+          className="rounded-md bg-accent-primary border border-border-strong text-body-sm text-on-accent h-auto px-4 py-2 transition-all hover:bg-accent-primary-hover active:translate-y-px"
         >
           <Link href="#precios">Empezar gratis</Link>
         </Button>

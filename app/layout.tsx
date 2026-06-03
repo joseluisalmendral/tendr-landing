@@ -1,32 +1,31 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AxeReporter } from "@/components/a11y/AxeReporter";
 import { Providers } from "@/components/Providers";
 
-// Display: Clash Display (Fontshare, libre comercial) self-hosteada.
-const clashDisplay = localFont({
-  src: [
-    { path: "./fonts/ClashDisplay-Semibold.woff2", weight: "600", style: "normal" },
-    { path: "./fonts/ClashDisplay-Bold.woff2", weight: "700", style: "normal" },
-  ],
-  variable: "--font-clash-display",
+// Display: Bricolage Grotesque (Google variable font, OFL).
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-bricolage",
   display: "swap",
 });
 
-// Body: Hanken Grotesk (OFL).
-const hankenGrotesk = Hanken_Grotesk({
+// Body: Plus Jakarta Sans (Google variable font, OFL).
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-hanken-grotesk",
+  weight: ["400", "500", "600"],
+  variable: "--font-jakarta",
   display: "swap",
 });
 
-// Mono: JetBrains Mono (OFL) para metadata/labels.
-const jetbrainsMono = JetBrains_Mono({
+// Mono: Geist Mono (OFL) para numerales/metadata/labels.
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
+  weight: ["400", "500"],
+  variable: "--font-geist-mono",
   display: "swap",
 });
 
@@ -46,9 +45,9 @@ export default function RootLayout({
       lang="es"
       className={cn(
         "h-full antialiased",
-        clashDisplay.variable,
-        hankenGrotesk.variable,
-        jetbrainsMono.variable,
+        bricolage.variable,
+        jakarta.variable,
+        geistMono.variable,
       )}
     >
       <body className="min-h-full flex flex-col">

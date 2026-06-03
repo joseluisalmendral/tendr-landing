@@ -240,14 +240,14 @@ function PipelineCardView({
         <motion.div
           whileHover={HOVER_LIFT}
           transition={HOVER_TRANSITION}
-          className="flex items-center gap-3 rounded-note border border-border-strong bg-surface-raised px-4 py-3 shadow-hard"
+          className="flex items-center gap-3 rounded-md border border-border-strong bg-surface-raised px-4 py-3 shadow-flat"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-input border border-border-strong bg-surface-sunken">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-surface-sunken">
             <card.Icon weight="duotone" className="h-5 w-5 text-text-primary" aria-hidden="true" />
           </span>
           <span className="flex min-w-0 flex-col">
             <span className="truncate text-body text-text-primary">{card.client}</span>
-            <span className="font-mono text-meta uppercase text-text-muted">
+            <span className="font-mono text-meta uppercase text-text-tertiary">
               {card.stage}
             </span>
           </span>
@@ -306,7 +306,7 @@ export function HeroPipeline() {
   }, [controls, reduce]);
 
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-card border border-border-strong bg-surface-raised shadow-soft">
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-border-strong bg-surface-raised shadow-soft">
       <motion.div
         className="absolute inset-0"
         variants={containerVariants}

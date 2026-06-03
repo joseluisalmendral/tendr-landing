@@ -90,7 +90,7 @@ export function Hero({
           filter: "blur(0px)",
           transition: {
             duration: 0.72, // --duration-wow
-            ease: [0.19, 1, 0.22, 1], // --ease-expo (exclusivo del momento wow)
+            ease: [0.16, 1, 0.3, 1], // --easing-expo (momento wow, v2)
           },
         },
       };
@@ -164,7 +164,7 @@ export function Hero({
           >
             <Button
               asChild
-              className="rounded-cta bg-accent-primary border border-border-strong shadow-hard text-[length:var(--text-body)] text-on-accent h-auto px-6 py-3 transition-all hover:bg-accent-primary-hover active:translate-y-px active:shadow-hard-sm"
+              className="rounded-md bg-accent-primary border border-border-strong text-[length:var(--text-body)] text-on-accent h-auto px-6 py-3 transition-all hover:bg-accent-primary-hover active:translate-y-px"
             >
               <Link href={ctaPrimary.href}>{ctaPrimary.label}</Link>
             </Button>
@@ -172,7 +172,7 @@ export function Hero({
             <Button
               asChild
               variant="outline"
-              className="rounded-control border-border-strong bg-transparent text-[length:var(--text-body)] text-text-primary shadow-none h-auto px-6 py-3"
+              className="rounded-md border-border-strong bg-transparent text-[length:var(--text-body)] text-text-primary shadow-none h-auto px-6 py-3"
             >
               <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
             </Button>

@@ -16,7 +16,7 @@ export function DraftNotice() {
     <aside
       role="note"
       aria-label="Aviso de borrador"
-      className="flex items-start gap-3 rounded-note border border-border-strong bg-accent-secondary-soft px-5 py-4 shadow-hard-sm"
+      className="flex items-start gap-3 rounded-md border border-border-strong bg-accent-secondary-soft px-5 py-4 shadow-flat"
     >
       <Warning
         aria-hidden="true"

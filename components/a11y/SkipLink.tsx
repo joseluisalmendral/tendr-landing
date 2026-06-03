@@ -37,11 +37,11 @@ export function SkipLink({ href = "#main" }: SkipLinkProps) {
         // On keyboard focus: pin top-left, above everything, fully visible.
         "focus-visible:not-sr-only focus-visible:fixed focus-visible:left-4 focus-visible:top-4 focus-visible:z-50",
         "focus-visible:inline-flex focus-visible:items-center focus-visible:justify-center",
-        // radius 0: brutalist default. rounded-cta is reserved for the primary CTA.
+        // radius 0: brutalist default. rounded-md is reserved for the primary CTA.
         "focus-visible:border focus-visible:border-border-strong",
         "focus-visible:bg-background focus-visible:px-4 focus-visible:py-2",
         "focus-visible:text-body-sm focus-visible:font-medium focus-visible:text-foreground",
-        "focus-visible:shadow-hard focus-visible:outline-none",
+        "focus-visible:shadow-soft focus-visible:outline-none",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
     >

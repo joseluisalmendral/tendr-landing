@@ -76,29 +76,29 @@ function KanbanFauxUI({ active }: { active: boolean }) {
       <div className="grid grid-cols-2 gap-4">
         {/* Column: En curso */}
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-meta uppercase text-text-muted">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             En curso
           </span>
-          <div className="rounded-input border border-border bg-surface p-3">
+          <div className="rounded-sm border border-border bg-surface p-3">
             <p className="text-body-sm text-text-primary">Marta Quiroga</p>
-            <p className="font-mono text-meta uppercase text-text-muted">
+            <p className="font-mono text-meta uppercase text-text-tertiary">
               Branding cafetería
             </p>
           </div>
-          <div className="rounded-input border border-border bg-surface p-3">
+          <div className="rounded-sm border border-border bg-surface p-3">
             <p className="text-body-sm text-text-primary">Estudio Bravo</p>
-            <p className="font-mono text-meta uppercase text-text-muted">
+            <p className="font-mono text-meta uppercase text-text-tertiary">
               Landing producto
             </p>
           </div>
         </div>
         {/* Column: Cerrado */}
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-meta uppercase text-text-muted">
+          <span className="font-mono text-meta uppercase text-text-tertiary">
             Cerrado
           </span>
           <motion.div
-            className="flex items-center gap-2 rounded-input border border-success bg-success-soft p-3"
+            className="flex items-center gap-2 rounded-sm border border-success bg-success-soft p-3"
             initial={false}
             animate={
               active
@@ -156,7 +156,7 @@ function AtRiskFauxUI({ active }: { active: boolean }) {
         </svg>
         <div className="relative px-2 py-1">
           <p className="text-body-sm text-text-primary">Hugo Salazar</p>
-          <p className="font-mono text-meta uppercase text-text-muted">
+          <p className="font-mono text-meta uppercase text-text-tertiary">
             Sin contacto 18 días
           </p>
         </div>
@@ -171,7 +171,7 @@ function ReminderFauxUI({ active }: { active: boolean }) {
     <div className="flex flex-col gap-4">
       <p className="font-heading text-h3 text-text-primary">Recordatorios</p>
       <motion.div
-        className="flex items-start gap-3 rounded-input border border-border bg-surface p-3 shadow-soft"
+        className="flex items-start gap-3 rounded-sm border border-border bg-surface p-3 shadow-soft"
         initial={false}
         animate={
           active ? { y: [8, 0], opacity: [0, 1] } : { y: 0, opacity: 1 }
@@ -185,7 +185,7 @@ function ReminderFauxUI({ active }: { active: boolean }) {
           aria-hidden
         />
         <div>
-          <p className="font-mono text-meta uppercase text-text-muted">Hoy</p>
+          <p className="font-mono text-meta uppercase text-text-tertiary">Hoy</p>
           <p className="text-body-sm text-text-primary">
             Seguimiento con Marta Quiroga
           </p>
@@ -199,7 +199,7 @@ function ReminderFauxUI({ active }: { active: boolean }) {
 function MetricFauxUI() {
   return (
     <div className="flex flex-col gap-2">
-      <span className="font-mono text-meta uppercase text-text-muted">
+      <span className="font-mono text-meta uppercase text-text-tertiary">
         Clientes gestionados
       </span>
       <p className="font-mono text-[2.75rem] leading-none text-text-primary">
@@ -305,7 +305,7 @@ function Note({
   return (
     <motion.article
       className={cn(
-        "group relative isolate flex flex-col gap-5 rounded-note border border-border bg-surface-raised p-6 shadow-soft",
+        "group relative isolate flex flex-col gap-5 rounded-md border border-border bg-surface-raised p-6 shadow-soft",
         config.span,
         draggable && "cursor-grab active:cursor-grabbing touch-none",
       )}

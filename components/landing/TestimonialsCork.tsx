@@ -78,7 +78,7 @@ const HAND_VH = 75; // hand sweeps in from top, presses, exits downward
 const ZOOM_OUT_VH = 50; // closing zoom-out
 const SMALL = 0.74; // resting scale of the framed board during zoom-in / zoom-out
 
-const EASE_EXPO = cubicBezier(0.19, 1, 0.22, 1); // wow board zoom-in
+const EASE_EXPO = cubicBezier(0.16, 1, 0.3, 1); // wow board zoom-in
 const EASE_SNAP = cubicBezier(0.34, 1.56, 0.64, 1); // press overshoot
 const EASE_OUT = cubicBezier(0.22, 1, 0.36, 1);
 
@@ -271,7 +271,7 @@ function CorkPan({
             {/* Cork-mounted heading label (real h2, first in reading order). */}
             <h2
               id={HEADING_ID}
-              className="cork-heading absolute left-1/2 top-[5.5rem] max-w-[min(90%,42rem)] -translate-x-1/2 rounded-card border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-hard-sm md:top-24"
+              className="cork-heading absolute left-1/2 top-[5.5rem] max-w-[min(90%,42rem)] -translate-x-1/2 rounded-lg border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-flat md:top-24"
             >
               {HEADING}
             </h2>
@@ -385,7 +385,7 @@ function StaticCorkGrid({
       <div className="mx-auto max-w-[1200px] px-6 py-16 md:py-24">
         <h2
           id={HEADING_ID}
-          className="cork-heading--static mx-auto mb-12 w-fit max-w-full rounded-card border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-hard-sm"
+          className="cork-heading--static mx-auto mb-12 w-fit max-w-full rounded-lg border border-border-strong bg-surface px-6 py-3 text-center font-display text-h2 text-text-primary shadow-flat"
         >
           {HEADING}
         </h2>

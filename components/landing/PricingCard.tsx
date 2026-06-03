@@ -54,7 +54,7 @@ export function PricingCard({
         "h-full ring-0 border border-border bg-surface-raised",
         // Highlighted tier: ink-accent 2px border, hard shadow, lifted scale.
         highlighted &&
-          "border-2 border-accent-primary shadow-hard scale-[1.02]",
+          "border-2 border-accent-primary shadow-flat scale-[1.02]",
       )}
     >
       <JsonLd
@@ -74,7 +74,7 @@ export function PricingCard({
         {badge ? (
           <Badge
             variant="outline"
-            className="w-fit rounded-input border-border-strong bg-surface-sunken text-text-secondary"
+            className="w-fit rounded-sm border-border-strong bg-surface-sunken text-text-secondary"
           >
             {badge}
           </Badge>
@@ -91,7 +91,7 @@ export function PricingCard({
           <span className="font-display text-h2 text-text-primary">
             {price}
           </span>
-          <span className="font-mono text-meta text-text-muted">{period}</span>
+          <span className="font-mono text-meta text-text-tertiary">{period}</span>
         </p>
       </CardHeader>
 
@@ -114,7 +114,7 @@ export function PricingCard({
         {highlighted ? (
           <Button
             asChild
-            className="rounded-cta bg-accent-primary text-on-accent border border-border-strong shadow-hard text-body h-auto w-full px-6 py-3 hover:bg-accent-primary-hover active:translate-y-px active:shadow-hard-sm transition-all"
+            className="rounded-md bg-accent-primary text-on-accent border border-border-strong text-body h-auto w-full px-6 py-3 hover:bg-accent-primary-hover active:translate-y-px transition-all"
           >
             <Link href={cta.href}>{cta.label}</Link>
           </Button>
@@ -122,7 +122,7 @@ export function PricingCard({
           <Button
             asChild
             variant="outline"
-            className="rounded-control border-border-strong bg-transparent text-text-primary text-body h-auto w-full px-6 py-3 shadow-none"
+            className="rounded-md border-border-strong bg-transparent text-text-primary text-body h-auto w-full px-6 py-3 shadow-none"
           >
             <Link href={cta.href}>{cta.label}</Link>
           </Button>
