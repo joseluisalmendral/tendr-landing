@@ -76,6 +76,13 @@
   /* highlight (sólo text-bg, p.ej. pill "Recomendado") */
   --color-highlight: var(--highlight);
   --color-highlight-fg: var(--highlight-fg);
+  /* washi tape tints (celo, B5-fix-1): 3 lavados cálidos translúcidos + filo */
+  --color-washi-buttermilk: var(--washi-buttermilk);
+  --color-washi-buttermilk-edge: var(--washi-buttermilk-edge);
+  --color-washi-wisp: var(--washi-wisp);
+  --color-washi-wisp-edge: var(--washi-wisp-edge);
+  --color-washi-teal: var(--washi-teal);
+  --color-washi-teal-edge: var(--washi-teal-edge);
   /* functional states (= estado) */
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
@@ -209,6 +216,23 @@
   /* ---- Highlight (sólo text-bg, p.ej. pill "Recomendado") ---- */
   --highlight: #fff8bb;
   --highlight-fg: #7a6a10;
+
+  /* ---- Washi tape (celo) tints — B5-fix-1 ----
+     Tres lavados CÁLIDOS SUAVES (Folk Twins: washes, no trazos saturados) que
+     dan al celo su propio color para que se vea sobre el papel blanco. Cada uno
+     es un color-mix de un matiz de marca al 22-28% sobre surface-raised, así que
+     queda translúcido y tenue (decorativo, no afecta AA). Se alternan por
+     index%3 a lo largo de la tira. El borde del celo usa una mezcla un poco más
+     saturada del mismo matiz para el filo "doblado" del washi.
+       buttermilk = highlight (amarillo mantequilla)
+       wisp       = support (magenta-wine, la firma)
+       teal       = support-teal (progreso) */
+  --washi-buttermilk: color-mix(in oklab, var(--highlight) 60%, var(--surface-raised));
+  --washi-buttermilk-edge: color-mix(in oklab, var(--highlight-fg) 30%, var(--washi-buttermilk));
+  --washi-wisp: color-mix(in oklab, var(--support) 24%, var(--surface-raised));
+  --washi-wisp-edge: color-mix(in oklab, var(--support) 42%, var(--surface-raised));
+  --washi-teal: color-mix(in oklab, var(--support-teal) 22%, var(--surface-raised));
+  --washi-teal-edge: color-mix(in oklab, var(--support-teal) 40%, var(--surface-raised));
 
   /* ---- Functional states (ocre cálido, no amber-wash) ---- */
   /* design.md §2.1 lista #3e7d52; se oscurece levemente a #356e48 para cumplir
@@ -655,6 +679,34 @@
   line-height: 0;
 }
 
+/* La TIRA de celo propiamente dicha (B5-fix-1). Antes era neutra semi-translúcida
+   y "desaparecía" sobre el papel blanco. Ahora:
+   1. TINTE de marca suave (washi wash) — se alterna por index%3 (buttermilk /
+      wisp / teal) vía la var --tape-tint que escribe el componente.
+   2. TEXTURA washi: franjas diagonales muy tenues (repeating-linear-gradient a
+      bajo contraste) que la diferencian de una etiqueta plana.
+   3. FILO suave: borde 1px en el matiz un poco más saturado (--tape-edge) + un
+      brillo interior superior que da el relieve del celo doblado.
+   Sigue siendo translúcida (opacity del wash) → decorativa, no afecta AA. */
+.tw-note__tape {
+  display: block;
+  width: 5.5rem;
+  height: 1.35rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--tape-edge, var(--color-border-hairline));
+  background-color: var(--tape-tint, var(--color-surface-sunken));
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in oklab, var(--tape-edge, var(--color-border-strong)) 22%, transparent) 0,
+    color-mix(in oklab, var(--tape-edge, var(--color-border-strong)) 22%, transparent) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-surface-raised) 70%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--tape-edge, var(--color-border-strong)) 28%, transparent);
+}
+
 /* Unidad opaca movible: contiene sombras + figure + avatar. El pan-JS escribe
    aquí su transform/opacity de entrada; el lean de hover va en el hijo. */
 .tw-note__unit {
@@ -742,8 +794,13 @@
   box-shadow: var(--shadow-flat);
 }
 
-/* Marco hairline del tablero limpio (sustituye el marco de madera v1).
-   pointer-events:none. */
+/* Marco VISIBLE del tablero limpio (B5-fix-1) — sustituye el marco hairline que
+   "se leía como sin marco". Ahora es un bisel moderno de pizarra: una banda
+   sólida de 2px en --border-strong (el filo del tablero) + una hairline interior
+   más clara (--border-hairline) que da el relieve "elevado" de una pizarra
+   enmarcada, y una hairline exterior que lo despega del cream de la página. Lee
+   inequívocamente como tablero ENMARCADO a primera vista, sin volver a la madera
+   v1. pointer-events:none. */
 .board-panel::before,
 .board-section--static::before {
   content: "";
@@ -752,7 +809,11 @@
   pointer-events: none;
   z-index: 2;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  border: 2px solid var(--color-border-strong);
+  box-shadow:
+    inset 0 0 0 1px var(--color-border-hairline),
+    inset 0 2px 4px color-mix(in oklab, var(--color-border-strong) 55%, transparent),
+    0 0 0 1px var(--color-border-hairline);
 }
 
 /* Encabezado montado en el tablero (etiqueta), por encima del marco. */

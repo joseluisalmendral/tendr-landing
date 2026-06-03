@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "motion/react";
 
+import { BoardHand } from "@/components/landing/BoardHand";
 import { TestimonialCard } from "@/components/landing/TestimonialCard";
 import type { NoteSize, TestimonialCardProps } from "@/components/landing/types";
 
@@ -30,11 +31,13 @@ import type { NoteSize, TestimonialCardProps } from "@/components/landing/types"
  * useScroll({ target: spacer, offset:["start start","end end"] }) → scrollYProgress.
  *
  * THREE phases over the spacer (the v1 cartoon-hand intro was retired with the
- * cork board — ADR-3 calls for a clean open):
+ * cork board; B5-fix-1 brings a RESTYLED v2 line-art hand back as a decorative
+ * once-per-entrance beat over the first note — see BoardHand):
  *   P0 ZOOM-IN  [0, tIn]
  *     The framed board scales SMALL → 1 (grows to fill the screen) over --ease-expo.
- *     The first note is already present and held; it just reveals via its normal
- *     whileInView entrance as the board resolves. No hand carries it in.
+ *     The first note is already present and held; it reveals via its normal
+ *     whileInView entrance as the board resolves, while the v2 line-art hand
+ *     (BoardHand) drifts in and presses its tape strip once.
  *   P1 PAN  [tIn, tPanEnd]
  *     The board pans laterally (x: 0 → -panVw) and notes #2..n appear
  *     (whileInView, time-based — see TestimonialCard). The first note is centred
@@ -247,9 +250,18 @@ function BoardPan({
                   aria-label={`Testimonio ${i + 1} de ${testimonials.length}`}
                   onFocusCapture={() => handleCellFocus(panPositions[i])}
                 >
+                  {/* The placing hand RETURNS (B5-fix-1), restyled to v2
+                      line-art. It plays ONCE on board entrance over the FIRST
+                      note: drifts in, PRESSES the tape strip (press beat = the
+                      tape settle), then lifts + exits. Decorative; omitted under
+                      reduced motion (BoardHand returns null). Positioned over the
+                      note's tape (top centre). */}
+                  {i === 0 ? (
+                    <BoardHand className="pointer-events-none absolute left-1/2 top-[-4.5rem] z-[3] h-28 w-24 -translate-x-1/2 md:h-32 md:w-28" />
+                  ) : null}
+
                   {/* All notes (incl. the first) reveal via their normal
-                      whileInView entrance as the board pans/zooms in. No hand
-                      carries the opening note anymore (ADR-3 clean open). */}
+                      whileInView entrance as the board pans/zooms in. */}
                   <TestimonialCard
                     {...t}
                     panProgress={scrollYProgress}
