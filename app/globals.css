@@ -76,13 +76,6 @@
   /* highlight (sólo text-bg, p.ej. pill "Recomendado") */
   --color-highlight: var(--highlight);
   --color-highlight-fg: var(--highlight-fg);
-  /* washi tape tints (celo, B5-fix-1): 3 lavados cálidos translúcidos + filo */
-  --color-washi-buttermilk: var(--washi-buttermilk);
-  --color-washi-buttermilk-edge: var(--washi-buttermilk-edge);
-  --color-washi-wisp: var(--washi-wisp);
-  --color-washi-wisp-edge: var(--washi-wisp-edge);
-  --color-washi-teal: var(--washi-teal);
-  --color-washi-teal-edge: var(--washi-teal-edge);
   /* functional states (= estado) */
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
@@ -216,23 +209,6 @@
   /* ---- Highlight (sólo text-bg, p.ej. pill "Recomendado") ---- */
   --highlight: #fff8bb;
   --highlight-fg: #7a6a10;
-
-  /* ---- Washi tape (celo) tints — B5-fix-1 ----
-     Tres lavados CÁLIDOS SUAVES (Folk Twins: washes, no trazos saturados) que
-     dan al celo su propio color para que se vea sobre el papel blanco. Cada uno
-     es un color-mix de un matiz de marca al 22-28% sobre surface-raised, así que
-     queda translúcido y tenue (decorativo, no afecta AA). Se alternan por
-     index%3 a lo largo de la tira. El borde del celo usa una mezcla un poco más
-     saturada del mismo matiz para el filo "doblado" del washi.
-       buttermilk = highlight (amarillo mantequilla)
-       wisp       = support (magenta-wine, la firma)
-       teal       = support-teal (progreso) */
-  --washi-buttermilk: color-mix(in oklab, var(--highlight) 60%, var(--surface-raised));
-  --washi-buttermilk-edge: color-mix(in oklab, var(--highlight-fg) 30%, var(--washi-buttermilk));
-  --washi-wisp: color-mix(in oklab, var(--support) 24%, var(--surface-raised));
-  --washi-wisp-edge: color-mix(in oklab, var(--support) 42%, var(--surface-raised));
-  --washi-teal: color-mix(in oklab, var(--support-teal) 22%, var(--surface-raised));
-  --washi-teal-edge: color-mix(in oklab, var(--support-teal) 40%, var(--surface-raised));
 
   /* ---- Functional states (ocre cálido, no amber-wash) ---- */
   /* design.md §2.1 lista #3e7d52; se oscurece levemente a #356e48 para cumplir
@@ -679,32 +655,48 @@
   line-height: 0;
 }
 
-/* La TIRA de celo propiamente dicha (B5-fix-1). Antes era neutra semi-translúcida
-   y "desaparecía" sobre el papel blanco. Ahora:
-   1. TINTE de marca suave (washi wash) — se alterna por index%3 (buttermilk /
-      wisp / teal) vía la var --tape-tint que escribe el componente.
-   2. TEXTURA washi: franjas diagonales muy tenues (repeating-linear-gradient a
-      bajo contraste) que la diferencian de una etiqueta plana.
-   3. FILO suave: borde 1px en el matiz un poco más saturado (--tape-edge) + un
-      brillo interior superior que da el relieve del celo doblado.
-   Sigue siendo translúcida (opacity del wash) → decorativa, no afecta AA. */
+/* La TIRA de celo propiamente dicha (B5-fix-2 — celo PREMIUM).
+   El tratamiento anterior (B5-fix-1: 3 tintes de marca rotativos + franjas
+   diagonales) leía artesanal/barato. Estudiando fotografía real de washi tape de
+   producto, el celo premium es: una tira TRANSLÚCIDA limpia (sin franjas) por la
+   que se ve LIGERAMENTE el papel debajo, con un filo más oscuro arriba/abajo (el
+   borde recto del celo), un brillo interior suave (el satinado del plástico) y un
+   leve sesgo. Por eso aquí:
+   1. UN solo lavado cálido NEUTRO whisper (no 3 tintes de marca): translúcido, el
+      papel se entrevé → integra en vez de gritar. El componente puede pasar
+      --tape-tint/--tape-edge si quiere un susurro de marca, pero el default es
+      neutro y profesional.
+   2. SIN franjas. El relieve viene del filo + el satinado, no de textura craft.
+   3. FILO RECTO: hairline más oscura arriba y abajo (los dos bordes del celo) via
+      box-shadow inset, no un borde de caja completo.
+   4. SATINADO: un gradiente vertical muy tenue (claro arriba → transparente) que
+      da el brillo del plástico del celo.
+   Translúcida (alpha del wash) → decorativa, no afecta AA. */
 .tw-note__tape {
   display: block;
-  width: 5.5rem;
-  height: 1.35rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--tape-edge, var(--color-border-hairline));
-  background-color: var(--tape-tint, var(--color-surface-sunken));
-  background-image: repeating-linear-gradient(
-    45deg,
-    color-mix(in oklab, var(--tape-edge, var(--color-border-strong)) 22%, transparent) 0,
-    color-mix(in oklab, var(--tape-edge, var(--color-border-strong)) 22%, transparent) 1px,
-    transparent 1px,
-    transparent 7px
+  width: 5.75rem;
+  height: 1.25rem;
+  border-radius: 2px;
+  /* lavado translúcido: el papel se entrevé pero la tira SE LEE de un vistazo
+     (alpha ~0.7 sobre sunken cálido). Neutro por defecto; el componente puede
+     susurrar un matiz de marca via --tape-tint. */
+  background-color: var(
+    --tape-tint,
+    color-mix(in oklab, var(--color-surface-sunken) 72%, transparent)
+  );
+  /* satinado del celo: brillo suave arriba que cae a transparente. */
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-surface-raised) 45%, transparent) 0,
+    transparent 48%,
+    color-mix(in oklab, var(--color-surface-raised) 16%, transparent) 100%
   );
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--color-surface-raised) 70%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, var(--tape-edge, var(--color-border-strong)) 28%, transparent);
+    /* filo recto superior e inferior (los dos bordes del celo) */
+    inset 0 1px 0 color-mix(in oklab, var(--color-surface-raised) 75%, transparent),
+    inset 0 -1px 0 var(--tape-edge, color-mix(in oklab, var(--color-border-strong) 42%, transparent)),
+    /* sombra de contacto bajo el filo inferior (celo despegando del papel) */
+    0 1px 2px color-mix(in oklab, var(--color-border-strong) 20%, transparent);
 }
 
 /* Unidad opaca movible: contiene sombras + figure + avatar. El pan-JS escribe

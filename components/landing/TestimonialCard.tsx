@@ -22,12 +22,12 @@ import type {
  * held to a CLEAN BOARD ("El tablero de Tendr") by a strip of WASHI TAPE / celo
  * (ADR-3, v2). The tape replaces the v1 pushpin as the holding device — it reads
  * analog-warm and consistent with the brand's paper/notebook metaphor, where a
- * metal magnet would fight the warm-paper surface. B5-fix-1: the tape now carries
- * a SOFT WARM brand wash (Folk Twins discipline — washes, not saturated strokes)
- * that rotates buttermilk → wisp → teal across the run, plus a faint
- * diagonal-stripe washi texture and a soft edge, so the celo is actually SEEN
- * over the white paper instead of the earlier neutral strip that disappeared.
- * Still translucent → decorative → AA unaffected.
+ * metal magnet would fight the warm-paper surface. B5-fix-2: the tape is now a
+ * PREMIUM washi treatment — ONE clean translucent strip (the paper shows faintly
+ * through it), a straight darker edge line, a soft satin highlight, and a gentle
+ * per-note skew. This replaces the B5-fix-1 look (3 rotating brand tints +
+ * diagonal stripes) which read crafty/cheap. Still translucent → decorative → AA
+ * unaffected.
  *
  * Client Component. Two independent motion concerns compose here:
  *
@@ -166,23 +166,15 @@ export function TestimonialCard({
     },
   };
 
-  // Tape tint rotates across the run (decorative run alternation, B5-fix-1):
-  // three SOFT WARM washes of brand hues (Folk Twins: washes, not saturated
-  // strokes) so the celo is actually SEEN over the white paper, instead of the
-  // old neutral semi-translucent strip that disappeared. buttermilk → wisp →
-  // teal by index%3. Each rotation also flips the strip's rotation sign so the
-  // board doesn't look mechanical. Decorative → translucent → AA unaffected.
-  const TAPE_TINTS = [
-    {
-      tint: "var(--color-washi-buttermilk)",
-      edge: "var(--color-washi-buttermilk-edge)",
-    },
-    { tint: "var(--color-washi-wisp)", edge: "var(--color-washi-wisp-edge)" },
-    { tint: "var(--color-washi-teal)", edge: "var(--color-washi-teal-edge)" },
-  ] as const;
-  const tapeIndex = (index ?? 0) % TAPE_TINTS.length;
-  const tape = TAPE_TINTS[tapeIndex];
-  const tapeRotate = tapeIndex === 1 ? 5 : tapeIndex === 2 ? -3 : -4;
+  // Tape look (B5-fix-2 — PREMIUM celo). The B5-fix-1 treatment (3 rotating
+  // brand tints + diagonal stripes) read crafty/cheap. Real washi-tape product
+  // photography is ONE clean translucent strip — the paper shows through, a
+  // darker edge line, a soft sheen, a gentle skew. So we drop the brand tints and
+  // the stripes entirely and let .tw-note__tape carry its refined neutral default
+  // (translucent warm wash + satin highlight + straight edge). Only the SKEW
+  // varies a touch per note (±8–12°) so the board isn't mechanical — exactly the
+  // gentle skew range real washi sits at. No --tape-tint / --tape-edge override.
+  const tapeRotate = (index ?? 0) % 2 === 0 ? -10 : 8;
 
   const avatarAlt = `Avatar de ${name}, ${role} en ${company}`;
   const sequenceLabel =
@@ -233,18 +225,10 @@ export function TestimonialCard({
           ...(pan ? { willChange: "transform, opacity" } : null),
         }}
       >
-        {/* The strip itself: tinted washi wash + diagonal-stripe texture + soft
-            edge (all token-driven via --tape-tint / --tape-edge, see .tw-note__tape
-            in globals.css). */}
-        <span
-          className="tw-note__tape"
-          style={
-            {
-              "--tape-tint": tape.tint,
-              "--tape-edge": tape.edge,
-            } as React.CSSProperties
-          }
-        />
+        {/* The strip itself: refined PREMIUM washi — one clean translucent wash +
+            satin highlight + straight edge (.tw-note__tape default in globals.css,
+            no brand tint, no stripes). */}
+        <span className="tw-note__tape" />
       </motion.span>
 
       {/* THE single opaque paper unit: entrance pose (pan path) wraps the hover

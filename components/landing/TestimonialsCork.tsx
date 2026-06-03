@@ -30,19 +30,24 @@ import type { NoteSize, TestimonialCardProps } from "@/components/landing/types"
  * inline calc → CLS 0) provides the scroll distance;
  * useScroll({ target: spacer, offset:["start start","end end"] }) → scrollYProgress.
  *
- * THREE phases over the spacer (the v1 cartoon-hand intro was retired with the
- * cork board; B5-fix-1 brings a RESTYLED v2 line-art hand back as a decorative
- * once-per-entrance beat over the first note — see BoardHand):
+ * FOUR phases over the spacer (B5-fix-2 restores the ORIGINAL hand phase: the
+ * v2 line-art hand is scroll-LINKED again over a dedicated [tIn, tHand] phase
+ * between the zoom-in and the pan, exactly like the retired cork hand — see
+ * BoardHand. B5-fix-1's whileInView beat fired the instant the board entered view
+ * ("salta muy pronto"); rebinding it to scrollYProgress fixes the timing):
  *   P0 ZOOM-IN  [0, tIn]
  *     The framed board scales SMALL → 1 (grows to fill the screen) over --ease-expo.
- *     The first note is already present and held; it reveals via its normal
- *     whileInView entrance as the board resolves, while the v2 line-art hand
- *     (BoardHand) drifts in and presses its tape strip once.
- *   P1 PAN  [tIn, tPanEnd]
+ *     The first note is already present and reveals via its whileInView entrance.
+ *   P1 HAND PRESS  [tIn, tHand]
+ *     The subtle line-art hand sweeps DOWN from above the frame, dips to PRESS the
+ *     first note's tape, then continues down and out of frame, fading. Scrubbed by
+ *     scroll (same scrollYProgress), so it only appears once the board has zoomed
+ *     in and the press follows the user's scroll.
+ *   P2 PAN  [tHand, tPanEnd]
  *     The board pans laterally (x: 0 → -panVw) and notes #2..n appear
  *     (whileInView, time-based — see TestimonialCard). The first note is centred
  *     at x=0; the last note is centred at x=-panVw.
- *   P2 ZOOM-OUT END  [tPanEnd, 1]
+ *   P3 ZOOM-OUT END  [tPanEnd, 1]
  *     The board scales 1 → SMALL while the pan HOLDS at -panVw, so it ends framed
  *     on the LAST note (never an empty board).
  *
@@ -74,13 +79,18 @@ const CELL_VW: Record<NoteSize, number> = {
 const GAP_VW = 5; // horizontal gap between cells
 
 // Scroll budgets (vh). Opening = board zoom-in (it grows to fill the screen);
-// then the lateral pan; then a closing zoom-out framed on the last note.
-// HUMAN-TUNING (not headless-verifiable): these + SMALL set the feel.
-const ZOOM_IN_VH = 55; // board grows small → full (absorbs the retired hand budget)
+// then the hand sweeps down + presses the first note; then the lateral pan; then
+// a closing zoom-out framed on the last note. HUMAN-TUNING (not
+// headless-verifiable): these + SMALL set the feel. B5-fix-2 reintroduces HAND_VH
+// (the original cork-hand budget) so the hand has its own scroll phase.
+const ZOOM_IN_VH = 45; // board grows small → full
+const HAND_VH = 72; // hand sweeps in from above, presses the first note, exits down
 const ZOOM_OUT_VH = 50; // closing zoom-out
 const SMALL = 0.74; // resting scale of the framed board during zoom-in / zoom-out
 
 const EASE_EXPO = cubicBezier(0.16, 1, 0.3, 1); // wow board zoom-in (v2 expo)
+const EASE_SNAP = cubicBezier(0.34, 1.56, 0.64, 1); // press overshoot (hand land)
+const EASE_OUT = cubicBezier(0.22, 1, 0.36, 1); // hand sweep / exit
 
 /**
  * Track geometry: lead padding so the FIRST note is centred at x=0, and panVw so
@@ -107,19 +117,21 @@ function computeGeometry(notes: TestimonialCardProps[]) {
 
 /** Phase fractions over the spacer (treats 1vw ≈ 1vh; exact split shifts a touch
  *  with aspect ratio — acceptable feel detail, flagged for human tuning).
- *  Phases: zoom-in [0,tIn] · pan [tIn,tPanEnd] · zoom-out [tPanEnd,1]. */
+ *  Phases: zoom-in [0,tIn] · hand press [tIn,tHand] · pan [tHand,tPanEnd] ·
+ *  zoom-out [tPanEnd,1]. */
 function computePhases(panVw: number) {
-  const total = ZOOM_IN_VH + panVw + ZOOM_OUT_VH;
+  const total = ZOOM_IN_VH + HAND_VH + panVw + ZOOM_OUT_VH;
   const tIn = ZOOM_IN_VH / total;
+  const tHand = (ZOOM_IN_VH + HAND_VH) / total;
   const tPanEnd = 1 - ZOOM_OUT_VH / total;
-  const pinHeight = `calc(100dvh + ${ZOOM_IN_VH}vh + ${panVw}vw + ${ZOOM_OUT_VH}vh)`;
-  return { pinHeight, tIn, tPanEnd };
+  const pinHeight = `calc(100dvh + ${ZOOM_IN_VH}vh + ${HAND_VH}vh + ${panVw}vw + ${ZOOM_OUT_VH}vh)`;
+  return { pinHeight, tIn, tHand, tPanEnd };
 }
 
-/** A note's pan-progress arrival point, remapped into the pan phase [tIn,tPanEnd]. */
-function remapToPan(panPosition: number, tIn: number, tPanEnd: number): number {
+/** A note's pan-progress arrival point, remapped into the pan phase [tHand,tPanEnd]. */
+function remapToPan(panPosition: number, tHand: number, tPanEnd: number): number {
   const p = Math.min(1, Math.max(0, panPosition));
-  return tIn + p * (tPanEnd - tIn);
+  return tHand + p * (tPanEnd - tHand);
 }
 
 const MD_QUERY = "(min-width: 768px)";
@@ -173,21 +185,54 @@ function BoardPan({
   });
 
   const { leadVw, trailVw, panVw, panPositions } = computeGeometry(testimonials);
-  const { pinHeight, tIn, tPanEnd } = computePhases(panVw);
+  const { pinHeight, tIn, tHand, tPanEnd } = computePhases(panVw);
 
   // Board zoom: SMALL → 1 (grows to fill the screen) over the zoom-in phase,
-  // held at 1 through the pan, then 1 → SMALL on the closing zoom-out.
+  // held at 1 through the hand + pan, then 1 → SMALL on the closing zoom-out.
   const scale = useTransform(
     scrollYProgress,
     [0, tIn, tPanEnd, 1],
     [SMALL, 1, 1, SMALL],
     { ease: EASE_EXPO },
   );
-  // Horizontal pan: held at 0 until the pan phase, runs, then held at -panVw
-  // during the zoom-out (so it ends framed on the last note).
-  const x = useTransform(scrollYProgress, [tIn, tPanEnd], ["0vw", `-${panVw}vw`], {
+  // Horizontal pan: held at 0 until the pan phase (now starts AFTER the hand
+  // phase at tHand), runs, then held at -panVw during the zoom-out (so it ends
+  // framed on the last note).
+  const x = useTransform(scrollYProgress, [tHand, tPanEnd], ["0vw", `-${panVw}vw`], {
     clamp: true,
   });
+
+  // Hand press beats inside [tIn, tHand] (B5-fix-2 — restored original CorkHand
+  // model). The line-art hand sweeps DOWN from above the frame, reaches the first
+  // note, presses (a small dip), then continues DOWN and out of frame, fading.
+  // All scroll-scrubbed (same scrollYProgress), transform/opacity only.
+  const hSpan = tHand - tIn;
+  const hArrive = tIn + hSpan * 0.4; // reached the press point
+  const hPress = tIn + hSpan * 0.5; // contact (dip)
+  const hExit0 = tIn + hSpan * 0.64; // starts withdrawing downward
+  const hExit1 = tHand;
+
+  const handY = useTransform(
+    scrollYProgress,
+    [tIn, hArrive, hPress, hExit0, hExit1],
+    ["-78vh", "0vh", "1.4vh", "0vh", "118vh"],
+    { clamp: true, ease: EASE_OUT },
+  );
+  const handScale = useTransform(scrollYProgress, [tIn, hArrive], [1.1, 1], {
+    clamp: true,
+    ease: EASE_SNAP, // tiny pop as it lands
+  });
+  const handRotate = useTransform(scrollYProgress, [hExit0, hExit1], [0, 7], {
+    clamp: true,
+    ease: EASE_OUT,
+  });
+  // Fades up at the start of the phase, holds, fades out as it exits below.
+  const handOpacity = useTransform(
+    scrollYProgress,
+    [tIn, tIn + hSpan * 0.12, hExit0, hExit1],
+    [0, 1, 1, 0],
+    { clamp: true },
+  );
 
   // R11 (WCAG 2.4.3 / 2.4.7): focusing an off-screen note snaps the pan to it.
   // Maps the note's panPosition into the pan phase [tIn, tPanEnd] of the spacer,
@@ -202,7 +247,7 @@ function BoardPan({
     const spacerTop = rect.top + window.scrollY;
     const travel = spacer.offsetHeight - window.innerHeight;
     if (travel <= 0) return;
-    const progress = remapToPan(panPosition, tIn, tPanEnd);
+    const progress = remapToPan(panPosition, tHand, tPanEnd);
     const target = spacerTop + progress * travel;
     if (lenis) {
       lenis.scrollTo(target, { immediate: Boolean(reduceMotion) });
@@ -250,16 +295,6 @@ function BoardPan({
                   aria-label={`Testimonio ${i + 1} de ${testimonials.length}`}
                   onFocusCapture={() => handleCellFocus(panPositions[i])}
                 >
-                  {/* The placing hand RETURNS (B5-fix-1), restyled to v2
-                      line-art. It plays ONCE on board entrance over the FIRST
-                      note: drifts in, PRESSES the tape strip (press beat = the
-                      tape settle), then lifts + exits. Decorative; omitted under
-                      reduced motion (BoardHand returns null). Positioned over the
-                      note's tape (top centre). */}
-                  {i === 0 ? (
-                    <BoardHand className="pointer-events-none absolute left-1/2 top-[-4.5rem] z-[3] h-28 w-24 -translate-x-1/2 md:h-32 md:w-28" />
-                  ) : null}
-
                   {/* All notes (incl. the first) reveal via their normal
                       whileInView entrance as the board pans/zooms in. */}
                   <TestimonialCard
@@ -271,6 +306,21 @@ function BoardPan({
                 </li>
               ))}
             </motion.ol>
+
+            {/* The placing hand (B5-fix-2 — original CorkHand choreography, v2
+                line-art look). It sits ABOVE the board content, OUTSIDE the
+                panning track (so it doesn't pan), centred where the first note
+                rests at x=0. Scroll-driven over [tIn, tHand]: sweeps DOWN from
+                above, presses the first note's tape, exits downward + fades.
+                Decorative → aria-hidden. Positioned so the fingertip (top centre
+                of the glyph) lands on the note's tape strip. */}
+            <BoardHand
+              className="pointer-events-none absolute left-1/2 top-[calc(50%-15rem)] z-[3] h-36 w-28 -translate-x-1/2 md:h-44 md:w-32"
+              y={handY}
+              scale={handScale}
+              rotate={handRotate}
+              opacity={handOpacity}
+            />
           </motion.div>
         </div>
       </div>
