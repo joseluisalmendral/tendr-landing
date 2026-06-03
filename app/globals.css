@@ -58,11 +58,20 @@
   /* ink action accent (= acción). NO hover/active tokens: usar CSS :hover/:active */
   --color-accent-primary: var(--accent-primary);
   --color-accent-fg: var(--accent-fg);
-  /* support magenta-wine (= firma / hand-drawn) */
+  /* support magenta-wine (= firma / hand-drawn = wisp). SOLO anotaciones + checks. */
   --color-support: var(--support);
   --color-support-fg: var(--support-fg);
   --color-accent-soft: var(--accent-soft);
   --color-handdrawn: var(--handdrawn);
+  /* Folk Twins (B2-fix-1): familia de apoyo con rotación de rol. cobalt = "lo
+     máquina" (IA/automatización), ochre = "progreso" (numerales/conectores/dots).
+     Monogramas/chips rotan wisp->cobalt->ochre por index%3. */
+  --color-support-cobalt: var(--support-cobalt);
+  --color-support-cobalt-fg: var(--support-cobalt-fg);
+  --color-support-cobalt-soft: var(--support-cobalt-soft);
+  --color-support-ochre: var(--support-ochre);
+  --color-support-ochre-fg: var(--support-ochre-fg);
+  --color-support-ochre-soft: var(--support-ochre-soft);
   /* highlight (sólo text-bg, p.ej. pill "Recomendado") */
   --color-highlight: var(--highlight);
   --color-highlight-fg: var(--highlight-fg);
@@ -177,6 +186,19 @@
   /* tinte muy suave del support sobre papel (bg de hover shadcn / chips) */
   --accent-soft: color-mix(in oklab, var(--support) 12%, var(--surface-raised));
   --handdrawn: var(--support);
+
+  /* ---- Folk Twins: familia de apoyo (B2-fix-1) ----
+     wisp (support, arriba) = firma; cobalt = "lo máquina" (IA/automatización);
+     ochre = "progreso" (numerales 01/02/03, conectores del viaje, dots).
+     Cada matiz tiene grado de texto (-fg, más oscuro para AA en texto pequeño)
+     y tinte suave (-soft, mismo patrón color-mix 12% que --accent-soft).
+     REGLA DURA: ochre NUNCA en caution/error (valor cercano a --warning). */
+  --support-cobalt: #2456a8;       /* stroke 7.0:1 vs surface */
+  --support-cobalt-fg: #1f4c94;    /* grado de texto (label "IA") */
+  --support-cobalt-soft: color-mix(in oklab, var(--support-cobalt) 12%, var(--surface-raised));
+  --support-ochre: #9a7b1a;        /* stroke 4.0:1 vs surface */
+  --support-ochre-fg: #7a6a10;     /* grado de texto (= familia --highlight-fg) */
+  --support-ochre-soft: color-mix(in oklab, var(--support-ochre) 12%, var(--surface-raised));
 
   /* ---- Highlight (sólo text-bg, p.ej. pill "Recomendado") ---- */
   --highlight: #fff8bb;

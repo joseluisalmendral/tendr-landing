@@ -43,7 +43,13 @@ Notación: hex + oklch de referencia. AA mínimo contra el fondo en cualquier co
 | `--color-border-interactive` | `#87837B` | `0.58 0.006 80` aprox. | **Borde de límites interactivos** (botones outline, pills, toggles). SC 1.4.11: ≥3:1 vs surface y raised (3.74:1 / 3.78:1). **No usar en hairlines decorativos** |
 | `--color-accent-primary` | `#101010` | `0.20 0 0` aprox. | **CTAs, links activos, focus. Warm-ink. Uso EXCLUSIVO para lo interactivo.** Texto blanco a 19.02:1 |
 | `--color-accent-fg` | `#FFFFFF` | `1 0 0` | Texto sobre acento primario (19.02:1, AAA) |
-| `--color-support` | `#B23A86` | `0.52 0.18 350` aprox. | **Firma humana:** anotaciones hand-drawn, checks, dots/indicadores no-textuales, strokes SVG. 5.4-5.5:1 vs surfaces (pasa SC 1.4.11). Texto de badge sobre tint 12% = 4.97:1 (**margen fino, documentado**) |
+| `--color-support` | `#B23A86` | `0.52 0.18 350` aprox. | **Firma humana (wisp):** SOLO anotaciones hand-drawn (flechas/círculos/órbita/rescate) + checks. 5.4-5.5:1 vs surfaces (pasa SC 1.4.11). Texto de badge sobre tint 12% = 4.97:1 (**margen fino, documentado**) |
+| `--color-support-cobalt` | `#2456A8` | `0.45 0.15 260` aprox. | **"Lo máquina" (cobalt):** todo lo IA/automatización no-textual — chip/pill ✦+texto IA, acentos de la burbuja IA, anillo de click del cursor. Stroke AA 7.0:1 vs surface. **No usar como texto plano sin grado de texto** |
+| `--color-support-cobalt-fg` | `#1F4C94` | `0.41 0.15 260` aprox. | Grado de **texto** del cobalt (label "IA" del pill, texto sobre tint 12%). Más oscuro que el stroke para pasar AA en texto pequeño |
+| `--color-support-cobalt-soft` | `color-mix(in oklab, var(--color-support-cobalt) 12%, var(--color-surface-raised))` | — | Tinte suave del cobalt para fondos IA (mismo patrón que `accent-soft`). **Fórmula, no hex fijo** |
+| `--color-support-ochre` | `#9A7B1A` | `0.58 0.11 95` aprox. | **"Progreso" (ochre):** numerales de viaje 01/02/03, conectores del viaje, dots de status/timeline. Stroke AA 4.0:1 vs surface. **REGLA DURA: nunca en contextos caution/error** (valor cercano a `--color-warning` #B5832E) |
+| `--color-support-ochre-fg` | `#7A6A10` | `0.50 0.11 100` aprox. | Grado de **texto** del ochre (numerales, dots con texto). = familia `--color-highlight-fg` |
+| `--color-support-ochre-soft` | `color-mix(in oklab, var(--color-support-ochre) 12%, var(--color-surface-raised))` | — | Tinte suave del ochre para fondos de progreso (mismo patrón que `accent-soft`). **Fórmula, no hex fijo** |
 | `--color-highlight` | `#FFF8BB` | `0.97 0.06 100` aprox. | **EXCLUSIVAMENTE fondo de texto:** subrayador `Mark` (ink encima 15.82:1) y pills tipo "Recomendado". **REGLA DURA: nunca como elemento no-textual** (dot/borde/stripe) — sobre near-white da 1.08:1, invisible |
 | `--color-highlight-fg` | `#7A6A10` | `0.50 0.11 100` aprox. | Texto sobre tint de highlight (pill "Recomendado", 5.32:1) |
 | `--color-accent-soft` | `color-mix(in oklab, var(--color-support) 12%, var(--color-surface-raised))` | — | Lavado suave del support para fondos decorativos (badges, washes). **Fórmula, no hex fijo** |
@@ -56,8 +62,18 @@ Notación: hex + oklch de referencia. AA mínimo contra el fondo en cualquier co
 **Regla de oro de color (ink-led, validada en showcase):** lo **interactivo es tinta** (`--color-accent-primary` #101010: CTAs, links, focus). El **color** aparece solo en dos roles acotados: `--color-support` (firma — anotaciones, checks, dots, strokes) y `--color-highlight` (optimismo — solo como fondo de texto: subrayado y pills). Superficie warm-white + hairlines hacen el resto. Contrato de tres roles:
 
 - **primary = acción** (ink, interactivo: CTA, link, focus).
-- **support = firma** (humanidad: hand-drawn, checks, dots, micro-UI; nunca texto largo).
+- **support = firma** (humanidad: hand-drawn, checks; nunca texto largo).
 - **highlight = optimismo** (subrayado/pill; **solo fondo de texto**, jamás elemento no-textual).
+
+**Familia de apoyo "Folk Twins" (linaje: el trío folk profundizado).** El antiguo `support` cubría tres trabajos a la vez (firma + máquina + progreso). En B2-fix-1 se reparte el rol en **una familia de tres matices** que comparten la disciplina "el color vive solo en micro-UI no-textual de firma", pero cada matiz tiene un trabajo:
+
+- **wisp (`--color-support` #B23A86) = firma.** SOLO anotaciones hand-drawn (flecha/círculo/órbita/rescate) y checks. El token `--color-handdrawn` sigue apuntando aquí, sin cambios.
+- **cobalt (`--color-support-cobalt` #2456A8) = "lo máquina".** Todo lo IA/automatización: chip/pill ✦+texto IA, acentos de la burbuja IA, anillo de click del cursor. Stroke 7.0:1; texto vía `--color-support-cobalt-fg` #1F4C94; tinte `--color-support-cobalt-soft`.
+- **ochre (`--color-support-ochre` #9A7B1A) = "progreso".** Numerales 01/02/03, conectores del viaje, dots de status/timeline. Stroke 4.0:1; texto vía `--color-support-ochre-fg` #7A6A10 (= familia `highlight-fg`); tinte `--color-support-ochre-soft`.
+
+**Regla de rotación (monogramas/chips).** Los monogramas y chips de cliente (tríptico del hero, viaje, y donde aparezcan) rotan los tres matices por índice: `index % 3` → wisp, cobalt, ochre. Un mismo cliente puede llevar matiz distinto según su posición, pero el rol de cada matiz (firma/máquina/progreso) manda sobre la rotación cuando el elemento ES uno de esos roles.
+
+**REGLA DURA (negativa).** **ochre NUNCA en contextos caution/error.** Su valor es cercano al `--color-warning` (#B5832E) y mezclarlos rompe la lectura semántica de "atención/peligro". El subrayador buttermilk (`--color-highlight`) sigue igual, sin tocar.
 
 ### 2.2 Tipografía
 
@@ -245,8 +261,15 @@ Patrones de **referencia que se re-implementan en Motion**, nunca dependencias i
   /* Accent system — combo folk-pastel (ink-led + pasteles) */
   --color-accent-primary:    #101010; /* interactivo: CTA, link, focus */
   --color-accent-fg:         #FFFFFF; /* 19.02:1 */
-  --color-support:           #B23A86; /* firma: hand-drawn, checks, dots */
+  --color-support:           #B23A86; /* wisp = firma: hand-drawn, checks */
   --color-support-fg:        #B23A86; /* texto de badge sobre tint 12% (4.97:1) */
+  /* Folk Twins — familia de apoyo (B2-fix-1): wisp(firma) → cobalt(máquina) → ochre(progreso) */
+  --color-support-cobalt:    #2456A8; /* "lo máquina": IA/automatización (stroke 7.0:1) */
+  --color-support-cobalt-fg: #1F4C94; /* grado de texto del cobalt (label IA) */
+  --color-support-cobalt-soft: color-mix(in oklab, var(--color-support-cobalt) 12%, var(--color-surface-raised));
+  --color-support-ochre:     #9A7B1A; /* "progreso": numerales/conectores/dots (stroke 4.0:1) · NUNCA en caution/error */
+  --color-support-ochre-fg:  #7A6A10; /* grado de texto del ochre (= highlight-fg) */
+  --color-support-ochre-soft: color-mix(in oklab, var(--color-support-ochre) 12%, var(--color-surface-raised));
   --color-highlight:         #FFF8BB; /* SOLO fondo de texto (Mark, pills) */
   --color-highlight-fg:      #7A6A10; /* texto sobre tint de highlight (5.32:1) */
   --color-accent-soft:       color-mix(in oklab, var(--color-support) 12%, var(--color-surface-raised));
@@ -281,6 +304,12 @@ Patrones de **referencia que se re-implementan en Motion**, nunca dependencias i
   --color-accent-fg: #FFFFFF;
   --color-support: #B23A86;
   --color-support-fg: #B23A86;
+  --color-support-cobalt: #2456A8;
+  --color-support-cobalt-fg: #1F4C94;
+  --color-support-cobalt-soft: color-mix(in oklab, var(--color-support-cobalt) 12%, var(--color-surface-raised));
+  --color-support-ochre: #9A7B1A;
+  --color-support-ochre-fg: #7A6A10;
+  --color-support-ochre-soft: color-mix(in oklab, var(--color-support-ochre) 12%, var(--color-surface-raised));
   --color-highlight: #FFF8BB;
   --color-highlight-fg: #7A6A10;
   --color-handdrawn: #B23A86;

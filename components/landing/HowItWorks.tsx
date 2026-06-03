@@ -80,8 +80,9 @@ const revealVariants: Variants = {
  * language as the FeaturesBoard at-risk circle / Pricing annotation: a clean,
  * geometric `motion.path` body plus a two-stroke arrowhead, drawn via
  * `pathLength` (the one allowed non-transform animation, exactly as the at-risk
- * ring and the pricing box). Stroke is the v2 handdrawn token
- * (var(--color-handdrawn) === support magenta-wine).
+ * ring and the pricing box). Folk Twins (B2-fix-1): the connector is "progreso",
+ * so its stroke is the ochre token (var(--color-support-ochre)), NOT the wisp
+ * handdrawn token — connectors carry journey progress, not a firma annotation.
  *
  * - Draw-in once on `whileInView` (the arrows belong to the scroll narrative,
  *   so they reveal as the user reaches each seam — not all at mount).
@@ -131,8 +132,11 @@ function HandDrawnConnector({
   return (
     <motion.svg
       aria-hidden="true"
+      // Folk Twins (B2-fix-1): los conectores del viaje son "progreso", no firma.
+      // La regla aprobada manda sobre el repunte a handdrawn de B2: ochre, no wisp.
+      // (Las anotaciones hand-drawn de OTRAS secciones siguen siendo wisp.)
       className={
-        "pointer-events-none mx-auto hidden h-16 w-40 text-handdrawn md:block md:h-20 " +
+        "pointer-events-none mx-auto hidden h-16 w-40 text-support-ochre md:block md:h-20 " +
         (flip ? "-scale-x-100" : "")
       }
       viewBox="0 0 120 80"
@@ -205,9 +209,10 @@ export function HowItWorks() {
                     : "flex flex-col gap-3 md:col-span-5"
                 }
               >
+                {/* Numeral 01/02/03 = "progreso" (Folk Twins): ochre, no wisp. */}
                 <span
                   aria-hidden="true"
-                  className="font-mono text-meta uppercase text-support"
+                  className="font-mono text-meta uppercase text-support-ochre-fg"
                 >
                   {s.n}
                 </span>
@@ -233,7 +238,7 @@ export function HowItWorks() {
               </div>
             </div>
 
-            {/* Support-ink connector leading to the next stage (1→2, 2→3). Kept inside
+            {/* Ochre "progreso" connector leading to the next stage (1→2, 2→3). Kept inside
                 the <li> (valid list markup, decorative aria-hidden), placed
                 below the grid so it sits in the seam between this block and the
                 next. Its reserved fixed-height box means it never reflows the

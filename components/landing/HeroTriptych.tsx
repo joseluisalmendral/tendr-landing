@@ -197,8 +197,10 @@ function CursorTu({
       style={{ left, top, opacity }}
     >
       <div className="relative">
+        {/* Click ring = "lo máquina" (Folk Twins): el click es la acción
+            asistida/automatizada, así que el anillo usa cobalt. */}
         <motion.span
-          className="absolute left-0 top-0 block size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-text-primary"
+          className="absolute left-0 top-0 block size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-support-cobalt"
           style={{ scale: ringScale, opacity: ringOpacity }}
         />
         <svg width="16" height="20" viewBox="0 0 16 20" className="block">
@@ -232,11 +234,13 @@ function AiPill({
         <svg width="10" height="10" viewBox="-5 -5 10 10" className="block">
           <path
             d="M0 -4.5 L1.1 -1.1 L4.5 0 L1.1 1.1 L0 4.5 L-1.1 1.1 L-4.5 0 L-1.1 -1.1 Z"
-            fill="var(--color-support)"
+            fill="var(--color-support-cobalt)"
           />
         </svg>
       )}
-      <span className="font-mono text-[11px] leading-none text-support">IA</span>
+      {/* "lo máquina" (Folk Twins): el label IA usa el grado de TEXTO del cobalt
+          (#1F4C94) para pasar AA en 11px; el ✦ usa el cobalt de stroke. */}
+      <span className="font-mono text-[11px] leading-none text-support-cobalt-fg">IA</span>
     </motion.span>
   );
 }
@@ -281,7 +285,7 @@ function AiBubble({
       <span className="relative inline-block text-body-sm leading-snug">
         <motion.span style={{ color }}>{text as never}</motion.span>
         {trailingStar && (
-          <motion.span className="text-support" style={{ opacity: done }}>
+          <motion.span className="text-support-cobalt" style={{ opacity: done }}>
             {" ✦"}
           </motion.span>
         )}
@@ -290,7 +294,7 @@ function AiBubble({
             <svg viewBox="0 0 140 8" preserveAspectRatio="none" className="block h-full w-full">
               <motion.path
                 d="M 2 5 q 68 5 136 0"
-                stroke="var(--color-support)"
+                stroke="var(--color-support-cobalt)"
                 strokeWidth={2}
                 strokeLinecap="round"
                 fill="none"
@@ -316,8 +320,10 @@ function ActIndicator({ active }: { active: 1 | 2 | 3 }) {
         const on = n === active;
         return (
           <span key={n} className="inline-flex items-center gap-1.5">
+            {/* Indicador de acto 01·02·03 = "progreso" (Folk Twins): el dot
+                activo usa ochre, no wisp. */}
             <span
-              className="block size-1 rounded-full bg-support transition-opacity duration-200"
+              className="block size-1 rounded-full bg-support-ochre transition-opacity duration-200"
               style={{ opacity: on ? 1 : 0 }}
             />
             <span
@@ -333,17 +339,34 @@ function ActIndicator({ active }: { active: 1 | 2 | 3 }) {
   );
 }
 
-/** A client chip ring + monogram (canon §3c). Sizes: ambient/const/timeline. */
-function ChipRing({ r, letter, stroke = 1.5, fill = "var(--color-text-secondary)", fontSize = 17 }: {
+/**
+ * Folk Twins monogram rotation (B2-fix-1): client monograms/chips rotate the
+ * support family by index%3 → wisp (firma) · cobalt (máquina) · ochre (progreso).
+ * Returns the chip ring stroke color for a given chip index. The ambient chips
+ * stay neutral (border-strong) — only addressable client monograms rotate.
+ */
+const MONOGRAM_HUES = [
+  "var(--color-support)",
+  "var(--color-support-cobalt)",
+  "var(--color-support-ochre)",
+] as const;
+function monogramHue(index: number) {
+  return MONOGRAM_HUES[((index % 3) + 3) % 3];
+}
+
+/** A client chip ring + monogram (canon §3c). Sizes: ambient/const/timeline.
+ * `ringStroke` overrides the neutral border-strong ring (Folk Twins rotation). */
+function ChipRing({ r, letter, stroke = 1.5, fill = "var(--color-text-secondary)", fontSize = 17, ringStroke = "var(--color-border-strong)" }: {
   r: number;
   letter: string;
   stroke?: number;
   fill?: string;
   fontSize?: number;
+  ringStroke?: string;
 }) {
   return (
     <>
-      <circle cx={0} cy={0} r={r} stroke="var(--color-border-strong)" strokeWidth={stroke} fill="none" />
+      <circle cx={0} cy={0} r={r} stroke={ringStroke} strokeWidth={stroke} fill="none" />
       <text
         x={0}
         y={fontSize * 0.34}
@@ -1117,8 +1140,8 @@ function ActTwo({ t, vis }: { t: MotionValue<number>; vis: MotionValue<number> }
         />
       </motion.g>
 
-      {CONSTELLATION.map((c) => (
-        <ConstellationChip key={c.key} chip={c} t={t} />
+      {CONSTELLATION.map((c, i) => (
+        <ConstellationChip key={c.key} chip={c} index={i} t={t} />
       ))}
     </motion.g>
   );
@@ -1126,9 +1149,11 @@ function ActTwo({ t, vis }: { t: MotionValue<number>; vis: MotionValue<number> }
 
 function ConstellationChip({
   chip,
+  index,
   t,
 }: {
   chip: (typeof CONSTELLATION)[number];
+  index: number;
   t: MotionValue<number>;
 }) {
   const isLucia = chip.key === "L";
@@ -1232,7 +1257,8 @@ function ConstellationChip({
   // position the group at the moving (x,y)
   return (
     <motion.g style={{ x, y, scale, opacity, rotate, filter }}>
-      <ChipRing r={18} letter={chip.letter} stroke={1.5} fill="var(--color-text-secondary)" fontSize={17} />
+      {/* Folk Twins: el aro del monograma rota wisp->cobalt->ochre por index%3. */}
+      <ChipRing r={18} letter={chip.letter} stroke={1.5} fill="var(--color-text-secondary)" fontSize={17} ringStroke={monogramHue(index)} />
     </motion.g>
   );
 }
@@ -1442,8 +1468,8 @@ function RowChip({ row, index, t }: { row: (typeof ROWS)[number]; index: number;
     <motion.g style={{ x: AXIS_X, y: useTransform(() => row.y + yOut.get()), opacity }}>
       {/* node dot on the axis */}
       <circle cx={0} cy={0} r={2.5} fill="var(--color-text-primary)" opacity={0.5} />
-      {/* 24px chip over the node */}
-      <ChipRing r={12} letter={row.letter} stroke={1.25} fill="var(--color-text-tertiary)" fontSize={12} />
+      {/* 24px chip over the node — Folk Twins rotation by row index. */}
+      <ChipRing r={12} letter={row.letter} stroke={1.25} fill="var(--color-text-tertiary)" fontSize={12} ringStroke={monogramHue(index)} />
     </motion.g>
   );
 }
@@ -1454,9 +1480,9 @@ function RowAiChip({ t }: { t: MotionValue<number> }) {
   return (
     <motion.g style={{ x: AXIS_X, y: useTransform(() => AI_ROW_Y + y.get()), opacity }}>
       <circle cx={0} cy={0} r={2.5} fill="var(--color-text-primary)" opacity={0.5} />
-      <circle cx={0} cy={0} r={12} stroke="var(--color-border-strong)" strokeWidth={1.25} fill="none" />
-      {/* ✦ glyph inside (support) — this is the row marker, the single ✦ lives in text */}
-      <path d="M0 -5 L1.3 -1.3 L5 0 L1.3 1.3 L0 5 L-1.3 1.3 L-5 0 L-1.3 -1.3 Z" fill="var(--color-support)" transform="scale(0.8)" />
+      <circle cx={0} cy={0} r={12} stroke="var(--color-support-cobalt)" strokeWidth={1.25} fill="none" />
+      {/* ✦ glyph inside = "lo máquina" (Folk Twins): la fila IA usa cobalt (no wisp). */}
+      <path d="M0 -5 L1.3 -1.3 L5 0 L1.3 1.3 L0 5 L-1.3 1.3 L-5 0 L-1.3 -1.3 Z" fill="var(--color-support-cobalt)" transform="scale(0.8)" />
     </motion.g>
   );
 }

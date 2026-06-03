@@ -110,7 +110,7 @@ export function JourneyCardContent({
    * prospect → propuesta → en curso → cerrado — NOT an invoice). */
   status?: string;
   /** When true the pill uses the success token (the case reached the closed/
-   * paid state) instead of the support in-progress token. */
+   * paid state) instead of the ochre "progreso" in-progress token. */
   closed?: boolean;
 } = {}) {
   return (
@@ -129,12 +129,14 @@ export function JourneyCardContent({
           Diseño · €2.000 {/* mock */}
         </span>
       </span>
+      {/* Status pill = "progreso" (Folk Twins): el estado en curso (Activo) usa
+          ochre; el cierre (Cobrado) sigue siendo success. */}
       <span
         className={
           "rounded-sm border px-2 py-0.5 font-mono text-meta uppercase " +
           (closed
             ? "border-success bg-success-soft text-success"
-            : "border-support bg-accent-soft text-support")
+            : "border-support-ochre bg-support-ochre-soft text-support-ochre-fg")
         }
       >
         {status}
@@ -276,10 +278,13 @@ type MiniCard = {
 function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
   return (
     <div
+      // Folk Twins: la card destacada es el cliente EN CURSO que se sigue por el
+      // tablero → contexto de "progreso", así que su énfasis (borde/ring/tinte/
+      // nombre) y su dot de estado usan ochre, no wisp.
       className={
         "flex items-center gap-2 rounded-sm border px-2 py-1.5 " +
         (highlight
-          ? "border-support bg-accent-soft ring-1 ring-support shadow-flat"
+          ? "border-support-ochre bg-support-ochre-soft ring-1 ring-support-ochre shadow-flat"
           : "border-border bg-surface")
       }
     >
@@ -287,7 +292,7 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
         className={
           "size-2 shrink-0 rounded-full " +
           (highlight || tone === "ink"
-            ? "bg-support"
+            ? "bg-support-ochre"
             : "bg-border-strong")
         }
         aria-hidden="true"
@@ -296,14 +301,14 @@ function MiniClientCard({ name, amount, tone, highlight }: MiniCard) {
         <span
           className={
             "truncate text-body-sm " +
-            (highlight ? "text-support" : "text-text-primary")
+            (highlight ? "text-support-ochre-fg" : "text-text-primary")
           }
         >
           {name}
         </span>
         {/* On the highlighted (tinted) card, tertiary meta fails AA at 12px over
-            the magenta-tinted accent-soft surface (4.45:1); use the darker
-            secondary ink there (6.4:1). Plain cards keep tertiary on bg-surface. */}
+            the ochre-tinted support-ochre-soft surface; use the darker secondary
+            ink there. Plain cards keep tertiary on bg-surface. */}
         <span
           className={
             "font-mono text-meta uppercase " +
@@ -356,8 +361,9 @@ function PipelineColumn({
 function ActivityEvent({ text, when }: { text: string; when: string }) {
   return (
     <li className="relative pl-4">
+      {/* Timeline dot = "progreso" (Folk Twins): ochre. */}
       <span
-        className="absolute left-0 top-1.5 size-1.5 rounded-full bg-support"
+        className="absolute left-0 top-1.5 size-1.5 rounded-full bg-support-ochre"
         aria-hidden="true"
       />
       <span className="block text-body-sm leading-tight text-text-secondary">
@@ -471,15 +477,17 @@ const CASE_TIMELINE: CaseEvent[] = [
 ];
 
 /* A single timeline entry. The closed/paid step gets a success dot to mark the
- * terminal state; the rest use the support activity dot (same as the seguimiento
+ * terminal state; the rest use the ochre "progreso" dot (same as the seguimiento
  * rail). Markdown-note / activity style, NOT a financial line item. */
 function CaseTimelineEvent({ text, when, done }: CaseEvent) {
   return (
     <li className="relative pl-4">
+      {/* Timeline dot = "progreso" (Folk Twins): el paso terminal cobrado usa
+          success; los pasos intermedios usan ochre (no wisp). */}
       <span
         className={
           "absolute left-0 top-1.5 size-1.5 rounded-full " +
-          (done ? "bg-success" : "bg-support")
+          (done ? "bg-success" : "bg-support-ochre")
         }
         aria-hidden="true"
       />
