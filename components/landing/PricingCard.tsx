@@ -53,7 +53,10 @@ export function PricingCard({
       className={cn(
         // h-full so every tier matches the tallest card in the row (equal
         // heights); the footer (CTA) is pushed to the bottom via flex below.
-        "h-full ring-0 border border-border bg-surface-raised shadow-none",
+        // Border lifted from hairline to a more present 1.5px border-strong so
+        // each card reads framed against the near-white page (still flat — no
+        // shadow; the border, not elevation, is the affordance).
+        "h-full ring-0 border-[1.5px] border-border-strong bg-surface-raised shadow-none",
         // Highlighted tier: ink-accent 2px border + lifted scale (no shadow —
         // the ink border is the affordance, the page stays flat/clean).
         highlighted &&

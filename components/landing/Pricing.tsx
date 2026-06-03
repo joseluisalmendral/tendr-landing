@@ -48,7 +48,9 @@ const EASE_SNAP = [0.34, 1.56, 0.64, 1] as const;
 // arrow redraw on reveal. Mirrors the token; kept as a JS tuple for Motion.
 const EASE_EMPHASIS = [0.2, 0.8, 0.2, 1] as const;
 const FLIP_DURATION = 0.4;
-const DURATION_DRAW = 0.48;
+// Calmer draw-in for the refined single-stroke glyphs: a touch slower than
+// before (0.48 -> 0.62) so the pen reads deliberate, not eager.
+const DURATION_DRAW = 0.62;
 const DURATION_MICRO = 0.12;
 
 type Work = "solo" | "equipo";
@@ -236,31 +238,47 @@ function ToggleField({
       <span className="font-mono text-meta uppercase text-text-tertiary">
         {label}
       </span>
+      {/* Premium segmented control (iOS-segmented read, mined from the 21st.dev
+          SegmentGroup / ToggleGroup pattern: a SUNKEN track holds the items and
+          the ACTIVE one becomes a raised chip). Translated into v2 ink tokens:
+          the track is a sunken buttermilk rail with a hairline + a subtle inner
+          shadow (depth cue), and the ACTIVE item is a SOLID INK pill with white
+          text — the exact CTA language, so the choice reads decided/solid, never
+          tinted-pastel. Idle items are text-secondary with a hover lift; :active
+          presses 0.97 for tactile feedback. ToggleGroup keeps radiogroup
+          semantics, so color is never the only state cue (fill + weight shift). */}
       <ToggleGroup
         type="single"
         value={value}
         onValueChange={onValueChange}
         aria-label={label}
-        variant="outline"
-        className="gap-2"
+        // Sunken track: inset hairline ring + soft inner shadow give the rail
+        // depth so the active ink pill reads as raised out of it.
+        className={cn(
+          "inline-flex w-fit gap-1 rounded-md bg-surface-sunken p-1",
+          // Sunken depth: inset hairline ring (border-strong) + a soft inner
+          // shadow tinted to the warm ink base (same rgba(31,27,22,...) the
+          // --shadow-soft token uses), so the rail reads recessed.
+          "shadow-[inset_0_0_0_1px_var(--color-border-strong),inset_0_1px_3px_rgba(31,27,22,0.08)]",
+        )}
       >
         {options.map((option) => (
           <ToggleGroupItem
             key={option.value}
             value={option.value}
-            // Separated pills (gap-2 on the group): each is its own rounded
-            // interactive control. v2 is ink-led, so the active item reads in
-            // ink — ink border + faint support-soft fill + ink text — never via
-            // a single visual cue (border + fill + weight of color all shift).
+            // Idle = text-secondary, transparent (the rail shows through). Active
+            // = solid ink fill + white text (matches the primary CTA, 19:1, AA
+            // far clear). The whole shape changes state — fill + text weight of
+            // color — so it never relies on hue alone. :active scale for touch.
             className={cn(
-              "h-auto rounded-sm px-4 py-2.5 text-body-sm text-text-secondary",
-              "border-border-interactive",
-              "transition-all duration-[var(--duration-fast)]",
-              "hover:bg-surface-sunken/60",
-              "data-[state=on]:border-accent-primary",
-              "data-[state=on]:bg-accent-soft",
-              "data-[state=on]:text-accent-primary",
-              "data-[state=on]:shadow-none",
+              "h-auto rounded-sm border-0 bg-transparent px-4 py-2 text-body-sm font-medium text-text-secondary",
+              "transition-all duration-[var(--duration-fast)] ease-[var(--easing-emphasis)]",
+              "hover:bg-surface-raised hover:text-text-primary hover:shadow-soft",
+              "active:scale-[0.97]",
+              "data-[state=on]:bg-accent-primary",
+              "data-[state=on]:text-accent-fg",
+              "data-[state=on]:shadow-soft",
+              "data-[state=on]:hover:bg-accent-primary data-[state=on]:hover:text-accent-fg",
             )}
           >
             {option.label}
@@ -322,10 +340,14 @@ function Annotation({
         fill="none"
       >
         <motion.path
-          // Wobbly hand-drawn rectangle that overshoots its corners slightly.
-          d="M3 5 C 30 2, 70 4, 97 3 C 96 30, 98 70, 97 96 C 70 98, 30 97, 4 97 C 3 70, 5 30, 3 4"
+          // Single confident loop (mature hand-drawn-clean, like the hero
+          // glyphs): one continuous stroke around the card with a calm,
+          // intentional overshoot where it closes at the top, instead of the old
+          // four-segment scribble. Round caps/joins; non-scaling so the 1.6px
+          // stroke stays even on the stretched viewBox.
+          d="M4 6 C 32 3, 68 3, 96 4 C 97 32, 97 68, 96 96 C 68 98, 32 98, 4 96 C 3 68, 3 32, 4 6 C 8 4.5, 14 4, 20 4.5"
           stroke="currentColor"
-          strokeWidth="0.8"
+          strokeWidth="1.6"
           strokeLinecap="round"
           strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
@@ -363,10 +385,13 @@ function Annotation({
         className="absolute -left-6 -top-8 z-20 hidden text-support md:block"
       >
         <motion.svg width="56" height="48" viewBox="0 0 56 48" fill="none">
+          {/* Single confident curve with a slight overshoot tail at the tip
+              (the pen lifts a touch past the target), then the arrowhead as one
+              continuous V — no scribble, mirrors the hero glyph language. */}
           <motion.path
-            d="M4 6 C 12 18, 22 20, 30 30 C 36 37, 44 38, 50 42"
+            d="M5 7 C 14 19, 23 23, 33 31 C 39 36, 46 39, 51 41"
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
             variants={draw}
@@ -374,9 +399,9 @@ function Annotation({
             animate="visible"
           />
           <motion.path
-            d="M50 42 L 39 41 M50 42 L 46 31"
+            d="M40 42 L 51 41 L 47 30"
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
             variants={draw}
