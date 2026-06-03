@@ -570,6 +570,47 @@
 }
 
 /* =========================================================================
+   HERO TEXT ENTRANCE (perf · LCP) — CSS-driven "blur-in" para subhead + CTA.
+
+   Por qué CSS y no Motion-JS: la subhead del Hero (<p>) es el elemento LCP de
+   la home. Cuando su entrada la conducía Motion con initial="hidden"
+   (opacity:0), el primer paint del <p> ocurría sólo tras hidratar + correr la
+   variante, así que bajo CPU throttling de mobile el LCP se iba a ~TTI (3.8s)
+   pese a FCP ~0.9s. Moviendo subhead + CTA a una animación CSS que arranca en
+   el primer frame (sin gate de JS), el elemento ya está pintado al cargar y el
+   LCP colapsa hacia el FCP. El word-cascade del <h1> sigue en Motion: ése es el
+   wow de entrada y sus spans son aria-hidden (no son candidatos a LCP).
+
+   Reduced-motion / sin soporte: el contenido se ve completo y estático (estado
+   final), nunca oculto — el valor de la subhead jamás depende del motion.
+   ========================================================================= */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-text-enter {
+    animation: hero-text-enter var(--duration-slow, 400ms) both;
+    animation-timing-function: var(--easing-emphasis);
+    will-change: transform, opacity;
+  }
+  /* Pequeño escalonado para conservar el "lead" del titular sobre el cuerpo. */
+  .hero-text-enter--subhead {
+    animation-delay: 180ms;
+  }
+  .hero-text-enter--cta {
+    animation-delay: 320ms;
+  }
+
+  @keyframes hero-text-enter {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* =========================================================================
    TESTIMONIALS NOTE -- ficha de papel sujeta con celo al tablero (ADR-3, design §3, §4).
 
    La entrada cinemática (entrance variado + "stab" de la chincheta) la conduce

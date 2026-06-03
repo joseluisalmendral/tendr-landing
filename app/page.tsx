@@ -1,15 +1,35 @@
+import dynamic from "next/dynamic";
+
 import { SkipLink } from "@/components/a11y/SkipLink";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { Section } from "@/components/landing/Section";
-import { HowItWorks } from "@/components/landing/HowItWorks";
-import { FeatureShowcase } from "@/components/landing/FeatureShowcase";
-import { Pricing } from "@/components/landing/Pricing";
 import { PRICING } from "@/components/landing/pricing.data";
-import { TestimonialsCork } from "@/components/landing/TestimonialsCork";
 import { TESTIMONIALS } from "@/components/landing/testimonials.data";
 import { FAQ } from "@/components/landing/FAQ";
 import { Footer } from "@/components/landing/Footer";
+
+// PERF (bundle-dynamic-imports): the below-the-fold client components are the
+// heavy hydration cost that competes with the Hero on the main thread during
+// initial load (Motion-driven, scroll-hijack pan, FLIP, etc.). Code-split them
+// into lazy chunks. `ssr` stays true (default) so their HTML is still
+// server-rendered — no CLS, no lost SEO content — but their client JS hydrates
+// in separate chunks instead of inflating the first-load bundle. The Hero (LCP)
+// and its wow are imported statically and untouched.
+const HowItWorks = dynamic(() =>
+  import("@/components/landing/HowItWorks").then((m) => m.HowItWorks),
+);
+const FeatureShowcase = dynamic(() =>
+  import("@/components/landing/FeatureShowcase").then((m) => m.FeatureShowcase),
+);
+const Pricing = dynamic(() =>
+  import("@/components/landing/Pricing").then((m) => m.Pricing),
+);
+const TestimonialsCork = dynamic(() =>
+  import("@/components/landing/TestimonialsCork").then(
+    (m) => m.TestimonialsCork,
+  ),
+);
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ogImage, pageMetadata, siteUrl } from "@/components/seo/metadata";
 import type { FaqItem, PricingCardProps } from "@/components/landing/types";

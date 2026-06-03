@@ -78,27 +78,14 @@ export function Hero({
   // copy with two "cliente"/"clientes" never paints two markers.
   const highlightIndex = words.findIndex(isHighlightWord);
 
-  // Container drives the stagger between the text-column children: the headline
-  // block first, then subhead, then the CTA group, with a small head start so
-  // the title clearly leads the choreography.
-  const containerVariants: Variants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.14,
-        delayChildren: 0.05,
-      },
-    },
-  };
-
   // The headline is itself a stagger container: its children are the words.
   const headingContainer: Variants = {
     hidden: {},
     visible: {
       transition: {
-        // ~55ms per word: a quick, legible cascade (the full title is readable
-        // almost immediately for LCP, but the eye catches the writing-in).
-        staggerChildren: 0.055,
+        // ~40ms per word: a quick, legible cascade. Tight enough that the full
+        // title settles right after FCP (LCP perf), still reads as writing-in.
+        staggerChildren: 0.04,
       },
     },
   };
@@ -112,13 +99,19 @@ export function Hero({
         visible: { opacity: 1, transition: { duration: 0.2 } },
       }
     : {
-        hidden: { opacity: 0, y: 28, filter: "blur(10px)" },
+        // PERF (LCP): the <h1> is the LCP element on mobile. Words start
+        // PAINTED (opacity 1) and animate only transform (y) + filter (blur):
+        // the glyphs are present from the first frame, so the simulated-throttle
+        // LCP is no longer pinned to the JS-driven opacity:0→1 at TTI. The
+        // signature "blur-in" cascade is preserved (rise + de-focus), and the
+        // initial blur is lighter so the text is legible/contentful immediately.
+        hidden: { opacity: 1, y: 16, filter: "blur(4px)" },
         visible: {
           opacity: 1,
           y: 0,
           filter: "blur(0px)",
           transition: {
-            duration: 0.72,
+            duration: 0.5,
             ease: [0.16, 1, 0.3, 1], // --easing-expo (momento wow, v2)
           },
         },
@@ -142,20 +135,6 @@ export function Hero({
         },
       };
 
-  // Subhead + CTA group: "Blur In" via opacity + small upward y. No blur so the
-  // value is safe under reduced motion.
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.4, // --duration-slow
-        ease: [0.2, 0.8, 0.2, 1], // --easing-emphasis (v2)
-      },
-    },
-  };
-
   return (
     <section
       className={cn(
@@ -167,16 +146,15 @@ export function Hero({
       )}
     >
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 px-6 pt-24 pb-16 lg:grid-cols-12 lg:gap-8">
-        {/* Text column: left, asymmetric (does not span the full grid).
-            On-load choreographed reveal: container staggers the children. */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col items-start gap-6 lg:col-span-6 lg:pr-6"
-        >
+        {/* Text column: left, asymmetric (does not span the full grid). The
+            headline runs its own Motion word-cascade (the wow entrance); the
+            subhead + CTA enter via CSS (.hero-text-enter) so the LCP <p> paints
+            on the first frame instead of waiting for JS hydration. */}
+        <div className="flex flex-col items-start gap-6 lg:col-span-6 lg:pr-6">
           <motion.h1
             variants={headingContainer}
+            initial="hidden"
+            animate="visible"
             aria-label={title}
             className="max-w-[18ch] text-balance font-display text-display-xl text-text-primary"
           >
@@ -225,17 +203,11 @@ export function Hero({
             })}
           </motion.h1>
 
-          <motion.p
-            variants={itemVariants}
-            className="max-w-[46ch] text-body-lg text-text-secondary"
-          >
+          <p className="hero-text-enter hero-text-enter--subhead max-w-[46ch] text-body-lg text-text-secondary">
             {subtitle}
-          </motion.p>
+          </p>
 
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-col gap-4 pt-2 sm:flex-row sm:items-center"
-          >
+          <div className="hero-text-enter hero-text-enter--cta flex flex-col gap-4 pt-2 sm:flex-row sm:items-center">
             <Button
               asChild
               // Primary CTA = ink fill (#101010) + white text (19:1), radius-md,
@@ -256,21 +228,17 @@ export function Hero({
             >
               <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
             </Button>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* Illustration column: right, asymmetric. "El Hilo" — a frameless
             looping scene (no window chrome, no card, no tape, no grid, no
             arrow). The portfolio draws itself as a single living ink stroke that
             threads three moments, drops a forgotten follow-up, then loops back
             to rescue it. The scene owns its own motion timeline and a11y; this
-            column is just its asymmetric slot, vertically centered. */}
-        <motion.div
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-          className="relative lg:col-span-6 lg:pl-6"
-        >
+            column is just its asymmetric slot, vertically centered. Enters via
+            CSS (.hero-text-enter) so no JS gate sits on the above-the-fold area. */}
+        <div className="hero-text-enter relative lg:col-span-6 lg:pl-6">
           {/* On mobile the scene is a compact supporting illustration (capped
               width so the square viewBox does not reserve a tall void above
               "Cómo funciona"); on lg+ it fills the asymmetric column beside the
@@ -279,7 +247,7 @@ export function Hero({
           <div className="mx-auto max-w-[260px] sm:max-w-[340px] lg:mx-0 lg:max-w-none">
             <HeroTriptych />
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
