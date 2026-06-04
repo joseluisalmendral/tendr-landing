@@ -15,7 +15,6 @@ const baseProps: PricingCardProps = {
     "Hasta 50 contactos",
     "Recordatorios automáticos",
   ],
-  cta: { label: "Empezar gratis", href: "/registro" },
   productName: "Tendr Solo",
   productDescription: "Plan gratuito para freelancers que empiezan.",
 };
@@ -61,12 +60,13 @@ describe("PricingCard", () => {
     expect(container.querySelector("img")).toBeNull();
   });
 
-  it("renders the cta as an <a> with the correct name and href", () => {
-    renderCard({ cta: { label: "Empezar gratis", href: "/registro" } });
+  it("renders no per-card CTA link (the single waitlist CTA lives under the grid)", () => {
+    // The plans are not purchasable yet (pre-launch waitlist), so a per-card
+    // "hire this plan" button would be a false affordance. The card carries no
+    // CTA; the single waitlist CTA is owned by the Pricing recommender.
+    renderCard();
 
-    const link = screen.getByRole("link", { name: "Empezar gratis" });
-    expect(link.tagName).toBe("A");
-    expect(link).toHaveAttribute("href", "/registro");
+    expect(screen.queryByRole("link")).toBeNull();
   });
 
   it("applies the accent emphasis (2px accent border) when highlighted", () => {

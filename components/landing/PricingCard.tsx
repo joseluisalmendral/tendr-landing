@@ -1,18 +1,32 @@
-import Link from "next/link";
 import { Check } from "@phosphor-icons/react/dist/ssr";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type { PricingCardProps } from "@/components/landing/types";
 import { cn } from "@/lib/utils";
+
+/**
+ * Map an ISO 4217 currency code (carried by the pricing data, never hardcoded at
+ * the call site) to its display symbol. Prices previously rendered as a bare
+ * number ("9") with no money symbol; per Spanish convention the amount is shown
+ * with a trailing euro sign and a thin space ("9 €"). Falls back to the raw code
+ * for any currency without a mapped glyph so we never silently drop the unit.
+ */
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  EUR: "€",
+  USD: "$",
+  GBP: "£",
+};
+
+function currencySymbol(code: string): string {
+  return CURRENCY_SYMBOLS[code] ?? code;
+}
 
 /**
  * One pricing tier rendered as a clean v2 card (flat surface + hairline border).
@@ -33,6 +47,13 @@ import { cn } from "@/lib/utils";
  * - `forWho`: a small "for whom" subtitle ("Para empezar" / "Para equipos").
  * - `badge`: a generic status pill ("Próximamente"), never the recommendation.
  *
+ * No per-card CTA: the plans are not purchasable yet (pre-launch waitlist), so a
+ * per-card "hire this plan" button would be a false affordance and per-card
+ * clicks would not be real purchase intent. A single waitlist CTA lives under
+ * the grid, owned by the Pricing recommender. The card therefore ends on its
+ * features list (the last block); the recommended-tier emphasis (accent border +
+ * scale) still guides reading, it just no longer "sells".
+ *
  * Emits a Product JSON-LD block per card so each tier is a structured Offer.
  */
 export function PricingCard({
@@ -41,7 +62,6 @@ export function PricingCard({
   priceCurrency,
   period,
   features,
-  cta,
   highlighted = false,
   forWho,
   badge,
@@ -94,14 +114,26 @@ export function PricingCard({
           </span>
         ) : null}
         <p className="flex items-baseline gap-1">
+          {/* Price + currency symbol per ES convention ("9 €"). The amount keeps
+              the display type; the euro sign sits in the same baseline group at a
+              calmer scale so the number stays the focal point of the hierarchy.
+              The symbol comes from priceCurrency (data-driven), never hardcoded. */}
           <span className="font-display text-h2 text-text-primary">
-            {price}
+            {price}{" "}
+            <span className="text-h3 text-text-secondary">
+              {currencySymbol(priceCurrency)}
+            </span>
           </span>
           <span className="font-mono text-meta text-text-tertiary">{period}</span>
         </p>
       </CardHeader>
 
-      <CardContent className="flex-1">
+      {/* Features list is the card's last block (no per-card CTA — see header
+          docblock). pb-6 restores the bottom breathing room the removed footer
+          used to provide, so the card closes calmly instead of ending abruptly
+          right under the final feature. flex-1 keeps the list filling toward the
+          bottom so equal-height cards stay balanced in the stretched row. */}
+      <CardContent className="flex-1 pb-6">
         <ul className="flex flex-col gap-3">
           {features.map((feature) => (
             <li key={feature} className="flex items-start gap-2">
@@ -115,25 +147,6 @@ export function PricingCard({
           ))}
         </ul>
       </CardContent>
-
-      <CardFooter>
-        {highlighted ? (
-          <Button
-            asChild
-            className="rounded-md bg-accent-primary text-accent-fg text-body h-auto w-full px-6 py-3 shadow-none hover:brightness-110 active:translate-y-px transition-all"
-          >
-            <Link href={cta.href}>{cta.label}</Link>
-          </Button>
-        ) : (
-          <Button
-            asChild
-            variant="outline"
-            className="rounded-md border-border-interactive bg-transparent text-text-primary text-body h-auto w-full px-6 py-3 shadow-none hover:bg-surface-sunken/60 active:translate-y-px transition-all"
-          >
-            <Link href={cta.href}>{cta.label}</Link>
-          </Button>
-        )}
-      </CardFooter>
     </Card>
   );
 }

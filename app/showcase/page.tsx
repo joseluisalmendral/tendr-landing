@@ -106,7 +106,6 @@ export default function ShowcasePage() {
                 "Pipeline visual con 3 etapas",
                 "Recordatorios de seguimiento",
               ]}
-              cta={{ label: "Empezar gratis", href: "/registro" }}
               productName="Tendr Gratis"
               productDescription="Plan inicial para freelancers que recién empiezan a ordenar clientes."
             />
@@ -122,7 +121,6 @@ export default function ShowcasePage() {
                 "Importar clientes por CSV",
                 "Informe mensual de actividad",
               ]}
-              cta={{ label: "Probar Pro", href: "/registro?plan=pro" }}
               productName="Tendr Pro"
               productDescription="Para freelancers que ya viven de sus clientes y quieren no perder ninguno."
             />

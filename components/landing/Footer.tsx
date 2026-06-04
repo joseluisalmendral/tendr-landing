@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { GithubLogo, LinkedinLogo, XLogo } from "@phosphor-icons/react/dist/ssr";
-import type { Icon } from "@phosphor-icons/react";
 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { siteUrl } from "@/components/seo/metadata";
@@ -18,35 +16,38 @@ import { siteUrl } from "@/components/seo/metadata";
  * Emits an Organization JSON-LD block (brand identity for SEO / answer engines)
  * including sameAs (the social profiles) and foundingDate.
  *
- * TODO: real social profiles and legal pages. The social URLs and the /logo.png
- * asset below are placeholders.
+ * NOTE: social links (X, LinkedIn, GitHub) are removed until real profile URLs
+ * exist. The "Redes" column returns when profiles are live. /logo.png is also
+ * a placeholder pending the real asset.
  */
 
-// Social profiles: reused for the visible links AND the JSON-LD `sameAs`.
-const SOCIALS: { label: string; href: string; icon: Icon }[] = [
-  { label: "X", href: "https://x.com/tendrapp", icon: XLogo },
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/tendrapp", icon: LinkedinLogo },
-  { label: "GitHub", href: "https://github.com/tendrapp", icon: GithubLogo },
+// Placeholder sameAs URLs kept for JSON-LD only — not shown as visible links
+// until real social profiles exist.
+const SOCIAL_SAME_AS = [
+  "https://x.com/tendrapp",
+  "https://www.linkedin.com/company/tendrapp",
+  "https://github.com/tendrapp",
 ];
 
-const PRODUCT_LINKS = [
-  { label: "Pricing", href: "#precios" },
-  { label: "Features", href: "#funciones" },
-  { label: "Cómo funciona", href: "#como-funciona" },
+const PRODUCT_ANCHORS = [
+  { label: "Pricing", anchor: "precios" },
+  { label: "Features", anchor: "funciones" },
+  { label: "Cómo funciona", anchor: "como-funciona" },
 ];
 
 const COMPANY_LINKS = [
   { label: "Planes", href: "/pricing" },
   { label: "Privacy", href: "/privacy" },
   { label: "Terms", href: "/terms" },
-  { label: "Contacto", href: "#" },
 ];
 
 const headingClass = "font-mono text-meta uppercase text-text-tertiary";
 const linkClass =
   "text-body-sm text-text-secondary underline-offset-4 hover:text-text-primary hover:underline";
 
-export function Footer() {
+export function Footer({ anchorBase = "/" }: { anchorBase?: string }) {
+  // Normalise anchorBase: strip trailing slash so `${base}#id` is always clean.
+  const base = anchorBase === "/" ? "" : anchorBase.replace(/\/$/, "");
   return (
     <footer className="w-full border-t border-border bg-surface-sunken">
       <JsonLd
@@ -57,12 +58,12 @@ export function Footer() {
           logo: new URL("/logo.png", siteUrl).toString(),
           description:
             "Mini-CRM con IA para profesionales B2B junior y freelancers que gestionan clientes externos.",
-          sameAs: SOCIALS.map((s) => s.href),
+          sameAs: SOCIAL_SAME_AS,
           foundingDate: "2026",
         }}
       />
 
-      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 py-24 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:px-8">
+      <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-12 px-6 py-24 md:grid-cols-[1.4fr_1fr_1fr] md:px-8">
         {/* Col 1: brand anchor — large display wordmark + the ONE hand-drawn
             wisp underline (firma) + a single short tagline. */}
         <div className="flex flex-col gap-4">
@@ -93,8 +94,8 @@ export function Footer() {
         {/* Col 2: Producto */}
         <nav aria-label="Producto" className="flex flex-col gap-3">
           <span className={headingClass}>Producto</span>
-          {PRODUCT_LINKS.map((link) => (
-            <Link key={link.label} href={link.href} className={linkClass}>
+          {PRODUCT_ANCHORS.map((link) => (
+            <Link key={link.label} href={`${base}#${link.anchor}`} className={linkClass}>
               {link.label}
             </Link>
           ))}
@@ -110,22 +111,6 @@ export function Footer() {
           ))}
         </nav>
 
-        {/* Col 4: Redes */}
-        <nav aria-label="Redes" className="flex flex-col gap-3">
-          <span className={headingClass}>Redes</span>
-          {SOCIALS.map(({ label, href, icon: SocialIcon }) => (
-            <a
-              key={label}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`flex items-center gap-2 ${linkClass}`}
-            >
-              <SocialIcon size={18} weight="regular" aria-hidden="true" />
-              {label}
-            </a>
-          ))}
-        </nav>
       </div>
 
       {/* Bottom row: copyright only (no locale strip, no version footer). */}

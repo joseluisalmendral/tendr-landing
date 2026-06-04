@@ -9,7 +9,10 @@ import type { PricingCardProps } from "@/components/landing/types";
  * being duplicated inline. Do NOT fork these values per page: prices are derived
  * from here so the schema price stays in sync with what users see.
  *
- * TODO(F6): copy provisional. Las variantes finales de copy se definen en F6.
+ * No per-tier CTA: the plans are not purchasable yet (pre-launch waitlist), so a
+ * per-card button would be a false affordance. A single waitlist CTA lives under
+ * the cards grid, owned by the Pricing recommender (label "Únete a la lista de
+ * espera", href "#waitlist" — the only real conversion action).
  */
 export const PRICING: PricingCardProps[] = [
   {
@@ -19,7 +22,6 @@ export const PRICING: PricingCardProps[] = [
     period: "/mes",
     forWho: "Para empezar",
     features: ["3 clientes", "1 proyecto", "Soporte de la comunidad"],
-    cta: { label: "Empezar gratis", href: "#" },
     productName: "Tendr Free",
     productDescription: "Plan gratuito para empezar a ordenar tu cartera.",
   },
@@ -35,7 +37,6 @@ export const PRICING: PricingCardProps[] = [
       "Reportes automáticos",
       "Soporte por email",
     ],
-    cta: { label: "Probar 14 días", href: "#" },
     highlighted: true,
     productName: "Tendr Pro",
     productDescription: "Para profesionalizar tu seguimiento con IA.",
@@ -53,7 +54,6 @@ export const PRICING: PricingCardProps[] = [
       "Permisos por rol",
       "Workspace de equipo",
     ],
-    cta: { label: "Apuntarse a waitlist", href: "#" },
     productName: "Tendr Team",
     productDescription: "Para equipos pequeños que comparten cartera.",
   },

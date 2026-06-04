@@ -128,11 +128,20 @@ export function HeroWithSocialProof({
           beat before the headline. pt stays within the design-spec cap. */}
       <div className="mx-auto grid min-h-[100dvh] max-w-[1280px] grid-cols-1 content-center items-center gap-12 px-6 pt-16 pb-24 lg:grid-cols-12 lg:gap-8 lg:pt-12 lg:pb-40">
         <div className="flex flex-col items-start gap-6 lg:col-span-6 lg:pr-6">
-          {/* Logo eyebrow — placeholder monogram marks, BEFORE the title. */}
+          {/* Logo eyebrow — placeholder monogram marks, BEFORE the title.
+              Pre-launch signal integration decision: this hero ALREADY owns one
+              eyebrow (the logo row). To honor the v2 "no two competing eyebrows"
+              rule, the "Pre-lanzamiento" signal is FOLDED INTO this same eyebrow
+              beat as a quiet leading mono tag on the same row as the marks,
+              rather than stacking a second eyebrow above or below the title. It
+              reads as one credibility line ("pre-launch, with these (illustrative)
+              brands"), keeps the hero text-element count unchanged, adds no client
+              JS and no layout shift, and enters with the existing logo-row stagger
+              reveal so the LCP path is untouched. */}
           <div className="hero-text-enter w-full">
             <p className="sr-only">
-              Marcas ilustrativas previas al lanzamiento. Tendr aún no ha salido;
-              no representan clientes reales.
+              Tendr está en pre-lanzamiento. Marcas ilustrativas previas al
+              lanzamiento: aún no ha salido; no representan clientes reales.
             </p>
             <motion.ul
               variants={logoRow}
@@ -141,6 +150,11 @@ export function HeroWithSocialProof({
               aria-hidden="true"
               className="flex flex-wrap items-center gap-x-6 gap-y-3"
             >
+              <motion.li variants={logoMark}>
+                <span className="inline-flex items-center rounded-full border border-border-hairline bg-surface-raised px-3 py-1 font-mono text-meta uppercase tracking-[0.18em] text-text-secondary shadow-flat">
+                  Pre-lanzamiento
+                </span>
+              </motion.li>
               {PLACEHOLDER_LOGOS.map((logo) => (
                 <motion.li key={logo.name} variants={logoMark}>
                   <LogoMark logo={logo} />

@@ -17,10 +17,12 @@ import type { PricingCardProps } from "@/components/landing/types";
  *     moves to the BOTTOM of the Pro card. Multi-user is the headline for an
  *     agency; bulk import is plumbing.
  *  4. HONESTY GUARD (brief §3 + docs/product.md): Team is "Próximamente" — it is
- *     NOT implemented. The badge stays, and its CTA is the interest-capture
- *     "Avísame cuando salga Team" (this click is the PRIMARY success metric in
- *     exploration/variants/decisions.md §2). No fake availability, no free-trial
- *     wording anywhere — CTAs are waitlist-honest (pre-launch).
+ *     NOT implemented. The badge stays. There is no per-card CTA (the plans are
+ *     not purchasable yet, so a per-tier button would be a false affordance); the
+ *     single waitlist CTA under the grid carries the Team-angle interest-capture
+ *     label "Avísame cuando salga Team" (passed by app/agencias/page.tsx). That
+ *     click is the PRIMARY success metric (exploration/variants/decisions.md §2).
+ *     No fake availability, no free-trial wording anywhere — waitlist-honest.
  *
  * Prices are intentionally identical to `pricing.data.ts` (single product, one
  * source of truth for the number); only copy/order/emphasis differ.
@@ -34,7 +36,6 @@ export const PRICING_AGENCIAS: PricingCardProps[] = [
     // Free is the evaluation step, not the destination, for an agency.
     forWho: "Para evaluar",
     features: ["3 clientes", "1 proyecto", "Soporte de la comunidad"],
-    cta: { label: "Probar el estudio", href: "#precios" },
     productName: "Tendr Free",
     productDescription:
       "Plan gratuito para probar Tendr con una cartera antes de traer al equipo.",
@@ -54,7 +55,6 @@ export const PRICING_AGENCIAS: PricingCardProps[] = [
       // not the headline for an agency.
       "Importar clientes por CSV",
     ],
-    cta: { label: "Unirse a la waitlist", href: "#precios" },
     productName: "Tendr Pro",
     productDescription:
       "Para cada account manager del estudio que profesionaliza su seguimiento con IA.",
@@ -75,9 +75,6 @@ export const PRICING_AGENCIAS: PricingCardProps[] = [
       "Workspace compartido del estudio",
       "Todo lo de Pro",
     ],
-    // Interest-capture CTA: this click IS the primary success metric
-    // (decisions.md §2). Honest about Team being "próximamente".
-    cta: { label: "Avísame cuando salga Team", href: "#precios" },
     productName: "Tendr Team",
     productDescription:
       "Para estudios pequeños que comparten la cartera de clientes.",

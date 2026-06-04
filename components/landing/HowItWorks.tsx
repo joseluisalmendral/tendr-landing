@@ -46,6 +46,8 @@
  *   reveal still applies (it degrades fine). No JS media query is needed now that
  *   the desktop-only cork hand was retired.
  */
+import Link from "next/link";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 
 import {
@@ -206,6 +208,7 @@ export function HowItWorks() {
   const lastIndex = JOURNEY_STAGES.length - 1;
 
   return (
+    <div className="flex flex-col gap-12 md:gap-16">
     <ol className="flex flex-col gap-12 md:gap-20">
       {JOURNEY_STAGES.map((s, index) => {
         const Backdrop = STAGE_COMPONENTS[index];
@@ -284,5 +287,27 @@ export function HowItWorks() {
         );
       })}
     </ol>
+
+      {/* Mid-page CTA (end of the "Cómo funciona" journey). The reader has just
+          followed one client through the three moments — the natural beat to ask
+          them to join. Lives on / and /agencias (both render HowItWorks); /pricing
+          does not, which is correct (it converts locally). Quiet text-link idiom,
+          NOT a primary accent block, to respect the v2 accent budget — the only
+          ink-filled CTAs are the hero and the pricing/waitlist actions. Points at
+          #waitlist, the single real conversion action. Not adjacent to the
+          Waitlist section (Funciones, Pricing, Testimonials and FAQ sit between),
+          so it never reads as redundant with the closing form. */}
+      <Link
+        href="#waitlist"
+        className="focus-ring group inline-flex w-fit items-center gap-1.5 self-start font-mono text-meta uppercase tracking-[0.14em] text-text-secondary underline-offset-4 transition-colors hover:text-text-primary hover:underline"
+      >
+        Así de simple. Únete a la lista de espera
+        <ArrowRight
+          aria-hidden="true"
+          weight="bold"
+          className="size-3.5 transition-transform duration-fast group-hover:translate-x-0.5"
+        />
+      </Link>
+    </div>
   );
 }

@@ -72,7 +72,14 @@ export type FeatureProps = {
   link?: CtaLink;
 };
 
-/** PricingCard: one pricing tier; emits a Product JSON-LD block. */
+/**
+ * PricingCard: one pricing tier; emits a Product JSON-LD block.
+ *
+ * Note: there is intentionally no per-card CTA. The plans are not purchasable
+ * yet (pre-launch waitlist), so a per-card "hire this plan" button would be a
+ * false affordance and per-card clicks would not be real purchase intent. The
+ * single waitlist CTA lives under the grid, owned by the Pricing recommender.
+ */
 export type PricingCardProps = {
   tier: string;
   /** Display string, e.g. "0" / "29". */
@@ -82,7 +89,6 @@ export type PricingCardProps = {
   /** Rendered in mono, e.g. "/mes". */
   period: string;
   features: string[];
-  cta: CtaLink;
   /**
    * Visual emphasis anchor (scale 1.02 + hard shadow + accent border). It marks
    * the target tier, NOT the live recommendation: the moving "Recomendado"

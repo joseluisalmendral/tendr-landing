@@ -32,12 +32,14 @@
  * The anchor is real value + visual hierarchy + the annotation that argues it.
  */
 import { useId, useState } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
 import { PricingCard } from "@/components/landing/PricingCard";
 import type { PricingCardProps } from "@/components/landing/types";
 import { cn } from "@/lib/utils";
@@ -69,6 +71,15 @@ type Props = {
   defaultWork?: Work;
   /** Initial "cartera" selector value. Defaults to "grande" (base behaviour). */
   defaultPortfolio?: Portfolio;
+  /**
+   * Label for the single waitlist CTA under the cards grid. Only the LABEL is
+   * configurable — the href is always "#waitlist" (every render site, /, /agencias
+   * and /pricing, has a local #waitlist section). The plans are not purchasable
+   * yet (pre-launch), so this one waitlist CTA replaces the old per-card buttons:
+   * per-card clicks on unpurchasable plans are not real purchase intent. The
+   * /agencias vertical passes the Team-angle label; / and /pricing use the default.
+   */
+  ctaLabel?: string;
 };
 
 /**
@@ -101,6 +112,7 @@ export function Pricing({
   tiers,
   defaultWork = "solo",
   defaultPortfolio = "grande",
+  ctaLabel = "Únete a la lista de espera",
 }: Props) {
   const reduceMotion = useReducedMotion();
   const liveId = useId();
@@ -184,6 +196,35 @@ export function Pricing({
             </div>
           );
         })}
+      </div>
+
+      {/* Single waitlist CTA under the grid (replaces the old per-card buttons).
+          The plans are not purchasable yet, so ONE honest action — join the
+          waitlist — is the only real conversion; three identical per-card
+          buttons would be false affordances. Same production CTA idiom as the
+          hero primary (focus-ring rounded-md bg-accent-primary text-accent-fg).
+          The href is always #waitlist (each render site has a local #waitlist
+          section). Composition order: grid -> CTA -> disclaimer. The CTA is the
+          decisive moment, so it comes first; the "precios de lanzamiento"
+          disclaimer is a footnote about the prices the user just acted on, so it
+          settles quietly underneath rather than splitting the cards from their
+          action. */}
+      <div className="flex flex-col items-center gap-4 pt-2">
+        <Button
+          asChild
+          className="rounded-md bg-accent-primary text-accent-fg text-body h-auto px-8 py-3 shadow-none hover:brightness-110 active:translate-y-px transition-all"
+        >
+          <Link href="#waitlist">{ctaLabel}</Link>
+        </Button>
+
+        {/* Pre-launch pricing disclaimer (shared, so /, /agencias and /pricing
+            all get it once). Quiet meta text so the plans read as "this is how it
+            will be" rather than "buy now" — honest for a waitlist landing where
+            nothing is purchasable yet. Tertiary mono so it never competes with the
+            CTA above or the prices in the cards. */}
+        <p className="text-center font-mono text-meta uppercase text-text-tertiary">
+          Precios de lanzamiento, sujetos a cambios.
+        </p>
       </div>
     </div>
   );

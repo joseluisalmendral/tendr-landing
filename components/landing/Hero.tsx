@@ -242,6 +242,16 @@ export function Hero({
             subhead + CTA enter via CSS (.hero-text-enter) so the LCP <p> paints
             on the first frame instead of waiting for JS hydration. */}
         <div className="flex flex-col items-start gap-6 lg:col-span-6 lg:pr-6">
+          {/* Pre-launch signal (/agencias): a quiet mono eyebrow tag before the
+              <h1>. This is the ONLY eyebrow in this hero (the base Hero has no
+              logo row), so it stays within the v2 eyebrow budget. Static markup —
+              no new client JS, no layout shift; it enters with the rest of the
+              text column via the existing .hero-text-enter CSS reveal so the LCP
+              path is untouched. A dot is intentionally avoided (decorative status
+              dots are rationed); the tag itself carries the signal. */}
+          <span className="hero-text-enter inline-flex w-fit items-center rounded-full border border-border-hairline bg-surface-raised px-3 py-1 font-mono text-meta uppercase tracking-[0.18em] text-text-secondary shadow-flat">
+            Pre-lanzamiento
+          </span>
           {heading}
           {subhead}
           {ctaGroup}
