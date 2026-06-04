@@ -1517,8 +1517,11 @@ function ActThreeOverlay({ t, vis }: { t: MotionValue<number>; vis: MotionValue<
       cx.set(VB_W + 60);
       cy.set(VB_H + 20);
     } else if (v < III.cursorOut) {
-      cx.set(260);
-      cy.set(AI_ROW_Y + 6);
+      // Same treatment as Act I: approach from below-right so the arrow tip +
+      // click ring land on the button's lower-right corner and the
+      // "Planificar" label stays legible at the climax.
+      cx.set(312);
+      cy.set(AI_ROW_Y + 20);
     } else {
       cx.set(VB_W + 60);
       cy.set(VB_H + 40);
