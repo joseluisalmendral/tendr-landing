@@ -1039,6 +1039,39 @@
   position: relative;
   /* height se fija inline desde panVw (calc estable -> CLS 0). */
 }
+
+/* SSR scroll-restoration stabiliser (rendered only inside the STATIC path).
+   The SSR snapshot always renders the static path (useMediaQuery -> false on the
+   server), so a desktop visitor's first HTML is the SHORT static grid even
+   though it will hydrate into the much TALLER pan path. On back/forward nav the
+   browser restores the saved scroll against that short SSR document and clamps to
+   the top. This block reserves the EXACT pan height at md+ so the SSR document is
+   as tall as the hydrated desktop document; below md it collapses to 0 (the
+   static grid IS the real layout there, no pan, no reservation needed). The
+   --board-pin-h value is the inline pinHeight calc (identical to the pan path's
+   .board-pin-spacer). Pure layout reservation: no paint, no pointer, behind all
+   content. CRITICAL: gated by the SAME md breakpoint as the JS pan gate, in CSS
+   only — so server HTML and hydrated desktop DOM agree on document height without
+   any JS branch in the static markup. */
+.board-pin-reserve {
+  height: 0;
+  width: 100%;
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .board-pin-reserve {
+    height: var(--board-pin-h, 0);
+  }
+}
+/* Respect reduced motion: the desktop pan path does NOT mount under reduced
+   motion (it falls back to the static grid), so the desktop document there is the
+   static grid height, NOT the tall pan height. Collapse the reservation so the
+   reduced-motion SSR/hydrated heights stay consistent with each other. */
+@media (prefers-reduced-motion: reduce) {
+  .board-pin-reserve {
+    height: 0;
+  }
+}
 .board-sticky {
   display: flex;
   flex-direction: column;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore, type CSSProperties } from "react";
 import { useLenis } from "lenis/react";
 import {
   cubicBezier,
@@ -166,10 +166,18 @@ export function TestimonialsCork({
   const isDesktop = useMediaQuery(MD_QUERY);
   const pan = isDesktop && !reduce;
 
+  // pinHeight is PURE arithmetic over the (static) testimonial data — it does not
+  // read the DOM — so it is identical on the server and the client. We compute it
+  // here, at the top of the island, so BOTH paths can reserve the SAME document
+  // height. See StaticBoardGrid for WHY the static path needs it too (SSR scroll
+  // restoration). computeGeometry/computePhases are pure helpers.
+  const { panVw } = computeGeometry(testimonials);
+  const { pinHeight } = computePhases(panVw);
+
   // The pan path is its OWN component so useScroll (needs a hydrated target ref)
   // only mounts when the pan actually renders.
   if (!pan) {
-    return <StaticBoardGrid testimonials={testimonials} />;
+    return <StaticBoardGrid testimonials={testimonials} pinHeight={pinHeight} />;
   }
   return <BoardPan testimonials={testimonials} />;
 }
@@ -468,8 +476,15 @@ function chunkByPlan<T>(items: T[], plan: readonly number[]): T[][] {
  */
 function StaticBoardGrid({
   testimonials,
+  pinHeight,
 }: {
   testimonials: TestimonialCardProps[];
+  /**
+   * The exact scroll budget the desktop pan path will occupy once hydrated. We
+   * compute it at the top of the island (pure arithmetic, SSR-stable) and pass it
+   * down so the static path can RESERVE the same document height at md+.
+   */
+  pinHeight: string;
 }) {
   const rows = chunkByPlan(testimonials, STATIC_ROW_PLAN);
   return (
@@ -479,6 +494,25 @@ function StaticBoardGrid({
       className="board-section board-section--static relative w-full scroll-mt-16"
       aria-labelledby={HEADING_ID}
     >
+      {/* SSR scroll-restoration stabiliser. useMediaQuery resolves false on the
+          server, so the SSR snapshot ALWAYS renders this static path — even for
+          desktop visitors who will hydrate into the (much taller) pan path. On
+          back/forward navigation the browser restores the saved scroll position
+          against the SSR document height; if that document is thousands of px
+          SHORTER than when the user left, the browser clamps the restore to the
+          top. This zero-content block reserves the EXACT pan-path height at md+
+          (and collapses to 0 below md via CSS, where the static grid is the real
+          desktop layout too), so the SSR document height matches the hydrated
+          desktop document height and the restore lands correctly. It sits behind
+          everything (z-0) and is purely a layout reservation — once desktop
+          hydrates into BoardPan this whole static subtree (and this block)
+          unmounts, replaced by the real .board-pin-spacer. Decorative. */}
+      <div
+        aria-hidden
+        className="board-pin-reserve"
+        style={{ "--board-pin-h": pinHeight } as CSSProperties}
+      />
+
       {/* Marker tray hint on the bottom frame edge (crafted-frame affordance,
           B5-fix-final item 1). Direct child of .board-section--static so it sits
           on the frame; decorative, styled in globals.css. */}

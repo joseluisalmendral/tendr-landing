@@ -45,13 +45,19 @@ export default function RootLayout({
     <html
       lang="es"
       className={cn(
-        "h-full antialiased",
+        "antialiased",
         bricolage.variable,
         jakarta.variable,
         geistMono.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">
+      {/* body owns the full-viewport min-height via min-h-dvh (a self-contained
+          viewport unit) instead of min-h-full, so <html> no longer needs h-full.
+          Removing h-full on <html> avoids a Safari quirk where a 100%-height root
+          can interfere with BFCache scroll restoration on back/forward nav. The
+          flex column + min-h-dvh keeps the sticky-footer layout identical: the
+          body is still at least one viewport tall and grows with content. */}
+      <body className="min-h-dvh flex flex-col">
         <AxeReporter />
         <Providers>{children}</Providers>
       </body>
