@@ -651,6 +651,200 @@
 }
 
 /* =========================================================================
+   WAITLIST SUBMIT — "wake-up" beat (the disabled→enabled celebration).
+
+   Brief: when the submit button becomes clickable, mark it as an EVENT in the
+   brand's hand-drawn voice so it's obvious the form is ready. The signature
+   device of Tendr is the WISP underline (the "firma": a single support-hue
+   hand-drawn stroke that draws itself in via stroke-dashoffset — design §3, §4,
+   "Hand-drawn draw-in ~600ms / standard"). We reuse exactly that idiom here:
+   the wisp draws itself under the button at the moment it wakes up. It is the
+   most on-brand way to say "this is ready, this is yours to click."
+
+   Choreography (one beat, fired only on the false→true transition — see
+   SubscribeForm's justEnabled guard):
+     1. Button POP: a quick transform-only scale overshoot (0.97 → 1.02 → 1) so
+        the button visibly "wakes". --ease-snap is the documented overshoot
+        easing (globals: cubic-bezier(0.34,1.56,0.64,1)); --duration-fast.
+     2. Wisp DRAW-IN: the brand firma stroke under the button draws left→right
+        via stroke-dashoffset (pathLength 1 → 0) over ~600ms / --easing-standard,
+        matching design.md's canonical "Hand-drawn draw-in" row. Then it rests
+        (stays drawn) while the button remains enabled.
+
+   The wisp lives behind the button as a sibling <svg> (data-state on the
+   wrapper drives it). When the button goes back to disabled, NO celebration:
+   the wisp simply settles back (dashoffset 1, a quiet ~150ms fade-out, no pop)
+   — the understated reverse the brief asked for.
+
+   PERFORMANCE: only transform / opacity / stroke-dashoffset (all compositor- or
+   paint-cheap, no layout). No JS per frame. No new deps.
+
+   A11Y: the state change never relies on color alone — the submit hint text
+   disappears, cursor flips from not-allowed to pointer, and (in SubscribeForm)
+   the label weight strengthens on enable. The wisp is aria-hidden decoration.
+   One beat only, no strobing (WCAG 2.3.1).
+
+   REDUCED MOTION: everything below is gated behind prefers-reduced-motion:
+   no-preference. Reduced users get the instant static state change only (the
+   wisp appears already-drawn with no motion, the button does not pop) — handled
+   by the base rules outside the @media block.
+   ========================================================================= */
+
+/* Base (always, incl. reduced-motion / no JS): the wisp is a resting decoration.
+   When enabled it is fully drawn and visible; when disabled it is hidden. No
+   motion here — this is the static truth the reduced-motion path falls back to. */
+.waitlist-wisp {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0; /* drawn */
+  opacity: 0;
+}
+.waitlist-submit[data-ready="true"] .waitlist-wisp {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Quiet settle out when going back to disabled (no celebration): fade the
+     wisp and let it re-hide. Transform-free, opacity-only. */
+  .waitlist-wisp {
+    stroke-dashoffset: 1; /* undrawn at rest until the wake-up draws it */
+    transition: opacity var(--duration-fast) var(--easing-standard);
+  }
+
+  /* The celebratory beat fires ONLY when the wrapper flips to data-ready=true
+     AND carries data-just-enabled=true (set for one tick by SubscribeForm on the
+     false→true edge, then cleared — the animation-replay guard). */
+  .waitlist-submit[data-just-enabled="true"] .waitlist-wisp {
+    animation: waitlist-wisp-draw var(--wisp-draw-duration, 600ms) var(--easing-standard) both;
+  }
+  .waitlist-submit[data-just-enabled="true"] .waitlist-submit__btn {
+    animation: waitlist-wake var(--duration-fast) var(--ease-snap) both;
+  }
+
+  /* When merely STAYING enabled (ready but not the fresh edge), the wisp holds
+     drawn with no replay. */
+  .waitlist-submit[data-ready="true"]:not([data-just-enabled="true"]) .waitlist-wisp {
+    stroke-dashoffset: 0;
+  }
+
+  @keyframes waitlist-wisp-draw {
+    from {
+      stroke-dashoffset: 1;
+      opacity: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+  }
+
+  @keyframes waitlist-wake {
+    0% {
+      transform: scale(0.97);
+    }
+    60% {
+      transform: scale(1.02);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
+/* =========================================================================
+   WAITLIST SUCCESS / DUPLICATE — the conversion-moment composition.
+
+   When the Server Action returns ok, SubscribeForm swaps the form for a
+   celebratory composition INSIDE the same nota-viva card. This is THE moment
+   of the page, so it earns one clear beat — then everything rests. No confetti,
+   no loops (design.md restraint, wow-budget already spent on the Hero scroll-pin).
+
+   The brand voice does the celebrating: a hand-drawn check (same one-pen
+   round-cap grammar as the board doodles, drawn in --color-success per the REGLA
+   DURA — never teal) + the brand firma wisp (--color-handdrawn) under the
+   headline. Both draw via stroke-dashoffset, exactly like the canonical
+   "Hand-drawn draw-in" row (design §4).
+
+   Two tones, driven by data-tone on .waitlist-success:
+     - data-tone="success" (new signup): full celebratory choreography.
+         1. Check DRAWS in            (0 → ~320ms,  --easing-standard)
+         2. Heading + copy RISE       (stagger ~200ms in, --easing-emphasis)
+         3. Wisp DRAWS under heading  (~440ms in, --easing-standard)
+         Total ~760ms, then rests.
+     - data-tone="neutral" (already on the list): calm settle. NO check draw,
+         NO wisp draw, NO success green. The block just fades+rises in once.
+
+   PERFORMANCE: transform / opacity / stroke-dashoffset only. Pure CSS off
+   data-attributes; no JS per frame, no new deps.
+
+   REDUCED MOTION: gated behind prefers-reduced-motion: no-preference. Reduced
+   users get the identical content fully visible and instant — the check + wisp
+   render already-drawn, the text sits at its final position (base rules below).
+   ========================================================================= */
+
+/* Base (always, incl. reduced-motion / no JS): the composition is fully present
+   and static. This is the truth the reduced-motion path falls back to. */
+.waitlist-success__check,
+.waitlist-success__wisp {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0; /* drawn */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* SUCCESS tone: the celebratory staggered beat. Each piece starts undrawn /
+     offset and animates to its resting state once, then holds. */
+  .waitlist-success[data-tone="success"] .waitlist-success__check {
+    animation: waitlist-check-draw 320ms var(--easing-standard) both;
+  }
+  .waitlist-success[data-tone="success"] .waitlist-success__heading,
+  .waitlist-success[data-tone="success"] .waitlist-success__copy {
+    animation: waitlist-success-rise var(--duration-slow) var(--easing-emphasis)
+      both;
+  }
+  /* Copy follows the heading by a beat (storytelling stagger). */
+  .waitlist-success[data-tone="success"] .waitlist-success__copy {
+    animation-delay: 120ms;
+  }
+  /* Heading + copy lag the check slightly so the check reads as the trigger. */
+  .waitlist-success[data-tone="success"] .waitlist-success__heading {
+    animation-delay: 200ms;
+  }
+  .waitlist-success[data-tone="success"] .waitlist-success__wisp {
+    animation: waitlist-wisp-draw 320ms var(--easing-standard) both;
+    animation-delay: 440ms;
+  }
+
+  /* NEUTRAL tone: one quiet settle of the whole block. No draw-ins, no green. */
+  .waitlist-success[data-tone="neutral"] .waitlist-success__heading,
+  .waitlist-success[data-tone="neutral"] .waitlist-success__copy {
+    animation: waitlist-success-rise var(--duration-slow) var(--easing-emphasis)
+      both;
+  }
+  .waitlist-success[data-tone="neutral"] .waitlist-success__copy {
+    animation-delay: 80ms;
+  }
+
+  @keyframes waitlist-check-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes waitlist-success-rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* =========================================================================
    TESTIMONIALS NOTE -- ficha de papel sujeta con celo al tablero (ADR-3, design §3, §4).
 
    La entrada cinemática (entrance variado + "stab" de la chincheta) la conduce
