@@ -58,6 +58,17 @@ type Portfolio = "pocos" | "grande";
 
 type Props = {
   tiers: PricingCardProps[];
+  /**
+   * Initial selector state (F6.5 vertical variants). Omit on the base landing —
+   * it defaults to "Solo yo" + "Cartera grande" → recommends Pro, the live
+   * production behaviour, byte-unchanged. The /agencias vertical passes
+   * `defaultWork="equipo"` so the recommender opens on Team (multiusuario), which
+   * is the protagonist of the agencies pitch. The selector stays fully
+   * interactive either way — this only seeds the FIRST render.
+   */
+  defaultWork?: Work;
+  /** Initial "cartera" selector value. Defaults to "grande" (base behaviour). */
+  defaultPortfolio?: Portfolio;
 };
 
 /**
@@ -86,13 +97,19 @@ function recommendReason(work: Work, portfolio: Portfolio): string {
   return "En solitario con cartera grande: uso ilimitado y reportes, sin pagar de más.";
 }
 
-export function Pricing({ tiers }: Props) {
+export function Pricing({
+  tiers,
+  defaultWork = "solo",
+  defaultPortfolio = "grande",
+}: Props) {
   const reduceMotion = useReducedMotion();
   const liveId = useId();
 
-  // Default = "Solo yo" + "Cartera grande" -> Pro (the pre-noted target tier).
-  const [work, setWork] = useState<Work>("solo");
-  const [portfolio, setPortfolio] = useState<Portfolio>("grande");
+  // Base default = "Solo yo" + "Cartera grande" -> Pro (the pre-noted target
+  // tier). The /agencias vertical seeds "equipo" -> Team. The selector remains
+  // fully interactive; these props only set the initial render.
+  const [work, setWork] = useState<Work>(defaultWork);
+  const [portfolio, setPortfolio] = useState<Portfolio>(defaultPortfolio);
 
   const recommended = recommendTier(work, portfolio);
   const reason = recommendReason(work, portfolio);
