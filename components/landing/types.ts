@@ -42,6 +42,14 @@ export type HeroProps = {
   ctaSecondary: CtaLink;
 };
 
+/** A placeholder social-proof mark for the Variant B logo eyebrow. */
+export type SocialProofLogo = {
+  /** Brand display name (used to derive the monogram glyph). */
+  name: string;
+  /** Optional explicit monogram override; defaults to the first letter of name. */
+  monogram?: string;
+};
+
 /** Section: a vertical content block that renders its own <h2>. */
 export type SectionProps = {
   id?: string;

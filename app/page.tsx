@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 
 import { SkipLink } from "@/components/a11y/SkipLink";
 import { Header } from "@/components/landing/Header";
-import { Hero } from "@/components/landing/Hero";
+import { HeroWithSocialProof } from "@/components/landing/HeroWithSocialProof";
 import { Section } from "@/components/landing/Section";
 import { PRICING } from "@/components/landing/pricing.data";
 import { TESTIMONIALS } from "@/components/landing/testimonials.data";
@@ -154,10 +154,10 @@ export default function Home() {
         <div className="wow-overlap-group">
           <div className="wow-hero-pin">
           <div className="wow-hero-fade">
-            <Hero
+            <HeroWithSocialProof
               title="Mira de un vistazo qué toca con cada cliente hoy"
               subtitle="Organiza clientes, casos y notas en un solo sitio, sin la sobrecarga de Salesforce ni la rigidez de Notion. Pensado para perfiles B2B junior."
-              ctaPrimary={{ label: "Empezar gratis", href: "#precios" }}
+              ctaPrimary={{ label: "Quiero acceso anticipado", href: "#precios" }}
               ctaSecondary={{ label: "Ver cómo funciona ↓", href: "#como-funciona" }}
             />
           </div>

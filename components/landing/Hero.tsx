@@ -135,33 +135,17 @@ export function Hero({
         },
       };
 
-  return (
-    <section
-      className={cn(
-        "relative isolate min-h-[100dvh] overflow-hidden",
-        // v2: flat warm near-white surface. The retired amber->clay wash is
-        // replaced by typography + asymmetry + the faux-UI pipeline + the
-        // highlighter Mark device on the headline (ADR-4 / brand system).
-        "bg-surface",
-      )}
+  // The <h1> runs the wow entrance (word cascade) + the highlighter Mark on the
+  // brand-anchor word. Built once and placed in the triptych shell.
+  const heading = (
+    <motion.h1
+      variants={headingContainer}
+      initial="hidden"
+      animate="visible"
+      aria-label={title}
+      className="max-w-[18ch] text-balance font-display text-display-xl text-text-primary"
     >
-      {/* Asymmetric padding (more below than above) biases the centered
-          content upward so the text block sits at the optical center, not
-          the geometric one. */}
-      <div className="mx-auto grid min-h-[100dvh] max-w-[1280px] grid-cols-1 content-center items-center gap-12 px-6 pt-12 pb-24 lg:grid-cols-12 lg:gap-8 lg:pt-6 lg:pb-36">
-        {/* Text column: left, asymmetric (does not span the full grid). The
-            headline runs its own Motion word-cascade (the wow entrance); the
-            subhead + CTA enter via CSS (.hero-text-enter) so the LCP <p> paints
-            on the first frame instead of waiting for JS hydration. */}
-        <div className="flex flex-col items-start gap-6 lg:col-span-6 lg:pr-6">
-          <motion.h1
-            variants={headingContainer}
-            initial="hidden"
-            animate="visible"
-            aria-label={title}
-            className="max-w-[18ch] text-balance font-display text-display-xl text-text-primary"
-          >
-            {words.map((word, i) => {
+      {words.map((word, i) => {
               const trailingSpace = i < words.length - 1 ? " " : "";
               if (i === highlightIndex) {
                 // The brand-anchor word: ink text sitting on a highlighter
@@ -204,34 +188,63 @@ export function Hero({
                 </motion.span>
               );
             })}
-          </motion.h1>
+    </motion.h1>
+  );
 
-          <p className="hero-text-enter hero-text-enter--subhead max-w-[46ch] text-body-lg text-text-secondary">
-            {subtitle}
-          </p>
+  const subhead = (
+    <p className="hero-text-enter hero-text-enter--subhead max-w-[46ch] text-body-lg text-text-secondary">
+      {subtitle}
+    </p>
+  );
 
-          <div className="hero-text-enter hero-text-enter--cta flex flex-col gap-4 pt-2 sm:flex-row sm:items-center">
-            <Button
-              asChild
-              // Primary CTA = ink fill (#101010) + white text (19:1), radius-md,
-              // no border/shadow (ink fill IS the affordance). Hover darkens via
-              // opacity (v2 dropped the accent-primary-hover token). :active
-              // push-down for tactile feedback; focus-ring offset utility.
-              className="focus-ring rounded-md bg-accent-primary text-[length:var(--text-body)] text-accent-fg h-auto px-6 py-3 transition-[opacity,transform] duration-fast hover:opacity-90 active:translate-y-px"
-            >
-              <Link href={ctaPrimary.href}>{ctaPrimary.label}</Link>
-            </Button>
+  const ctaGroup = (
+    <div className="hero-text-enter hero-text-enter--cta flex flex-col gap-4 pt-2 sm:flex-row sm:items-center">
+      <Button
+        asChild
+        // Primary CTA = ink fill (#101010) + white text (19:1), radius-md,
+        // no border/shadow (ink fill IS the affordance). Hover darkens via
+        // opacity (v2 dropped the accent-primary-hover token). :active
+        // push-down for tactile feedback; focus-ring offset utility.
+        className="focus-ring rounded-md bg-accent-primary text-[length:var(--text-body)] text-accent-fg h-auto px-6 py-3 transition-[opacity,transform] duration-fast hover:opacity-90 active:translate-y-px"
+      >
+        <Link href={ctaPrimary.href}>{ctaPrimary.label}</Link>
+      </Button>
 
-            <Button
-              asChild
-              variant="outline"
-              // Outline CTA = transparent + border-interactive (#87837B, ≥3:1)
-              // + ink text, radius-md. Subtle sunken hover, tactile :active.
-              className="focus-ring rounded-md border-border-interactive bg-transparent text-[length:var(--text-body)] text-text-primary shadow-none h-auto px-6 py-3 transition-[background-color,transform] duration-fast hover:bg-surface-sunken active:translate-y-px"
-            >
-              <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
-            </Button>
-          </div>
+      <Button
+        asChild
+        variant="outline"
+        // Outline CTA = transparent + border-interactive (#87837B, ≥3:1)
+        // + ink text, radius-md. Subtle sunken hover, tactile :active.
+        className="focus-ring rounded-md border-border-interactive bg-transparent text-[length:var(--text-body)] text-text-primary shadow-none h-auto px-6 py-3 transition-[background-color,transform] duration-fast hover:bg-surface-sunken active:translate-y-px"
+      >
+        <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
+      </Button>
+    </div>
+  );
+
+  // Production triptych hero (used by /agencias with vertical copy props).
+  return (
+    <section
+      className={cn(
+        "relative isolate min-h-[100dvh] overflow-hidden",
+        // v2: flat warm near-white surface. The retired amber->clay wash is
+        // replaced by typography + asymmetry + the faux-UI pipeline + the
+        // highlighter Mark device on the headline (ADR-4 / brand system).
+        "bg-surface",
+      )}
+    >
+      {/* Asymmetric padding (more below than above) biases the centered
+          content upward so the text block sits at the optical center, not
+          the geometric one. */}
+      <div className="mx-auto grid min-h-[100dvh] max-w-[1280px] grid-cols-1 content-center items-center gap-12 px-6 pt-12 pb-24 lg:grid-cols-12 lg:gap-8 lg:pt-6 lg:pb-36">
+        {/* Text column: left, asymmetric (does not span the full grid). The
+            headline runs its own Motion word-cascade (the wow entrance); the
+            subhead + CTA enter via CSS (.hero-text-enter) so the LCP <p> paints
+            on the first frame instead of waiting for JS hydration. */}
+        <div className="flex flex-col items-start gap-6 lg:col-span-6 lg:pr-6">
+          {heading}
+          {subhead}
+          {ctaGroup}
         </div>
 
         {/* Illustration column: right, asymmetric. "El Hilo" — a frameless
