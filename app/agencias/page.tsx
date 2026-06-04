@@ -7,6 +7,7 @@ import { Section } from "@/components/landing/Section";
 import { PRICING_AGENCIAS } from "@/components/landing/agencias/pricing-agencias.data";
 import { TESTIMONIALS_AGENCIAS } from "@/components/landing/agencias/testimonials-agencias.data";
 import { FAQ } from "@/components/landing/FAQ";
+import { Waitlist } from "@/components/landing/Waitlist";
 import { Footer } from "@/components/landing/Footer";
 
 // PERF (bundle-dynamic-imports): mirror the base page exactly — the
@@ -27,6 +28,9 @@ const TestimonialsCork = dynamic(() =>
   import("@/components/landing/TestimonialsCork").then(
     (m) => m.TestimonialsCork,
   ),
+);
+const SubscribeForm = dynamic(() =>
+  import("@/components/landing/SubscribeForm").then((m) => m.SubscribeForm),
 );
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ogImage, pageMetadata, siteUrl } from "@/components/seo/metadata";
@@ -176,7 +180,7 @@ export default function AgenciasPage() {
       />
 
       <SkipLink />
-      <Header />
+      <Header anchorBase="/agencias" />
 
       <main id="main" tabIndex={-1} className="flex flex-1 flex-col">
         {/* WOW #1: identical sticky overlap Hero -> "Cómo funciona" as the base
@@ -189,7 +193,7 @@ export default function AgenciasPage() {
             <Hero
               title="Mira de un vistazo en qué punto está cada cliente del estudio"
               subtitle="Cada account manager lleva su cartera y tú ves la foto completa, sin preguntar en Slack. Pensado para estudios y agencias de 5 a 20 personas."
-              ctaPrimary={{ label: "Ver planes del estudio", href: "#precios" }}
+              ctaPrimary={{ label: "Quiero acceso para el estudio", href: "#waitlist" }}
               ctaSecondary={{ label: "Ver cómo funciona ↓", href: "#como-funciona" }}
             />
           </div>
@@ -228,8 +232,13 @@ export default function AgenciasPage() {
           >
             {/* Team is highlighted via PRICING_AGENCIAS (data-driven); the moving
                 recommender opens on Team via defaultWork="equipo". The selector
-                stays interactive. */}
-            <Pricing tiers={PRICING_AGENCIAS} defaultWork="equipo" />
+                stays interactive. The single waitlist CTA carries the Team-angle
+                label since Team is the protagonist of the agencies vertical. */}
+            <Pricing
+              tiers={PRICING_AGENCIAS}
+              defaultWork="equipo"
+              ctaLabel="Avísame cuando salga Team"
+            />
           </Section>
         </div>
 
@@ -241,9 +250,21 @@ export default function AgenciasPage() {
         <Section id="faq" heading="Preguntas frecuentes" divider>
           <FAQ items={FAQ_ITEMS} />
         </Section>
+
+        {/* Waitlist: SAME shared Waitlist composition as the base page, moved to
+            close the page after the FAQ (funnel: pricing -> social proof ->
+            objections -> ask). Only the framing copy shifts to the studio/team
+            angle; the SubscribeForm stays the page-owned dynamic() import passed
+            in as children so the code-split is preserved. */}
+        <Waitlist
+          heading="Apúntate a la waitlist"
+          lead="El plan Team aún no está abierto. Déjanos el email del estudio y seréis de los primeros en probarlo cuando abramos el acceso: un único correo con vuestra invitación, sin newsletters ni spam."
+        >
+          <SubscribeForm />
+        </Waitlist>
       </main>
 
-      <Footer />
+      <Footer anchorBase="/agencias" />
     </>
   );
 }

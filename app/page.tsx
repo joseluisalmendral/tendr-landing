@@ -7,6 +7,7 @@ import { Section } from "@/components/landing/Section";
 import { PRICING } from "@/components/landing/pricing.data";
 import { TESTIMONIALS } from "@/components/landing/testimonials.data";
 import { FAQ } from "@/components/landing/FAQ";
+import { Waitlist } from "@/components/landing/Waitlist";
 import { Footer } from "@/components/landing/Footer";
 
 // PERF (bundle-dynamic-imports): the below-the-fold client components are the
@@ -29,6 +30,9 @@ const TestimonialsCork = dynamic(() =>
   import("@/components/landing/TestimonialsCork").then(
     (m) => m.TestimonialsCork,
   ),
+);
+const SubscribeForm = dynamic(() =>
+  import("@/components/landing/SubscribeForm").then((m) => m.SubscribeForm),
 );
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ogImage, pageMetadata, siteUrl } from "@/components/seo/metadata";
@@ -157,7 +161,7 @@ export default function Home() {
             <HeroWithSocialProof
               title="Mira de un vistazo qué toca con cada cliente hoy"
               subtitle="Organiza clientes, casos y notas en un solo sitio, sin la sobrecarga de Salesforce ni la rigidez de Notion. Pensado para perfiles B2B junior."
-              ctaPrimary={{ label: "Quiero acceso anticipado", href: "#precios" }}
+              ctaPrimary={{ label: "Quiero acceso anticipado", href: "#waitlist" }}
               ctaSecondary={{ label: "Ver cómo funciona ↓", href: "#como-funciona" }}
             />
           </div>
@@ -217,6 +221,18 @@ export default function Home() {
         <Section id="faq" heading="Preguntas frecuentes" divider>
           <FAQ items={FAQ_ITEMS} />
         </Section>
+
+        {/* Waitlist: the closing CTA, moved here to follow the conversion
+            funnel — pricing -> social proof -> objections (FAQ) -> ask. The
+            email is collected last, after trust is built. The form is the SHARED
+            SubscribeForm client island, kept as the page-owned dynamic() import
+            and passed into Waitlist as children so the code-split stays intact. */}
+        <Waitlist
+          heading="Apúntate a la waitlist"
+          lead="Tendr aún no está abierto al público. Déjanos tu email y serás de los primeros en entrar cuando abramos el acceso: un único correo con tu invitación, sin newsletters ni spam."
+        >
+          <SubscribeForm />
+        </Waitlist>
       </main>
 
       <Footer />

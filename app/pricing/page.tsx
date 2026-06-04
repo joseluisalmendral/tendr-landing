@@ -1,12 +1,22 @@
+import dynamic from "next/dynamic";
+
 import { Check, Minus } from "@phosphor-icons/react/dist/ssr";
 
 import { SkipLink } from "@/components/a11y/SkipLink";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { Pricing } from "@/components/landing/Pricing";
+import { Waitlist } from "@/components/landing/Waitlist";
 import { PRICING } from "@/components/landing/pricing.data";
 import { pageMetadata } from "@/components/seo/metadata";
 import { cn } from "@/lib/utils";
+
+// PERF: SubscribeForm is the client island (Server Action + Turnstile). Keep it
+// as a page-owned dynamic() import so it splits into its own chunk and does not
+// inflate the /pricing first-load bundle (same pattern as app/page.tsx).
+const SubscribeForm = dynamic(() =>
+  import("@/components/landing/SubscribeForm").then((m) => m.SubscribeForm),
+);
 
 export const metadata = pageMetadata({
   title: "Precios",
@@ -23,7 +33,12 @@ export const metadata = pageMetadata({
  * <table> with <caption>, scoped headers and text/icon cells (never color-only):
  * ✓ / — carry an sr-only label so the meaning is read out, not just seen.
  *
- * Shell matches the home and the legal pages: SkipLink + Header + main + Footer.
+ * Closes with the shared <Waitlist> section (id="waitlist") so the PricingCard
+ * CTAs (#waitlist) and the Header CTA resolve locally on this page. Same
+ * composition pattern as app/page.tsx: Waitlist receives heading/lead props and
+ * SubscribeForm as children (page-owned dynamic() import — code-split intact).
+ *
+ * Shell: SkipLink + Header + main (Pricing + comparison table + Waitlist) + Footer.
  */
 
 type CellValue = boolean | string;
@@ -183,6 +198,17 @@ export default function PricingPage() {
             </div>
           </section>
         </div>
+
+        {/* Waitlist: closing CTA section so PricingCard #waitlist CTAs and the
+            Header "Únete a la waitlist" CTA resolve locally on this page. Visitor
+            has just compared plans — the lead acknowledges that context. Same
+            composition as app/page.tsx: Waitlist + page-owned SubscribeForm. */}
+        <Waitlist
+          heading="Apúntate a la waitlist"
+          lead="Tendr aún no está abierto. Déjanos tu email y serás de los primeros en entrar cuando abramos el acceso: un único correo con tu invitación, sin newsletters ni spam."
+        >
+          <SubscribeForm />
+        </Waitlist>
       </main>
 
       <Footer />
