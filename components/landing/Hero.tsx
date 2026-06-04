@@ -145,7 +145,10 @@ export function Hero({
         "bg-surface",
       )}
     >
-      <div className="mx-auto grid min-h-[100dvh] max-w-[1280px] grid-cols-1 content-center items-center gap-12 px-6 py-20 lg:grid-cols-12 lg:gap-8 lg:py-16">
+      {/* Asymmetric padding (more below than above) biases the centered
+          content upward so the text block sits at the optical center, not
+          the geometric one. */}
+      <div className="mx-auto grid min-h-[100dvh] max-w-[1280px] grid-cols-1 content-center items-center gap-12 px-6 pt-12 pb-24 lg:grid-cols-12 lg:gap-8 lg:pt-6 lg:pb-36">
         {/* Text column: left, asymmetric (does not span the full grid). The
             headline runs its own Motion word-cascade (the wow entrance); the
             subhead + CTA enter via CSS (.hero-text-enter) so the LCP <p> paints

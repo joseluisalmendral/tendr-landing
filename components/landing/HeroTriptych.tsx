@@ -1399,8 +1399,14 @@ function ActThree({ t, vis }: { t: MotionValue<number>; vis: MotionValue<number>
         stroke="var(--color-border-strong)"
         strokeWidth={1.25}
         strokeLinecap="round"
-        style={{ scaleY: axisScaleY, originY: AXIS_Y0, originX: AXIS_X, opacity: axisOpacity }}
-        transform-origin={`${AXIS_X} ${AXIS_Y0}`}
+        style={{
+          scaleY: axisScaleY,
+          opacity: axisOpacity,
+          // CSS transform-origin in px (viewport units of the SVG coordinate
+          // space). Replaces the invalid kebab-case DOM attribute and Motion's
+          // originX/originY pair, which both compile to the same property.
+          transformOrigin: `${AXIS_X}px ${AXIS_Y0}px`,
+        }}
       />
 
       {/* row nodes + chips */}
