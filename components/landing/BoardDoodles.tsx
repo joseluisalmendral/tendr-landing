@@ -83,7 +83,10 @@ export function BoardDoodleArrow({ className }: { className?: string }) {
  * end-to-end stages for a freelancer at a glance: Contacto · En curso · Cerrado.
  *
  * Rendered as REAL text (font-mono, far more legible than hand-lettered paths,
- * anti-kitsch) with a marker treatment: ink at ~60% opacity, a slight per-header
+ * anti-kitsch) with a marker treatment: ink at 65% opacity — the AA floor for
+ * 12px text on the near-white surface (0.58/0.60 measured 4.22/4.48:1 in axe,
+ * under the 4.5:1 bar; aria-hidden does NOT exempt visible text from
+ * contrast) — a slight per-header
  * rotation, and ONE hand-drawn underline (SVG, same round-cap "one pen" stroke)
  * under "En curso" — the column the protagonist note sits in. Decorative wrapper,
  * but the words themselves aid comprehension, so they stay visible on the static /
@@ -95,14 +98,14 @@ export function BoardKanbanHeaders({ className }: { className?: string }) {
     <div aria-hidden className={className}>
       <span
         className="font-mono text-meta uppercase tracking-[0.18em] text-text-primary"
-        style={{ opacity: 0.58, transform: "rotate(-2.5deg)" }}
+        style={{ opacity: 0.65, transform: "rotate(-2.5deg)" }}
       >
         Contacto
       </span>
       <span className="relative inline-flex flex-col items-center">
         <span
           className="font-mono text-meta uppercase tracking-[0.18em] text-text-primary"
-          style={{ opacity: 0.6, transform: "rotate(1.5deg)" }}
+          style={{ opacity: 0.65, transform: "rotate(1.5deg)" }}
         >
           En curso
         </span>
@@ -124,7 +127,7 @@ export function BoardKanbanHeaders({ className }: { className?: string }) {
       </span>
       <span
         className="font-mono text-meta uppercase tracking-[0.18em] text-text-primary"
-        style={{ opacity: 0.58, transform: "rotate(-1.5deg)" }}
+        style={{ opacity: 0.65, transform: "rotate(-1.5deg)" }}
       >
         Cerrado
       </span>
