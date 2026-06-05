@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { JsonLd } from "@/components/seo/JsonLd";
 import type { PricingCardProps } from "@/components/landing/types";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +53,10 @@ function currencySymbol(code: string): string {
  * features list (the last block); the recommended-tier emphasis (accent border +
  * scale) still guides reading, it just no longer "sells".
  *
- * Emits a Product JSON-LD block per card so each tier is a structured Offer.
+ * Pricing tiers are exposed as Offer entries inside the SoftwareApplication
+ * JSON-LD block emitted by the page (app/page.tsx, app/agencias/page.tsx).
+ * No per-card Product block: standalone Product requires an image field for
+ * Google Rich Results and the tiers are not standalone products.
  */
 export function PricingCard({
   tier,
@@ -65,8 +67,6 @@ export function PricingCard({
   highlighted = false,
   forWho,
   badge,
-  productName,
-  productDescription,
 }: PricingCardProps) {
   return (
     <Card
@@ -83,19 +83,6 @@ export function PricingCard({
           "border-2 border-accent-primary scale-[1.02]",
       )}
     >
-      <JsonLd
-        type="Product"
-        data={{
-          name: productName,
-          description: productDescription,
-          offers: {
-            "@type": "Offer",
-            price: String(price),
-            priceCurrency,
-          },
-        }}
-      />
-
       <CardHeader>
         {badge ? (
           <Badge

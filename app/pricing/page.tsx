@@ -8,7 +8,9 @@ import { Footer } from "@/components/landing/Footer";
 import { Pricing } from "@/components/landing/Pricing";
 import { Waitlist } from "@/components/landing/Waitlist";
 import { PRICING } from "@/components/landing/pricing.data";
-import { pageMetadata } from "@/components/seo/metadata";
+import type { PricingCardProps } from "@/components/landing/types";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { ogImage, pageMetadata, siteUrl } from "@/components/seo/metadata";
 import { cn } from "@/lib/utils";
 
 // PERF: SubscribeForm is the client island (Server Action + Turnstile). Keep it
@@ -55,6 +57,28 @@ type FeatureRow = {
 // behind the "Próximamente" header, not faked as live.
 const COLUMNS = ["Free", "Pro", "Team"] as const;
 
+// Public offers for the SoftwareApplication schema: only the purchasable Free
+// and Pro tiers, derived from PRICING so the price is a single source of truth
+// (Team is "próximamente", so it is not advertised as an active offer). Same
+// shape as app/page.tsx so every page with pricing carries the product schema.
+const APP_OFFERS = [
+  PRICING.find((tier) => tier.tier === "Free"),
+  PRICING.find((tier) => tier.tier === "Pro"),
+]
+  .filter((tier): tier is PricingCardProps => Boolean(tier))
+  .map((tier) => ({
+    "@type": "Offer" as const,
+    name: tier.tier,
+    price: tier.price,
+    priceCurrency: tier.priceCurrency,
+  }));
+
+const ORGANIZATION = {
+  "@type": "Organization" as const,
+  name: "Tendr",
+  url: siteUrl.toString(),
+};
+
 const COMPARISON: FeatureRow[] = [
   { feature: "Clientes", cells: ["3", "Ilimitados", "Ilimitados"] },
   { feature: "Proyectos", cells: ["1", "Ilimitados", "Ilimitados"] },
@@ -97,6 +121,25 @@ function ComparisonCell({ value }: { value: CellValue }) {
 export default function PricingPage() {
   return (
     <>
+      {/* GEO/SEO: SoftwareApplication structured data (same block as the home)
+          so /pricing keeps product + offers schema after the per-card Product
+          JSON-LD was removed from PricingCard. */}
+      <JsonLd
+        type="SoftwareApplication"
+        data={{
+          name: "Tendr",
+          description:
+            "Mini-CRM con IA para freelancers y perfiles B2B junior: organiza tu cartera de clientes, casos y seguimientos en un pipeline visual.",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: siteUrl.toString(),
+          screenshot: ogImage(),
+          offers: APP_OFFERS,
+          author: ORGANIZATION,
+          publisher: ORGANIZATION,
+        }}
+      />
+
       <SkipLink />
       <Header />
 

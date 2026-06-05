@@ -5,6 +5,12 @@ import { axe } from "jest-axe";
 import { PricingCard } from "@/components/landing/PricingCard";
 import type { PricingCardProps } from "@/components/landing/types";
 
+// NOTE: PricingCard no longer emits per-card Product JSON-LD. Pricing tiers
+// are exposed as Offer entries inside the SoftwareApplication block emitted by
+// the page (app/page.tsx). Standalone Product requires an `image` field for
+// Google Rich Results; folding tiers as Offers in SoftwareApplication is the
+// correct schema.org modelling for a pre-launch SaaS with non-purchasable plans.
+
 const baseProps: PricingCardProps = {
   tier: "Solo",
   price: "0",
@@ -21,14 +27,6 @@ const baseProps: PricingCardProps = {
 
 function renderCard(overrides: Partial<PricingCardProps> = {}) {
   return render(<PricingCard {...baseProps} {...overrides} />);
-}
-
-function parseJsonLd(container: HTMLElement) {
-  const script = container.querySelector(
-    'script[type="application/ld+json"]',
-  );
-  expect(script).not.toBeNull();
-  return JSON.parse(script!.textContent!);
 }
 
 describe("PricingCard", () => {
@@ -90,7 +88,7 @@ describe("PricingCard", () => {
     expect(screen.queryByText("Recomendado")).toBeNull();
   });
 
-  it("emits exactly one Product JSON-LD script with the correct offer shape", () => {
+  it("emits no JSON-LD script (pricing tiers are Offers inside SoftwareApplication on the page)", () => {
     const { container } = renderCard({
       price: "29",
       priceCurrency: "EUR",
@@ -101,14 +99,7 @@ describe("PricingCard", () => {
     const scripts = container.querySelectorAll(
       'script[type="application/ld+json"]',
     );
-    expect(scripts).toHaveLength(1);
-
-    const data = parseJsonLd(container);
-    expect(data["@type"]).toBe("Product");
-    expect(data.name).toBe("Tendr Pro");
-    expect(data.offers.price).toBe(String(29));
-    expect(data.offers.priceCurrency).toBe("EUR");
-    expect(data.offers["@type"]).toBe("Offer");
+    expect(scripts).toHaveLength(0);
   });
 
   it("has no accessibility violations (default)", async () => {
