@@ -156,3 +156,7 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# landing-auditor: artefacto de distribución (regenerable) y lock de runtime
+/landing-auditor.zip
+.claude/scheduled_tasks.lock

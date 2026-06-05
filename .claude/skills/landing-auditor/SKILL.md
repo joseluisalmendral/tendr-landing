@@ -55,7 +55,11 @@ Se activa hardened con `AUDIT_HARDENED=1`, o automáticamente si `CI=true` (lo s
    Motion es opcional: omitir si aprieta el time-box o si no hay presupuesto ni forma de obtenerlo.
 5. **Leer los JSON.** Si falta uno, leer su `<capa>.error`, anotar "no ejecutado: {motivo}" en esa sección y seguir con el resto. Un script caído nunca aborta el reporte.
 6. **Compilar el reporte** siguiendo `assets/report-template.md`. Mapear cada campo del JSON a su sección; priorizar findings por impacto real (ver tabla de prioridad), no por capa.
-7. **Guardar** en `docs/audits/NN-YYYY-MM-DD.md` (NN = siguiente correlativo; crear el dir si no existe).
+7. **Guardar** en `docs/audits/NN-YYYY-MM-DD-HHMM-<host>.md` (crear el dir si no existe):
+   - `NN` = siguiente correlativo de 2 dígitos (mirar los reportes existentes).
+   - `YYYY-MM-DD-HHMM` = fecha y hora del run (`date +%Y-%m-%d-%H%M`).
+   - `<host>` = host de la URL en minúsculas, con `.`/`/` → `-` (ej. `tendr-landing-vercel-app`).
+   - Ej.: `01-2026-06-05-0255-tendr-landing-vercel-app.md`. Hace cada reporte identificable de un vistazo y evita colisiones cuando se audita más de un sitio el mismo día.
 8. **Imprimir el resumen ejecutivo en chat** (el reporte completo queda en archivo).
 
 ## Reglas de prioridad
