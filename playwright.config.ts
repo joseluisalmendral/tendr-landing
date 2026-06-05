@@ -32,7 +32,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm exec next dev -p ${PORT}`,
+    // CI runs against the production server (the build happens in a previous
+    // workflow step); local runs keep the self-contained dev server.
+    command: process.env.CI
+      ? `pnpm exec next start -p ${PORT}`
+      : `pnpm exec next dev -p ${PORT}`,
     url: BASE_URL,
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,

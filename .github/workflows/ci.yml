@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # NEXT_PUBLIC_* are inlined at build time, so they must be set for the
+      # Build step. The Turnstile values are Cloudflare's PUBLIC test keys
+      # (always pass, no real challenge) — not secrets.
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      NEXT_PUBLIC_SITE_URL: http://localhost:3100
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+      # CI-only salt: smoke-run ipHashes never collide with any real environment.
+      SUBSCRIBE_SALT: ci-smoke-only-salt
+      # Real Neon connection string (main/dev branch) so the smoke test can
+      # exercise the full subscribe flow. Set with: gh secret set DATABASE_URL
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Enable corepack (pnpm from packageManager field)
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm tsc --noEmit
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke test
+        run: pnpm smoke
