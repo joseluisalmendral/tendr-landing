@@ -149,6 +149,7 @@ Section gap mínimo: `space-16` (64px). Card padding: `space-6`–`space-8`.
 | `easing-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` | Default |
 | `easing-emphasis` | `cubic-bezier(0.2, 0.8, 0.2, 1)` | Reveals |
 | `easing-expo` | `cubic-bezier(0.16, 1, 0.3, 1)` | El wow con scroll-pin (Hero→"Cómo funciona") y los reveals de transición (page-peel) |
+| `ease-snap` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Overshoot de resorte: FLIP de Pricing, press de la mano del tablero, pops de micro-UI (settle/pop). El único easing con overshoot del sistema; reservado para elementos que "encajan en su sitio" |
 
 Tope de 3 librerías de animación: **Motion (`motion/react`) + CSS scroll-driven nativo + Lenis**. Reduced-motion: estado final estático en cada coreografía.
 
