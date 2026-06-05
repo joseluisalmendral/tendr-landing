@@ -1,5 +1,3 @@
-import dynamic from "next/dynamic";
-
 import { Check, Minus } from "@phosphor-icons/react/dist/ssr";
 
 import { SkipLink } from "@/components/a11y/SkipLink";
@@ -13,12 +11,10 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { ogImage, pageMetadata, siteUrl } from "@/components/seo/metadata";
 import { cn } from "@/lib/utils";
 
-// PERF: SubscribeForm is the client island (Server Action + Turnstile). Keep it
-// as a page-owned dynamic() import so it splits into its own chunk and does not
-// inflate the /pricing first-load bundle (same pattern as app/page.tsx).
-const SubscribeForm = dynamic(() =>
-  import("@/components/landing/SubscribeForm").then((m) => m.SubscribeForm),
-);
+// PERF: SubscribeForm is the client island (Server Action + Turnstile). It is
+// deferred behind LazySubscribeForm so its chunk loads on #waitlist intent or
+// section proximity instead of during hydration (same pattern as app/page.tsx).
+import { LazySubscribeForm } from "@/components/landing/LazySubscribeForm";
 
 export const metadata = pageMetadata({
   title: "Precios",
@@ -250,7 +246,7 @@ export default function PricingPage() {
           heading="Apúntate a la waitlist"
           lead="Tendr aún no está abierto. Déjanos tu email y serás de los primeros en entrar cuando abramos el acceso: un único correo con tu invitación, sin newsletters ni spam."
         >
-          <SubscribeForm />
+          <LazySubscribeForm />
         </Waitlist>
       </main>
 

@@ -29,9 +29,9 @@ const TestimonialsCork = dynamic(() =>
     (m) => m.TestimonialsCork,
   ),
 );
-const SubscribeForm = dynamic(() =>
-  import("@/components/landing/SubscribeForm").then((m) => m.SubscribeForm),
-);
+// PERF: deferred form import — see LazySubscribeForm (loads on #waitlist
+// intent or section proximity, not during hydration). Same as app/page.tsx.
+import { LazySubscribeForm } from "@/components/landing/LazySubscribeForm";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ogImage, pageMetadata, siteUrl } from "@/components/seo/metadata";
 import type { FaqItem, PricingCardProps } from "@/components/landing/types";
@@ -260,7 +260,7 @@ export default function AgenciasPage() {
           heading="Apúntate a la waitlist"
           lead="El plan Team aún no está abierto. Déjanos el email del estudio y seréis de los primeros en probarlo cuando abramos el acceso: un único correo con vuestra invitación, sin newsletters ni spam."
         >
-          <SubscribeForm />
+          <LazySubscribeForm />
         </Waitlist>
       </main>
 

@@ -31,9 +31,11 @@ const TestimonialsCork = dynamic(() =>
     (m) => m.TestimonialsCork,
   ),
 );
-const SubscribeForm = dynamic(() =>
-  import("@/components/landing/SubscribeForm").then((m) => m.SubscribeForm),
-);
+// PERF: SubscribeForm's stack (zod + RHF + Turnstile) goes one step further
+// than the dynamic() splits above — a bare dynamic() chunk still gets fetched
+// during hydration, inside the LCP window. LazySubscribeForm defers the actual
+// import until #waitlist intent (CTA click / hash) or section proximity.
+import { LazySubscribeForm } from "@/components/landing/LazySubscribeForm";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ogImage, pageMetadata, siteUrl } from "@/components/seo/metadata";
 import type { FaqItem, PricingCardProps } from "@/components/landing/types";
@@ -231,7 +233,7 @@ export default function Home() {
           heading="Apúntate a la waitlist"
           lead="Tendr aún no está abierto al público. Déjanos tu email y serás de los primeros en entrar cuando abramos el acceso: un único correo con tu invitación, sin newsletters ni spam."
         >
-          <SubscribeForm />
+          <LazySubscribeForm />
         </Waitlist>
       </main>
 
