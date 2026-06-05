@@ -78,3 +78,17 @@ Passes: 46. Incompleto (revisión humana): `color-contrast` (56 nodos — axe no
 - prefers-reduced-motion: kill-switch CSS global ✓ · guards JS en los orquestadores ✓ (los 2 archivos flaggeados son falsos positivos del check per-file).
 - Scroll-pins: 1 coreográfico (TestimonialsCork) / 1 permitido ✓ — Header y playground son layout/ruta interna.
 - **Juicio del agente (heurístico):** hay exactamente 1 wow (hero, `--easing-expo` acotado a `globals.css` + `Hero.tsx` — sus dos únicos usuarios legítimos) y 1 pin coreográfico. El presupuesto de motion se respeta en producción.
+
+---
+
+## Addendum post-fix (mismo día, 14:45)
+
+Los dos MEDIOs se corrigieron (commits `e92dced` + `715ad49`) y se re-midió performance en producción tras el deploy:
+
+| Métrica | Run 03 | Post-fix | Δ |
+|---|---|---|---|
+| Score | 92 | 93 | +1 |
+| LCP | 3337ms | 3182ms | −155ms |
+| unused-javascript | ~450ms | ~150ms | −300ms |
+
+**Veredicto:** el finding unused-javascript queda resuelto (el chunk del form — zod + RHF + Turnstile — ya no se carga en la ventana del LCP; verificado con captura de red). El LCP restante (~3.2s) NO está dominado por JS: con TTFB 23ms y FCP ~1s, el gap vive en el render del elemento LCP (hipótesis: coreografía de entrada del hero y/o font del heading). Investigación propuesta para un sprint futuro: trace de lab del hero (`largest-contentful-paint-element` + film strip) antes de tocar nada.
