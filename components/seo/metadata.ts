@@ -52,6 +52,11 @@ export function baseMetadata(): Metadata {
     alternates: {
       canonical: "/",
     },
+    // Search Console ownership proof. Lives in baseMetadata so every page
+    // ships the google-site-verification meta tag from the root layout.
+    verification: {
+      google: "UBRfiQ4IKCWq_VeOs_1UUaxulYbHD4xkS2HU28NsSsU",
+    },
     robots: {
       index: true,
       follow: true,
