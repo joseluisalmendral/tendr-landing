@@ -1,0 +1,20 @@
+{
+  "_doc": "Project-specific expectations for the landing-auditor skill. geo: expected JSON-LD types and llms.txt sections. motion: animation budget from design.md section 2.7.",
+  "geo": {
+    "expectedSchemas": ["Organization", "SoftwareApplication", "FAQPage"],
+    "llmsSections": ["audience", "pricing", "faq"]
+  },
+  "motion": {
+    "maxLibraries": 3,
+    "allowedLibraries": ["motion", "framer-motion", "lenis", "@studio-freight/lenis"],
+    "nativeAllowed": ["css-scroll-driven"],
+    "easings": {
+      "easing-standard": [0.4, 0, 0.2, 1],
+      "easing-emphasis": [0.2, 0.8, 0.2, 1],
+      "easing-expo": [0.16, 1, 0.3, 1]
+    },
+    "wowEasingToken": "easing-expo",
+    "maxScrollPins": 1,
+    "reducedMotionPerChoreography": true
+  }
+}
