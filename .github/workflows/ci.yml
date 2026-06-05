@@ -37,7 +37,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          # 24 matches local dev and the Vercel project setting; pnpm 11 needs
+          # builtins (node:sqlite) that Node 20 lacks.
+          node-version: 24
           cache: pnpm
 
       - name: Install
